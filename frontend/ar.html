@@ -63,8 +63,8 @@
       camera.position.set(0, 0, 3);
 
       // Light (soft)
-      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-      scene.add(ambient);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // White light, soft intensity
+      scene.add(ambientLight);
 
       const dir = new THREE.DirectionalLight(0xffffff, 0.8);
       dir.position.set(2, 2, 3);
