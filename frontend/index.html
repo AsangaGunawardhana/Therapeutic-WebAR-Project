@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Socket.IO Latency Test</title>
+  </head>
+  <body>
+    <h2>Socket.IO Connection Test</h2>
+    <div id="log"></div>
+
+    <!-- 1. Load Socket.IO client script from the server -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // 2. Connect to the server
+      const socket = io();
+
+      const logDiv = document.getElementById("log");
+      function log(message) {
+        const p = document.createElement("p");
+        p.textContent = message;
+        logDiv.appendChild(p);
+      }
+
+      // 3. When connected
+      socket.on("connect", () => {
+        log("Connected to server. Socket ID: " + socket.id);
+      });
+
+      // 4. Send ping every 1 second with current time
+      setInterval(() => {
+        const now = Date.now(); // current timestamp in ms
+        socket.emit("ping_test", now);
+      }, 1000);
+
+      // 5. When we get pong back, calculate latency
+      socket.on("pong_test", (sentTime) => {
+        const now = Date.now();
+        const latency = now - sentTime;
+        log("Latency: " + latency + " ms");
+      });
+    </script>
+  </body>
+</html>

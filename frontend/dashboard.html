@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard (Biometric Simulator)</title>
+</head>
+<body>
+  <h2>Dashboard (Biometric Simulator)</h2>
+
+  <label>HR: <b id="hrVal">80</b></label><br/>
+  <input type="range" id="hr" min="40" max="160" value="80" />
+  <br/><br/>
+
+  <label>HRV: <b id="hrvVal">60</b></label><br/>
+  <input type="range" id="hrv" min="10" max="120" value="60" />
+
+  <p>Socket: <b id="status">Disconnected</b></p>
+  <p>Last sent: <span id="sent">-</span></p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const hr = document.getElementById("hr");
+    const hrv = document.getElementById("hrv");
+    const hrVal = document.getElementById("hrVal");
+    const hrvVal = document.getElementById("hrvVal");
+    const status = document.getElementById("status");
+    const sent = document.getElementById("sent");
+
+    socket.on("connect", () => status.textContent = "Connected");
+    socket.on("disconnect", () => status.textContent = "Disconnected");
+
+    function sendUpdate() {
+      const data = { hr: Number(hr.value), hrv: Number(hrv.value) };
+      socket.emit("bio:update", data);
+      sent.textContent = JSON.stringify(data);
+    }
+
+    hr.addEventListener("input", () => { hrVal.textContent = hr.value; sendUpdate(); });
+    hrv.addEventListener("input", () => { hrvVal.textContent = hrv.value; sendUpdate(); });
+
+    sendUpdate(); // send once when page loads
+  </script>
+</body>
+</html>
