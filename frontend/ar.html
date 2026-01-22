@@ -1,188 +1,176 @@
-<!-- <!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>AR Client (Mock)</title>
-</head>
-<body>
-  <h2>AR Client (Mock)</h2>
-
-  <div id="box" style="width:220px;height:220px;border:2px solid #000;margin-bottom:10px;"></div>
-
-  <pre id="out" style="background:#f3f3f3;padding:10px;border:1px solid #ccc;"></pre>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    const box = document.getElementById("box");
-    const out = document.getElementById("out");
-
-    socket.on("ar:command", (cmd) => {
-      out.textContent = JSON.stringify(cmd, null, 2);
-
-      // Preview: if COLOR mode, show the exact hex
-      if (cmd.lightingMode === "COLOR" && cmd.colorHex) {
-        box.style.background = cmd.colorHex;
-      } else {
-        // Preview for CCT mode: just show neutral white (we’ll do better later)
-        box.style.background = "#ffffff";
+  <head>
+    <meta charset="UTF-8" />
+    <title>AR Client (Three.js Mock)</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
       }
-    });
-  </script>
-</body>
-</html> -->
+      #ui {
+        padding: 10px;
+      }
+      #scene {
+        width: 100vw;
+        height: 60vh;
+        display: block;
+      }
+      pre {
+        background: #f3f3f3;
+        padding: 10px;
+        border: 1px solid #ccc;
+        height: 30vh;
+        overflow: auto;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+      <h2>AR Client (Three.js Mock)</h2>
+    </div>
 
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>AR Client (Three.js Mock)</title>
-  <style>
-    body { margin: 0; font-family: Arial, sans-serif; }
-    #ui { padding: 10px; }
-    #scene { width: 100vw; height: 60vh; display: block; }
-    pre { background:#f3f3f3; padding:10px; border:1px solid #ccc; height: 30vh; overflow:auto; margin:0; }
-  </style>
-</head>
-<body>
-  <div id="ui">
-    <h2>AR Client (Three.js Mock)</h2>
-  </div>
+    <canvas id="scene"></canvas>
+    <pre id="out"></pre>
 
-  <canvas id="scene"></canvas>
-  <pre id="out"></pre>
+    <script src="/socket.io/socket.io.js"></script>
 
-  <script src="/socket.io/socket.io.js"></script>
+    <!-- Three.js (CDN) -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 
-  <!-- Three.js (CDN) -->
-  <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script>
+      // -----------------------------
+      // 1) Socket
+      // -----------------------------
+      const socket = io();
+      const out = document.getElementById("out");
 
-  <script>
-    // -----------------------------
-    // 1) Socket
-    // -----------------------------
-    const socket = io();
-    const out = document.getElementById("out");
+      // -----------------------------
+      // 2) Three.js scene + orb
+      // -----------------------------
+      const canvas = document.getElementById("scene");
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
 
-    // -----------------------------
-    // 2) Three.js scene + orb
-    // -----------------------------
-    const canvas = document.getElementById("scene");
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+      const scene = new THREE.Scene();
 
-    const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
+      camera.position.set(0, 0, 3);
 
-    const camera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
-    camera.position.set(0, 0, 3);
+      // Light (soft)
+      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambient);
 
-    // Light (soft)
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir.position.set(2, 2, 3);
+      scene.add(dir);
 
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(2, 2, 3);
-    scene.add(dir);
+      // Orb
+      const geometry = new THREE.SphereGeometry(0.8, 64, 64);
+      const material = new THREE.MeshStandardMaterial({
+        color: new THREE.Color("#ffffff"),
+        emissive: new THREE.Color("#000000"),
+        emissiveIntensity: 0.2,
+        roughness: 0.4,
+        metalness: 0.1,
+      });
+      const orb = new THREE.Mesh(geometry, material);
+      scene.add(orb);
 
-    // Orb
-    const geometry = new THREE.SphereGeometry(0.8, 64, 64);
-    const material = new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#ffffff"),
-      emissive: new THREE.Color("#000000"),
-      emissiveIntensity: 0.2,
-      roughness: 0.4,
-      metalness: 0.1
-    });
-    const orb = new THREE.Mesh(geometry, material);
-    scene.add(orb);
+      // Resize
+      function resize() {
+        const w = window.innerWidth;
+        const h = Math.floor(window.innerHeight * 0.6);
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      window.addEventListener("resize", resize);
+      resize();
 
-    // Resize
-    function resize() {
-      const w = window.innerWidth;
-      const h = Math.floor(window.innerHeight * 0.6);
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    }
-    window.addEventListener("resize", resize);
-    resize();
+      // -----------------------------
+      // 3) Target values (for smooth transitions)
+      // -----------------------------
+      let targetColor = new THREE.Color(0xffffff); // Default color
+      let currentColor = new THREE.Color(0xffffff); // Initial color
+      let targetEmissive = new THREE.Color("#000000");
+      let targetEmissiveIntensity = 0.2;
 
-    // -----------------------------
-    // 3) Target values (for smooth transitions)
-    // -----------------------------
-    let targetColor = new THREE.Color("#ffffff");
-    let targetEmissive = new THREE.Color("#000000");
-    let targetEmissiveIntensity = 0.2;
+      let isPulsing = false;
 
-    let isPulsing = false;
-
-    function cctToHex(cctK) {
-      // Simple mapping (enough for mock)
-      if (cctK <= 3000) return "#FFD8A8"; // warm
-      if (cctK <= 4000) return "#FFF1CC"; // neutral warm
-      return "#FFFFFF"; // cool/white
-    }
-
-    function stopPulse() {
-      isPulsing = false;
-      orb.scale.set(1, 1, 1);
-    }
-
-    // -----------------------------
-    // 4) Apply command (LOCKED schema)
-    // -----------------------------
-    function applyCommand(cmd) {
-      out.textContent = JSON.stringify(cmd, null, 2);
-
-      const v = cmd.visual;
-
-      // Color source must come from schema only
-      let hex;
-      if (typeof v.colorOrCCT === "string") {
-        hex = v.colorOrCCT; // SOOTHING hex
-      } else {
-        hex = cctToHex(v.colorOrCCT.cctK); // CCT -> hex
+      function cctToHex(cctK) {
+        // Simple mapping (enough for mock)
+        if (cctK <= 3000) return "#FFD8A8"; // warm
+        if (cctK <= 4000) return "#FFF1CC"; // neutral warm
+        return "#FFFFFF"; // cool/white
       }
 
-      targetColor = new THREE.Color(hex);
-      targetEmissive = new THREE.Color(hex);
-
-      // Intensity -> emissive brightness
-      targetEmissiveIntensity = Math.max(0, Math.min(1, v.intensity)) * 2.0;
-
-      // Bradycardia pulse
-      if (cmd.state === "BRADYCARDIA_ALERT") {
-        isPulsing = true;
-      } else {
-        stopPulse();
-      }
-    }
-
-    socket.on("ar:command", applyCommand);
-
-    // -----------------------------
-    // 5) Render loop (smooth transitions + pulse)
-    // -----------------------------
-    function animate(t) {
-      requestAnimationFrame(animate);
-
-      // Smooth color fade (no snapping)
-      orb.material.color.lerp(targetColor, 0.08);
-      orb.material.emissive.lerp(targetEmissive, 0.08);
-
-      // Smooth intensity
-      orb.material.emissiveIntensity += (targetEmissiveIntensity - orb.material.emissiveIntensity) * 0.08;
-
-      // Pulse only in alert
-      if (isPulsing) {
-        const s = 1 + 0.15 * Math.sin(t * 0.01);
-        orb.scale.set(s, s, s);
+      function stopPulse() {
+        isPulsing = false;
+        orb.scale.set(1, 1, 1);
       }
 
-      orb.rotation.y += 0.003;
-      renderer.render(scene, camera);
-    }
-    animate(0);
-  </script>
-</body>
+      // -----------------------------
+      // 4) Apply command (LOCKED schema)
+      // -----------------------------
+      function applyCommand(cmd) {
+        out.textContent = JSON.stringify(cmd, null, 2);
+
+        const v = cmd.visual;
+
+        // Color source must come from schema only
+        let hex;
+        if (typeof v.colorOrCCT === "string") {
+          hex = v.colorOrCCT; // SOOTHING hex
+        } else {
+          hex = cctToHex(v.colorOrCCT.cctK); // CCT -> hex
+        }
+
+        targetColor = new THREE.Color(hex);
+        targetEmissive = new THREE.Color(hex);
+
+        // Intensity -> emissive brightness
+        targetEmissiveIntensity = Math.max(0, Math.min(1, v.intensity)) * 2.0;
+
+        // Bradycardia pulse
+        if (cmd.state === "BRADYCARDIA_ALERT") {
+          isPulsing = true;
+        } else {
+          stopPulse();
+        }
+      }
+
+      socket.on("ar:command", applyCommand);
+
+      // -----------------------------
+      // 5) Render loop (smooth transitions + pulse)
+      // -----------------------------
+      function animate(t) {
+        requestAnimationFrame(animate);
+
+        // Smooth color fade (no snapping)
+        orb.material.color.lerp(targetColor, 0.08);
+        orb.material.emissive.lerp(targetEmissive, 0.08);
+
+        // Smooth intensity
+        orb.material.emissiveIntensity +=
+          (targetEmissiveIntensity - orb.material.emissiveIntensity) * 0.08;
+
+        // Pulse only in alert
+        if (isPulsing) {
+          const s = 1 + 0.15 * Math.sin(t * 0.01);
+          orb.scale.set(s, s, s);
+        }
+
+        orb.rotation.y += 0.003;
+        renderer.render(scene, camera);
+      }
+      animate(0);
+    </script>
+  </body>
 </html>
