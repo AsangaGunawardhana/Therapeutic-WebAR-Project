@@ -17,18 +17,33 @@
         display: block;
       }
       pre {
-        background: #f3f3f3;
-        padding: 10px;
-        border: 1px solid #ccc;
-        height: 30vh;
+
         overflow: auto;
         margin: 0;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      pre .key {
+        color: #9cdcfe;
+      }
+      pre .string {
+        color: #ce9178;
+      }
+      pre .number {
+        color: #b5cea8;
       }
     </style>
   </head>
   <body>
     <div id="ui">
       <h2>AR Client (Three.js Mock)</h2>
+      <div style="background: #2d2d2d; color: #fff; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+        <strong>LIVE VITALS:</strong> 
+        HR: <span id="liveHR" style="color: #4fc3f7; font-size: 18px; font-weight: bold;">--</span> bpm | 
+        HRV: <span id="liveHRV" style="color: #81c784; font-size: 18px; font-weight: bold;">--</span> ms | 
+        State: <span id="liveState" style="color: #ffb74d; font-size: 16px; font-weight: bold;">--</span>
+      </div>
     </div>
 
     <canvas id="scene"></canvas>
@@ -70,7 +85,7 @@
       dir.position.set(2, 2, 3);
       scene.add(dir);
 
-      // Orb
+      // Therapeutic Orb
       const geometry = new THREE.SphereGeometry(0.8, 64, 64);
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color("#ffffff"),
@@ -79,8 +94,8 @@
         roughness: 0.4,
         metalness: 0.1,
       });
-      const orb = new THREE.Mesh(geometry, material);
-      scene.add(orb);
+      const therapeuticOrb = new THREE.Mesh(geometry, material);
+      scene.add(therapeuticOrb);
 
       // Resize
       function resize() {
@@ -96,8 +111,8 @@
       // -----------------------------
       // 3) Target values (for smooth transitions)
       // -----------------------------
-      let targetColor = new THREE.Color(0xffffff); // Default color
-      let currentColor = new THREE.Color(0xffffff); // Initial color
+      const targetColor = new THREE.Color(0xffffff); // Default color
+      const currentColor = new THREE.Color(0xffffff); // Initial color
       let targetEmissive = new THREE.Color("#000000");
       let targetEmissiveIntensity = 0.2;
 
@@ -112,65 +127,98 @@
 
       function stopPulse() {
         isPulsing = false;
-        orb.scale.set(1, 1, 1);
+        therapeuticOrb.scale.set(1, 1, 1);
       }
 
       // -----------------------------
-      // 4) Apply command (LOCKED schema)
+      // 4) Socket listener - Handle ar:command from server
       // -----------------------------
-      function applyCommand(cmd) {
-        out.textContent = JSON.stringify(cmd, null, 2);
+      socket.on("ar:command", (data) => {
+        // Update live display at top
+        document.getElementById("liveHR").textContent = data.vitals.hr;
+        document.getElementById("liveHRV").textContent = data.vitals.hrv;
+        document.getElementById("liveState").textContent = data.state;
+        
+        // Display command in UI with better formatting
+        const displayText = 
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STATE: ${data.state}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VITALS:
+  HR:  ${data.vitals.hr} bpm
+  HRV: ${data.vitals.hrv} ms
 
-        const v = cmd.visual;
+VISUAL:
+  Mode:     ${data.visual.mode}
+  Color:    ${typeof data.visual.colorOrCCT === 'string' ? data.visual.colorOrCCT : 'CCT ' + data.visual.colorOrCCT.cctK + 'K'}
+  Intensity: ${data.visual.intensity}
 
-        // Color source must come from schema only
+MESSAGE: ${data.message_patient}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Full JSON:
+${JSON.stringify(data, null, 2)}`;
+        
+        out.textContent = displayText;
+
+        const v = data.visual;
+
+        // Convert color format: string (hex) or object {cctK}
         let hex;
         if (typeof v.colorOrCCT === "string") {
-          hex = v.colorOrCCT; // SOOTHING hex
+          hex = v.colorOrCCT; // Direct hex like #2E8BFF
+        } else if (typeof v.colorOrCCT === "object" && v.colorOrCCT.cctK) {
+          hex = cctToHex(v.colorOrCCT.cctK); // CCT -> hex conversion
         } else {
-          hex = cctToHex(v.colorOrCCT.cctK); // CCT -> hex
+          console.error("❌ Invalid colorOrCCT format:", v.colorOrCCT);
+          return;
         }
 
-        targetColor = new THREE.Color(hex);
-        targetEmissive = new THREE.Color(hex);
+        // Update target colors (lerp will handle smooth transition)
+        targetColor.set(hex);
+        targetEmissive.set(hex);
 
-        // Intensity -> emissive brightness
+        // Update emissive intensity
         targetEmissiveIntensity = Math.max(0, Math.min(1, v.intensity)) * 2.0;
 
-        // Bradycardia pulse
-        if (cmd.state === "BRADYCARDIA_ALERT") {
+        // Handle bradycardia pulse effect
+        if (data.state === "BRADYCARDIA_ALERT") {
           isPulsing = true;
         } else {
           stopPulse();
         }
-      }
-
-      socket.on("ar:command", applyCommand);
+      });
 
       // -----------------------------
       // 5) Render loop (smooth transitions + pulse)
       // -----------------------------
-      function animate(t) {
+      let currentEmissive = new THREE.Color("#000000");
+      let currentEmissiveIntensity = 0.2;
+
+      function animate() {
         requestAnimationFrame(animate);
 
-        // Smooth color fade (no snapping)
-        orb.material.color.lerp(targetColor, 0.08);
-        orb.material.emissive.lerp(targetEmissive, 0.08);
+        // Smooth color transitions using lerp (10% per frame = ~1.5 sec fade)
+        currentColor.lerp(targetColor, 0.1);
+        currentEmissive.lerp(targetEmissive, 0.1);
+        currentEmissiveIntensity += (targetEmissiveIntensity - currentEmissiveIntensity) * 0.1;
 
-        // Smooth intensity
-        orb.material.emissiveIntensity +=
-          (targetEmissiveIntensity - orb.material.emissiveIntensity) * 0.08;
+        // Apply smoothed colors to orb material
+        therapeuticOrb.material.color.copy(currentColor);
+        therapeuticOrb.material.emissive.copy(currentEmissive);
+        therapeuticOrb.material.emissiveIntensity = currentEmissiveIntensity;
 
-        // Pulse only in alert
+        // Apply color to ambient light (room wash effect)
+        ambientLight.color.copy(currentColor);
+
+        // Pulse animation for bradycardia alert
         if (isPulsing) {
-          const s = 1 + 0.15 * Math.sin(t * 0.01);
-          orb.scale.set(s, s, s);
+          const scale = 1.0 + Math.sin(Date.now() * 0.005) * 0.15; // Pulse between 0.85 and 1.15
+          therapeuticOrb.scale.set(scale, scale, scale);
         }
 
-        orb.rotation.y += 0.003;
         renderer.render(scene, camera);
       }
-      animate(0);
+      animate(); // Start the animation loop
     </script>
   </body>
 </html>
