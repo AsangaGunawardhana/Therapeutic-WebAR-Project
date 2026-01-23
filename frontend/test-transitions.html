@@ -1,0 +1,409 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>QA Test - Color Transitions</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .panel {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .test-button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .test-button:hover {
+        background: #0056b3;
+      }
+      .test-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      #status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .connected {
+        background: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      #log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+        border-left: 3px solid #007bff;
+        background: white;
+      }
+      .log-pass {
+        border-left-color: #28a745;
+        background: #d4edda;
+      }
+      .log-fail {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+      }
+      iframe {
+        width: 100%;
+        height: 600px;
+        border: 2px solid #dee2e6;
+        border-radius: 4px;
+      }
+      .test-scenario {
+        margin: 10px 0;
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 4px;
+      }
+      .controls {
+        margin: 15px 0;
+      }
+      label {
+        display: block;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      input[type="range"] {
+        width: 100%;
+      }
+      .value-display {
+        display: inline-block;
+        min-width: 50px;
+        text-align: center;
+        font-weight: bold;
+        color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 QA Test: Color Transition Smoothness</h1>
+
+    <div class="container">
+      <!-- Left Panel: Controls & Tests -->
+      <div class="panel">
+        <h2>Test Dashboard</h2>
+        <div id="status" class="disconnected">Disconnected</div>
+
+        <div class="controls">
+          <label>
+            HR: <span class="value-display" id="hrVal">80</span> bpm
+            <input type="range" id="hr" min="40" max="160" value="80" />
+          </label>
+
+          <label>
+            HRV: <span class="value-display" id="hrvVal">60</span> ms
+            <input type="range" id="hrv" min="10" max="120" value="60" />
+          </label>
+        </div>
+
+        <h3>Automated Test Scenarios</h3>
+
+        <div class="test-scenario">
+          <strong>Test 1: CALM → HIGH STRESS</strong><br />
+          <button class="test-button" onclick="runTest1()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 70 → 120 | Expected: White → Blue fade
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 2: HIGH STRESS → MODERATE</strong><br />
+          <button class="test-button" onclick="runTest2()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HRV: 20 → 45 | Expected: Blue → Warm fade
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 3: MODERATE → CALM</strong><br />
+          <button class="test-button" onclick="runTest3()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 90 → 70, HRV: 40 → 70 | Expected: Warm → White fade
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 4: Emergency Bradycardia</strong><br />
+          <button class="test-button" onclick="runTest4()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 45 | Expected: Immediate white + pulse
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 5: Rapid State Changes</strong><br />
+          <button class="test-button" onclick="runTest5()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Multiple quick changes | Check debouncing
+          </p>
+        </div>
+
+        <button
+          class="test-button"
+          onclick="runAllTests()"
+          style="background: #28a745; margin-top: 15px; width: 100%"
+        >
+          ▶ Run All Tests
+        </button>
+
+        <h3>Test Log</h3>
+        <div id="log">
+          <div class="log-entry">Ready to test...</div>
+        </div>
+      </div>
+
+      <!-- Right Panel: AR View -->
+      <div class="panel">
+        <h2>AR View (Live)</h2>
+        <iframe id="arFrame" src="/ar.html"></iframe>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const hr = document.getElementById("hr");
+      const hrv = document.getElementById("hrv");
+      const hrVal = document.getElementById("hrVal");
+      const hrvVal = document.getElementById("hrvVal");
+      const status = document.getElementById("status");
+      const log = document.getElementById("log");
+
+      let testRunning = false;
+      let currentTestColors = [];
+
+      socket.on("connect", () => {
+        status.textContent = "✓ Connected";
+        status.className = "connected";
+        addLog("Connected to server", "pass");
+      });
+
+      socket.on("disconnect", () => {
+        status.textContent = "✗ Disconnected";
+        status.className = "disconnected";
+        addLog("Disconnected from server", "fail");
+      });
+
+      socket.on("ar:command", (cmd) => {
+        const color =
+          typeof cmd.visual.colorOrCCT === "string"
+            ? cmd.visual.colorOrCCT
+            : `CCT ${cmd.visual.colorOrCCT.cctK}K`;
+
+        addLog(
+          `State: ${cmd.state} | Color: ${color} | Intensity: ${cmd.visual.intensity}`,
+          "",
+        );
+
+        if (testRunning) {
+          currentTestColors.push(color);
+        }
+      });
+
+      function sendUpdate() {
+        const data = { hr: Number(hr.value), hrv: Number(hrv.value) };
+        socket.emit("bio:update", data);
+      }
+
+      hr.addEventListener("input", () => {
+        hrVal.textContent = hr.value;
+        sendUpdate();
+      });
+
+      hrv.addEventListener("input", () => {
+        hrvVal.textContent = hrv.value;
+        sendUpdate();
+      });
+
+      function addLog(message, type = "") {
+        const entry = document.createElement("div");
+        entry.className = `log-entry ${type ? "log-" + type : ""}`;
+        const timestamp = new Date().toLocaleTimeString();
+        entry.textContent = `[${timestamp}] ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function setValues(hrValue, hrvValue) {
+        hr.value = hrValue;
+        hrv.value = hrvValue;
+        hrVal.textContent = hrValue;
+        hrvVal.textContent = hrvValue;
+        sendUpdate();
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      async function runTest1() {
+        addLog("=== Test 1: CALM → HIGH STRESS ===", "");
+        testRunning = true;
+        currentTestColors = [];
+
+        addLog("Setting CALM state (HR: 70, HRV: 65)...", "");
+        setValues(70, 65);
+        await sleep(3000);
+
+        addLog("Transitioning to HIGH STRESS (HR: 120, HRV: 65)...", "");
+        setValues(120, 65);
+        await sleep(3000);
+
+        addLog(
+          "✓ Test 1 Complete - Check for smooth white to blue fade",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest2() {
+        addLog("=== Test 2: HIGH STRESS → MODERATE ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH STRESS (HR: 110, HRV: 20)...", "");
+        setValues(110, 20);
+        await sleep(3000);
+
+        addLog("Transitioning to MODERATE (HR: 90, HRV: 45)...", "");
+        setValues(90, 45);
+        await sleep(3000);
+
+        addLog(
+          "✓ Test 2 Complete - Check for smooth blue to warm fade",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest3() {
+        addLog("=== Test 3: MODERATE → CALM ===", "");
+        testRunning = true;
+
+        addLog("Setting MODERATE (HR: 90, HRV: 40)...", "");
+        setValues(90, 40);
+        await sleep(3000);
+
+        addLog("Transitioning to CALM (HR: 70, HRV: 70)...", "");
+        setValues(70, 70);
+        await sleep(3000);
+
+        addLog(
+          "✓ Test 3 Complete - Check for smooth warm to white fade",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest4() {
+        addLog("=== Test 4: BRADYCARDIA ALERT ===", "");
+        testRunning = true;
+
+        addLog("Setting normal state first (HR: 75, HRV: 60)...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog("⚠ TRIGGERING BRADYCARDIA (HR: 45)...", "fail");
+        setValues(45, 60);
+        await sleep(3000);
+
+        addLog("Recovering (HR: 75)...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog(
+          "✓ Test 4 Complete - Should see immediate response + pulse effect",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest5() {
+        addLog("=== Test 5: RAPID STATE CHANGES (Debounce Test) ===", "");
+        testRunning = true;
+
+        addLog("Rapidly changing states...", "");
+        setValues(120, 20); // HIGH STRESS
+        await sleep(500);
+
+        setValues(70, 70); // CALM
+        await sleep(500);
+
+        setValues(90, 40); // MODERATE
+        await sleep(500);
+
+        setValues(110, 25); // HIGH STRESS
+        await sleep(500);
+
+        addLog("Waiting for debounce to settle...", "");
+        await sleep(3000);
+
+        addLog(
+          "✓ Test 5 Complete - Check that colors didn't flicker rapidly",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runAllTests() {
+        addLog("====================================", "");
+        addLog("🚀 RUNNING FULL TEST SUITE", "pass");
+        addLog("====================================", "");
+
+        await runTest1();
+        await sleep(2000);
+        await runTest2();
+        await sleep(2000);
+        await runTest3();
+        await sleep(2000);
+        await runTest4();
+        await sleep(2000);
+        await runTest5();
+
+        addLog("====================================", "");
+        addLog("✅ ALL TESTS COMPLETED", "pass");
+        addLog("====================================", "");
+      }
+
+      // Initial update
+      sendUpdate();
+    </script>
+  </body>
+</html>
