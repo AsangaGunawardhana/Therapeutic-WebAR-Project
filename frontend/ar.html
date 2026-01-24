@@ -244,6 +244,12 @@
         document.getElementById("liveHRV").textContent = data.vitals.hrv;
         document.getElementById("liveState").textContent = data.state;
 
+        // Map the patient guidance message to the bottom center panel
+        document.getElementById("coachingText").textContent = data.message_patient;
+
+        // Map the clinical/scientific reasoning to the top right panel
+        document.getElementById("insightText").textContent = data.message_clinical;
+
         const v = data.visual;
 
         // Convert color format: string (hex) or object {cctK}
