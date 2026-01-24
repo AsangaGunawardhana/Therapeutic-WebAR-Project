@@ -176,6 +176,40 @@
           </p>
         </div>
 
+        <h3>Task 2.2: Message Mapping Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 6: HIGH_STRESS Messages</strong><br />
+          <button class="test-button" onclick="runTest6()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 115, HRV: 22 | Verify blue light messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 7: CALM_RECOVERY Messages</strong><br />
+          <button class="test-button" onclick="runTest7()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 75, HRV: 65 | Verify recovery messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 8: MODERATE Messages</strong><br />
+          <button class="test-button" onclick="runTest8()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 85, HRV: 40 | Verify moderate state messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 9: BRADYCARDIA Messages</strong><br />
+          <button class="test-button" onclick="runTest9()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 45 | Verify alert messages
+          </p>
+        </div>
+
         <button
           class="test-button"
           onclick="runAllTests()"
@@ -232,6 +266,14 @@
           `State: ${cmd.state} | Color: ${color} | Intensity: ${cmd.visual.intensity}`,
           "",
         );
+        
+        // Task 2.2 QA: Log coaching and clinical messages
+        if (cmd.message_patient) {
+          addLog(`📢 Coaching: "${cmd.message_patient}"`, "");
+        }
+        if (cmd.message_clinical) {
+          addLog(`🔬 Clinical: "${cmd.message_clinical}"`, "");
+        }
 
         if (testRunning) {
           currentTestColors.push(color);
@@ -382,6 +424,74 @@
         testRunning = false;
       }
 
+      async function runTest6() {
+        addLog("=== Test 6: HIGH_STRESS Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS state (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(2000);
+
+        addLog("Expected Coaching: 'Let's slow down. The room will shift to a calming mode.'", "");
+        addLog("Expected Clinical: Blue light (475 nm) science explanation", "");
+        await sleep(2000);
+
+        addLog("✓ Test 6 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest7() {
+        addLog("=== Test 7: CALM_RECOVERY Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM_RECOVERY state (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("Expected Coaching: Recovery/calm guidance message", "");
+        addLog("Expected Clinical: Recovery state explanation", "");
+        await sleep(2000);
+
+        addLog("✓ Test 7 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest8() {
+        addLog("=== Test 8: MODERATE Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting MODERATE state (HR: 85, HRV: 40)...", "");
+        setValues(85, 40);
+        await sleep(2000);
+
+        addLog("Expected Coaching: Moderate state guidance", "");
+        addLog("Expected Clinical: Moderate state explanation", "");
+        await sleep(2000);
+
+        addLog("✓ Test 8 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest9() {
+        addLog("=== Test 9: BRADYCARDIA_ALERT Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting BRADYCARDIA state (HR: 45, HRV: 30)...", "");
+        setValues(45, 30);
+        await sleep(2000);
+
+        addLog("Expected Coaching: 'Your heart rate is low. Please rest and call a nurse.'", "");
+        addLog("Expected Clinical: Bradycardia alert explanation", "");
+        await sleep(3000);
+
+        addLog("Returning to normal...", "");
+        setValues(75, 60);
+        await sleep(1000);
+
+        addLog("✓ Test 9 Complete - Verify alert messages and pulse effect", "pass");
+        testRunning = false;
+      }
+
       async function runAllTests() {
         addLog("====================================", "");
         addLog("🚀 RUNNING FULL TEST SUITE", "pass");
@@ -396,6 +506,15 @@
         await runTest4();
         await sleep(2000);
         await runTest5();
+        await sleep(2000);
+        addLog("--- Task 2.2 Message Tests ---", "");
+        await runTest6();
+        await sleep(2000);
+        await runTest7();
+        await sleep(2000);
+        await runTest8();
+        await sleep(2000);
+        await runTest9();
 
         addLog("====================================", "");
         addLog("✅ ALL TESTS COMPLETED", "pass");
