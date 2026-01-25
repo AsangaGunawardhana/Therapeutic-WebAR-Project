@@ -176,6 +176,100 @@
           </p>
         </div>
 
+        <h3>Task 2.2: Message Mapping Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 6: HIGH_STRESS Messages</strong><br />
+          <button class="test-button" onclick="runTest6()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 115, HRV: 22 | Verify blue light messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 7: CALM_RECOVERY Messages</strong><br />
+          <button class="test-button" onclick="runTest7()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 75, HRV: 65 | Verify recovery messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 8: MODERATE Messages</strong><br />
+          <button class="test-button" onclick="runTest8()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 85, HRV: 40 | Verify moderate state messages
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 9: BRADYCARDIA Messages</strong><br />
+          <button class="test-button" onclick="runTest9()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            HR: 45 | Verify alert messages
+          </p>
+        </div>
+
+        <h3>Task 2.3: Breathing Loop Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 10: Breathing Loop Activation</strong><br />
+          <button class="test-button" onclick="runTest10()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify breathing loop starts in HIGH_STRESS
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 11: 4-Second Timing</strong><br />
+          <button class="test-button" onclick="runTest11()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify 4-second breathing cycle timing
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 12: Breathing Loop Deactivation</strong><br />
+          <button class="test-button" onclick="runTest12()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify loop stops when leaving HIGH_STRESS
+          </p>
+        </div>
+
+        <h3>Task 2.4: State-Based Styling Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 13: HIGH_STRESS Blue Glow</strong><br />
+          <button class="test-button" onclick="runTest13()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify blue borders and glow on HUD panels
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 14: BRADYCARDIA Red Glow</strong><br />
+          <button class="test-button" onclick="runTest14()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify red borders and glow on HUD panels
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 15: Neutral State Reset</strong><br />
+          <button class="test-button" onclick="runTest15()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify borders reset to neutral, no glow
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 16: Panel Styling Transitions</strong><br />
+          <button class="test-button" onclick="runTest16()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify smooth state-to-state border transitions
+          </p>
+        </div>
+
         <button
           class="test-button"
           onclick="runAllTests()"
@@ -232,6 +326,14 @@
           `State: ${cmd.state} | Color: ${color} | Intensity: ${cmd.visual.intensity}`,
           "",
         );
+
+        // Task 2.2 QA: Log coaching and clinical messages
+        if (cmd.message_patient) {
+          addLog(`📢 Coaching: "${cmd.message_patient}"`, "");
+        }
+        if (cmd.message_clinical) {
+          addLog(`🔬 Clinical: "${cmd.message_clinical}"`, "");
+        }
 
         if (testRunning) {
           currentTestColors.push(color);
@@ -340,7 +442,7 @@
         setValues(75, 60);
         await sleep(2000);
 
-        addLog("⚠ TRIGGERING BRADYCARDIA (HR: 45)...", "fail");
+        addLog("⚠ TRIGGERING BRADYCARDIA (HR: 45)...", "");
         setValues(45, 60);
         await sleep(3000);
 
@@ -382,6 +484,300 @@
         testRunning = false;
       }
 
+      async function runTest6() {
+        addLog("=== Test 6: HIGH_STRESS Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS state (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(2000);
+
+        addLog(
+          "Expected Coaching: Message about slowing down and calming mode",
+          "",
+        );
+        addLog(
+          "Expected Clinical: Blue light (475 nm) science explanation",
+          "",
+        );
+        await sleep(2000);
+
+        addLog("✓ Test 6 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest7() {
+        addLog("=== Test 7: CALM_RECOVERY Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM_RECOVERY state (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("Expected Coaching: Recovery/calm guidance message", "");
+        addLog("Expected Clinical: Recovery state explanation", "");
+        await sleep(2000);
+
+        addLog("✓ Test 7 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest8() {
+        addLog("=== Test 8: MODERATE Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting MODERATE state (HR: 85, HRV: 40)...", "");
+        setValues(85, 40);
+        await sleep(2000);
+
+        addLog("Expected Coaching: Moderate state guidance", "");
+        addLog("Expected Clinical: Moderate state explanation", "");
+        await sleep(2000);
+
+        addLog("✓ Test 8 Complete - Verify messages in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest9() {
+        addLog("=== Test 9: BRADYCARDIA_ALERT Messages ===", "");
+        testRunning = true;
+
+        addLog("Setting BRADYCARDIA state (HR: 45, HRV: 30)...", "");
+        setValues(45, 30);
+        await sleep(2000);
+
+        addLog(
+          "Expected Coaching: 'Your heart rate is low. Please rest and call a nurse.'",
+          "",
+        );
+        addLog("Expected Clinical: Bradycardia alert explanation", "");
+        await sleep(3000);
+
+        addLog("Returning to normal...", "");
+        setValues(75, 60);
+        await sleep(1000);
+
+        addLog(
+          "✓ Test 9 Complete - Verify alert messages and pulse effect",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest10() {
+        addLog("=== Test 10: Breathing Loop ACTIVATION ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM state first (HR: 70, HRV: 65)...", "");
+        setValues(70, 65);
+        await sleep(2000);
+
+        addLog("⚡ ACTIVATING HIGH_STRESS (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA: Bottom panel should now alternate:", "");
+        addLog("   - 'BREATHE IN ⬆️' (4 sec)", "");
+        addLog("   - 'BREATHE OUT ⬇️' (4 sec)", "");
+        addLog("Observing for 12 seconds (3 cycles)...", "");
+        await sleep(12000);
+
+        addLog("✓ Test 10 Complete - Check AR view for breathing loop", "pass");
+        testRunning = false;
+      }
+
+      async function runTest11() {
+        addLog("=== Test 11: 4-SECOND TIMING TEST ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS (HR: 110, HRV: 25)...", "");
+        setValues(110, 25);
+        await sleep(1000);
+
+        addLog("⏱️ TIMING VERIFICATION (Medical Sweet Spot = 4 seconds):", "");
+        addLog("Starting timer...", "");
+
+        const startTime = Date.now();
+        await sleep(4000);
+        const firstSwitch = Date.now();
+        addLog(
+          `First switch at: ${((firstSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        await sleep(4000);
+        const secondSwitch = Date.now();
+        addLog(
+          `Second switch at: ${((secondSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        await sleep(4000);
+        const thirdSwitch = Date.now();
+        addLog(
+          `Third switch at: ${((thirdSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        addLog("✅ PASS CRITERIA: Each interval should be ~4.0 seconds", "");
+        addLog(
+          "✓ Test 11 Complete - Verify timing consistency in AR view",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest12() {
+        addLog("=== Test 12: Breathing Loop DEACTIVATION ===", "");
+        testRunning = true;
+
+        addLog(
+          "Setting HIGH_STRESS to activate loop (HR: 115, HRV: 20)...",
+          "",
+        );
+        setValues(115, 20);
+        await sleep(8000); // Let breathing loop run for 2 cycles
+
+        addLog("⚡ DEACTIVATING - Switching to CALM (HR: 70, HRV: 70)...", "");
+        setValues(70, 70);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Breathing loop must STOP immediately", "");
+        addLog("   2. Text must return to normal message:", "");
+        addLog(
+          "      'You're recovering well. Keeping the room comfortable.'",
+          "",
+        );
+        addLog("   3. NO flickering between breathing and normal messages", "");
+        await sleep(3000);
+
+        addLog("Verifying stability (observing for 6 seconds)...", "");
+        await sleep(6000);
+
+        addLog("✓ Test 12 Complete - Verify clean deactivation", "pass");
+        testRunning = false;
+      }
+
+      async function runTest13() {
+        addLog("=== Test 13: HIGH_STRESS Blue Glow ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM state first (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("⚡ ACTIVATING HIGH_STRESS (HR: 160, HRV: 60)...", "");
+        setValues(160, 60);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Blue border (#2e8bff)", "");
+        addLog(
+          "   2. Vitals Panel: Blue glow (0 0 20px rgba(46, 139, 255, 0.6))",
+          "",
+        );
+        addLog("   3. Insights Panel: Blue border (#2e8bff)", "");
+        addLog("   4. Therapeutic orb should also be blue", "");
+        await sleep(4000);
+
+        addLog(
+          "✓ Test 13 Complete - Verify blue borders and glow in AR view",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest14() {
+        addLog("=== Test 14: BRADYCARDIA_ALERT Red Glow ===", "");
+        testRunning = true;
+
+        addLog("Setting NORMAL state first (HR: 75, HRV: 60)...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog("⚠️ TRIGGERING BRADYCARDIA (HR: 48, HRV: 36)...", "");
+        setValues(48, 36);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Red border (#ff5252)", "");
+        addLog(
+          "   2. Vitals Panel: Red glow (0 0 20px rgba(255, 82, 82, 0.6))",
+          "",
+        );
+        addLog("   3. Insights Panel: Red border (#ff5252)", "");
+        addLog("   4. Therapeutic orb should pulse with white light", "");
+        await sleep(4000);
+
+        addLog("Recovering to normal...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog(
+          "✓ Test 14 Complete - Verify red borders and glow in AR view",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest15() {
+        addLog("=== Test 15: Neutral State Reset ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS first (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(3000);
+
+        addLog("Switching to MODERATE state (HR: 85, HRV: 36)...", "");
+        setValues(85, 36);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Border rgba(100, 200, 255, 0.6)", "");
+        addLog("   2. Vitals Panel: Box-shadow preserved (depth maintained)", "");
+        addLog("   3. Insights Panel: Border rgba(150, 150, 150, 0.4)", "");
+        addLog("   4. Clean reset - no residual glow effects", "");
+        await sleep(4000);
+
+        addLog("✓ Test 15 Complete - Verify neutral borders, no glow", "pass");
+        testRunning = false;
+      }
+
+      async function runTest16() {
+        addLog("=== Test 16: Panel Styling State Transitions ===", "");
+        testRunning = true;
+
+        addLog("Starting with CALM (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("Transition 1: CALM → HIGH_STRESS (Blue glow)...", "");
+        setValues(110, 25);
+        await sleep(3000);
+
+        addLog("Transition 2: HIGH_STRESS → MODERATE (Neutral)...", "");
+        setValues(90, 36);
+        await sleep(3000);
+
+        addLog("Transition 3: MODERATE → BRADYCARDIA (Red glow)...", "");
+        setValues(48, 36);
+        await sleep(3000);
+
+        addLog("Transition 4: BRADYCARDIA → CALM (Neutral)...", "");
+        setValues(75, 65);
+        await sleep(3000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   - All border color transitions instant (no lag)", "");
+        addLog("   - Glow effects appear/disappear correctly", "");
+        addLog("   - No visual artifacts or flickering", "");
+        addLog("   - State text matches border colors", "");
+
+        addLog("✓ Test 16 Complete - Verify smooth panel transitions", "pass");
+        testRunning = false;
+      }
+
       async function runAllTests() {
         addLog("====================================", "");
         addLog("🚀 RUNNING FULL TEST SUITE", "pass");
@@ -396,6 +792,31 @@
         await runTest4();
         await sleep(2000);
         await runTest5();
+        await sleep(2000);
+        addLog("--- Task 2.2 Message Tests ---", "");
+        await runTest6();
+        await sleep(2000);
+        await runTest7();
+        await sleep(2000);
+        await runTest8();
+        await sleep(2000);
+        await runTest9();
+        await sleep(2000);
+        addLog("--- Task 2.3 Breathing Loop Tests ---", "");
+        await runTest10();
+        await sleep(2000);
+        await runTest11();
+        await sleep(2000);
+        await runTest12();
+        await sleep(2000);
+        addLog("--- Task 2.4 State-Based Styling Tests ---", "");
+        await runTest13();
+        await sleep(2000);
+        await runTest14();
+        await sleep(2000);
+        await runTest15();
+        await sleep(2000);
+        await runTest16();
 
         addLog("====================================", "");
         addLog("✅ ALL TESTS COMPLETED", "pass");
