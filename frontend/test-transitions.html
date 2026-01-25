@@ -236,6 +236,40 @@
           </p>
         </div>
 
+        <h3>Task 2.4: State-Based Styling Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 13: HIGH_STRESS Blue Glow</strong><br />
+          <button class="test-button" onclick="runTest13()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify blue borders and glow on HUD panels
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 14: BRADYCARDIA Red Glow</strong><br />
+          <button class="test-button" onclick="runTest14()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify red borders and glow on HUD panels
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 15: Neutral State Reset</strong><br />
+          <button class="test-button" onclick="runTest15()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify borders reset to neutral, no glow
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 16: Panel Styling Transitions</strong><br />
+          <button class="test-button" onclick="runTest16()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify smooth state-to-state border transitions
+          </p>
+        </div>
+
         <button
           class="test-button"
           onclick="runAllTests()"
@@ -625,6 +659,113 @@
         testRunning = false;
       }
 
+      async function runTest13() {
+        addLog("=== Test 13: HIGH_STRESS Blue Glow ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM state first (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("⚡ ACTIVATING HIGH_STRESS (HR: 160, HRV: 60)...", "");
+        setValues(160, 60);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Blue border (#2e8bff)", "");
+        addLog("   2. Vitals Panel: Blue glow (0 0 20px rgba(46, 139, 255, 0.6))", "");
+        addLog("   3. Insights Panel: Blue border (#2e8bff)", "");
+        addLog("   4. Therapeutic orb should also be blue", "");
+        await sleep(4000);
+
+        addLog("✓ Test 13 Complete - Verify blue borders and glow in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest14() {
+        addLog("=== Test 14: BRADYCARDIA_ALERT Red Glow ===", "");
+        testRunning = true;
+
+        addLog("Setting NORMAL state first (HR: 75, HRV: 60)...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog("⚠️ TRIGGERING BRADYCARDIA (HR: 48, HRV: 36)...", "fail");
+        setValues(48, 36);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Red border (#ff5252)", "");
+        addLog("   2. Vitals Panel: Red glow (0 0 20px rgba(255, 82, 82, 0.6))", "");
+        addLog("   3. Insights Panel: Red border (#ff5252)", "");
+        addLog("   4. Therapeutic orb should pulse with white light", "");
+        await sleep(4000);
+
+        addLog("Recovering to normal...", "");
+        setValues(75, 60);
+        await sleep(2000);
+
+        addLog("✓ Test 14 Complete - Verify red borders and glow in AR view", "pass");
+        testRunning = false;
+      }
+
+      async function runTest15() {
+        addLog("=== Test 15: Neutral State Reset ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS first (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(3000);
+
+        addLog("Switching to MODERATE state (HR: 154, HRV: 36)...", "");
+        setValues(154, 36);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Vitals Panel: Border rgba(100, 200, 255, 0.6)", "");
+        addLog("   2. Vitals Panel: NO box-shadow (glow removed)", "");
+        addLog("   3. Insights Panel: Border rgba(150, 150, 150, 0.4)", "");
+        addLog("   4. Clean reset - no residual glow effects", "");
+        await sleep(4000);
+
+        addLog("✓ Test 15 Complete - Verify neutral borders, no glow", "pass");
+        testRunning = false;
+      }
+
+      async function runTest16() {
+        addLog("=== Test 16: Panel Styling State Transitions ===", "");
+        testRunning = true;
+
+        addLog("Starting with CALM (HR: 75, HRV: 65)...", "");
+        setValues(75, 65);
+        await sleep(2000);
+
+        addLog("Transition 1: CALM → HIGH_STRESS (Blue glow)...", "");
+        setValues(160, 60);
+        await sleep(3000);
+
+        addLog("Transition 2: HIGH_STRESS → MODERATE (Neutral)...", "");
+        setValues(154, 36);
+        await sleep(3000);
+
+        addLog("Transition 3: MODERATE → BRADYCARDIA (Red glow)...", "");
+        setValues(48, 36);
+        await sleep(3000);
+
+        addLog("Transition 4: BRADYCARDIA → CALM (Neutral)...", "");
+        setValues(75, 65);
+        await sleep(3000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   - All border color transitions instant (no lag)", "");
+        addLog("   - Glow effects appear/disappear correctly", "");
+        addLog("   - No visual artifacts or flickering", "");
+        addLog("   - State text matches border colors", "");
+
+        addLog("✓ Test 16 Complete - Verify smooth panel transitions", "pass");
+        testRunning = false;
+      }
+
       async function runAllTests() {
         addLog("====================================", "");
         addLog("🚀 RUNNING FULL TEST SUITE", "pass");
@@ -655,6 +796,15 @@
         await runTest11();
         await sleep(2000);
         await runTest12();
+        await sleep(2000);
+        addLog("--- Task 2.4 State-Based Styling Tests ---", "");
+        await runTest13();
+        await sleep(2000);
+        await runTest14();
+        await sleep(2000);
+        await runTest15();
+        await sleep(2000);
+        await runTest16();
 
         addLog("====================================", "");
         addLog("✅ ALL TESTS COMPLETED", "pass");
