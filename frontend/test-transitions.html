@@ -729,13 +729,13 @@
         setValues(115, 22);
         await sleep(3000);
 
-        addLog("Switching to MODERATE state (HR: 154, HRV: 36)...", "");
-        setValues(154, 36);
+        addLog("Switching to MODERATE state (HR: 85, HRV: 36)...", "");
+        setValues(85, 36);
         await sleep(1000);
 
         addLog("✅ PASS CRITERIA:", "");
         addLog("   1. Vitals Panel: Border rgba(100, 200, 255, 0.6)", "");
-        addLog("   2. Vitals Panel: NO box-shadow (glow removed)", "");
+        addLog("   2. Vitals Panel: Box-shadow preserved (depth maintained)", "");
         addLog("   3. Insights Panel: Border rgba(150, 150, 150, 0.4)", "");
         addLog("   4. Clean reset - no residual glow effects", "");
         await sleep(4000);
@@ -753,11 +753,11 @@
         await sleep(2000);
 
         addLog("Transition 1: CALM → HIGH_STRESS (Blue glow)...", "");
-        setValues(160, 60);
+        setValues(110, 25);
         await sleep(3000);
 
         addLog("Transition 2: HIGH_STRESS → MODERATE (Neutral)...", "");
-        setValues(154, 36);
+        setValues(90, 36);
         await sleep(3000);
 
         addLog("Transition 3: MODERATE → BRADYCARDIA (Red glow)...", "");
