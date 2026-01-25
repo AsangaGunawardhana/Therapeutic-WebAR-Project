@@ -223,6 +223,10 @@
 
       let isPulsing = false;
 
+      // Breathing loop variables (Task 2.3)
+      let breathingInterval = null;
+      let currentBreathingStep = "IN"; // Alternates between IN and OUT
+
       function cctToHex(cctK) {
         // Simple mapping (enough for mock)
         if (cctK <= 3000) return "#FFD8A8"; // warm
@@ -236,6 +240,34 @@
       }
 
       // -----------------------------
+      // 3.5) Breathing Loop Functions (Task 2.3)
+      // -----------------------------
+      function startBreathingLoop() {
+        if (breathingInterval) return; // Already running
+
+        const coachingElement = document.getElementById("coachingText");
+
+        // Set initial message immediately (don't wait for first interval)
+        coachingElement.textContent = "BREATHE IN ⬆️";
+        currentBreathingStep = "IN";
+
+        breathingInterval = setInterval(() => {
+          if (currentBreathingStep === "IN") {
+            coachingElement.textContent = "BREATHE OUT ⬇️";
+            currentBreathingStep = "OUT";
+          } else {
+            coachingElement.textContent = "BREATHE IN ⬆️";
+            currentBreathingStep = "IN";
+          }
+        }, 4000); // 4 seconds for a natural therapeutic breath
+      }
+
+      function stopBreathingLoop() {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+      }
+
+      // -----------------------------
       // 4) Socket listener - Handle ar:command from server
       // -----------------------------
       socket.on("ar:command", (data) => {
@@ -244,11 +276,19 @@
         document.getElementById("liveHRV").textContent = data.vitals.hrv;
         document.getElementById("liveState").textContent = data.state;
 
-        // Map the patient guidance message to the bottom center panel
-        document.getElementById("coachingText").textContent = data.message_patient;
-
         // Map the clinical/scientific reasoning to the top right panel
-        document.getElementById("insightText").textContent = data.message_clinical;
+        document.getElementById("insightText").textContent =
+          data.message_clinical;
+
+        // Handle breathing loop for HIGH_STRESS state (Task 2.3)
+        if (data.state === "HIGH_STRESS") {
+          startBreathingLoop();
+        } else {
+          stopBreathingLoop();
+          // Reset to the default message from the server if not stressed
+          document.getElementById("coachingText").textContent =
+            data.message_patient;
+        }
 
         const v = data.visual;
 
