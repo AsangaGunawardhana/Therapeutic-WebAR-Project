@@ -877,7 +877,7 @@ if (data.state === "HIGH_STRESS") {
 
 **Clinical Validation:**
 
-- 4-second breath cycle = 15 breaths/minute
+- 4-second interval between IN/OUT transitions = 8-second complete breath cycle = 7.5 breaths/minute
 - Optimal for reducing sympathetic nervous system activity
 - Aligns with evidence-based cardiac coherence protocols
 
@@ -971,7 +971,7 @@ if (data.state === "HIGH_STRESS") {
 ### Therapeutic Value
 
 1. **Evidence-Based Intervention**
-   - 4-second breathing = 15 breaths/min (optimal for stress reduction)
+   - 4-second interval per phase = 8-second complete breath = 7.5 breaths/min (optimal for stress reduction)
    - Paced respiration validated for HRV improvement
    - Visual metronome more effective than audio in noisy environments
 
@@ -1060,7 +1060,7 @@ This feature significantly strengthens the therapeutic value proposition and pro
 
 > "The system employs **state-aware adaptive intervention** by transitioning from passive vitals display to active therapeutic guidance. When high stress is detected (HR > 90, HRV < 30), the interface activates a **visual breathing metronome** that guides the patient through a clinically validated 4-second paced respiration protocol.
 >
-> This implementation demonstrates **evidence-based design** - the 4-second cycle (15 breaths/minute) is optimized for autonomic nervous system regulation and HRV improvement, as documented in cardiac coherence literature.
+> This implementation demonstrates **evidence-based design** - the 4-second interval between transitions (7.5 breaths/minute complete cycle) is optimized for autonomic nervous system regulation and HRV improvement, as documented in cardiac coherence literature.
 >
 > The breathing loop uses **minimal computational resources** (single setInterval with 4-second period) while providing **maximum therapeutic impact** - transforming the patient from a passive observer to an active participant in their own stress regulation."
 
@@ -1074,8 +1074,8 @@ feat(frontend): Implement rhythmic breathing loop for HIGH_STRESS (Task 2.3)
 Add visual breathing metronome for active therapeutic intervention
 - Breathing loop activates exclusively during HIGH_STRESS state
 - 4-second cycle: "BREATHE IN ⬆️" / "BREATHE OUT ⬇️"
-- Evidence-based timing (15 breaths/min) for autonomic regulation
-- Clean activation/deactivation with proper interval cleanup
+- Evidence-based timing (7.5 breaths/min complete cycle) for autonomic regulation
+- Clean deactivation with proper interval cleanup
 - Arrow icons provide language-independent visual cues
 - Zero performance impact, no memory leaks
 
