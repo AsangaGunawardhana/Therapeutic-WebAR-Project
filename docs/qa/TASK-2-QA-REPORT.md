@@ -222,7 +222,7 @@ document.getElementById("liveState").textContent = data.state;
 - `textContent` is the fastest DOM text update method
 - Color transitions use `lerp()` for smooth 1.5-second fade
 - No layout thrashing (reading and writing in separate phases)
-- Socket.IO handles debouncing automatically (slider updates throttled)
+- Server-side debouncing throttles slider updates (implemented in server.js)
 
 **Benchmarks:**
 

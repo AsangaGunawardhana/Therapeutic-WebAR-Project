@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Client (Three.js Mock)</title>
     <style>
       body {
@@ -251,9 +252,15 @@
         // (vitals may change while still in HIGH_STRESS)
         patientMessage = contextMessage;
 
-        if (breathingInterval) return; // Interval already running, message updated
-
         const coachingElement = document.getElementById("coachingText");
+
+        // Update UI immediately with current step and new message
+        if (breathingInterval) {
+          // Interval already running - update current display with new message
+          const currentStep = currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
+          coachingElement.textContent = patientMessage + " " + currentStep;
+          return;
+        }
 
         // Set initial message immediately (don't wait for first interval)
         coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
