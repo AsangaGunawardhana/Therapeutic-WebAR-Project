@@ -34,6 +34,7 @@
     >
       <!-- Top-Left: Vitals Panel -->
       <div
+        id="vitalsPanel"
         style="
           position: absolute;
           top: 20px;
@@ -120,6 +121,7 @@
 
       <!-- Top-Right: Clinical Insights -->
       <div
+        id="insightsPanel"
         style="
           position: absolute;
           top: 20px;
@@ -279,6 +281,27 @@
         // Map the clinical/scientific reasoning to the top right panel
         document.getElementById("insightText").textContent =
           data.message_clinical;
+
+        // --- Task 2.4: State-Based Styling (Visual Cues) ---
+        const vPanel = document.getElementById("vitalsPanel");
+        const iPanel = document.getElementById("insightsPanel");
+
+        if (data.state === "HIGH_STRESS") {
+          // Apply Calming Blue Glow
+          vPanel.style.borderColor = "#2e8bff";
+          vPanel.style.boxShadow = "0 0 20px rgba(46, 139, 255, 0.6)";
+          iPanel.style.borderColor = "#2e8bff";
+        } else if (data.state === "BRADYCARDIA_ALERT") {
+          // Apply Urgent Red Glow
+          vPanel.style.borderColor = "#ff5252";
+          vPanel.style.boxShadow = "0 0 20px rgba(255, 82, 82, 0.6)";
+          iPanel.style.borderColor = "#ff5252";
+        } else {
+          // Reset to Neutral
+          vPanel.style.borderColor = "rgba(100, 200, 255, 0.6)";
+          vPanel.style.boxShadow = "none";
+          iPanel.style.borderColor = "rgba(150, 150, 150, 0.4)";
+        }
 
         // Handle breathing loop for HIGH_STRESS state (Task 2.3)
         if (data.state === "HIGH_STRESS") {
