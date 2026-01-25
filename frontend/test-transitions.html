@@ -210,6 +210,32 @@
           </p>
         </div>
 
+        <h3>Task 2.3: Breathing Loop Tests</h3>
+
+        <div class="test-scenario">
+          <strong>Test 10: Breathing Loop Activation</strong><br />
+          <button class="test-button" onclick="runTest10()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify breathing loop starts in HIGH_STRESS
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 11: 4-Second Timing</strong><br />
+          <button class="test-button" onclick="runTest11()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify 4-second breathing cycle timing
+          </p>
+        </div>
+
+        <div class="test-scenario">
+          <strong>Test 12: Breathing Loop Deactivation</strong><br />
+          <button class="test-button" onclick="runTest12()">Run Test</button>
+          <p style="font-size: 12px; margin: 5px 0">
+            Verify loop stops when leaving HIGH_STRESS
+          </p>
+        </div>
+
         <button
           class="test-button"
           onclick="runAllTests()"
@@ -266,7 +292,7 @@
           `State: ${cmd.state} | Color: ${color} | Intensity: ${cmd.visual.intensity}`,
           "",
         );
-        
+
         // Task 2.2 QA: Log coaching and clinical messages
         if (cmd.message_patient) {
           addLog(`📢 Coaching: "${cmd.message_patient}"`, "");
@@ -432,8 +458,14 @@
         setValues(115, 22);
         await sleep(2000);
 
-        addLog("Expected Coaching: 'Let's slow down. The room will shift to a calming mode.'", "");
-        addLog("Expected Clinical: Blue light (475 nm) science explanation", "");
+        addLog(
+          "Expected Coaching: 'Let's slow down. The room will shift to a calming mode.'",
+          "",
+        );
+        addLog(
+          "Expected Clinical: Blue light (475 nm) science explanation",
+          "",
+        );
         await sleep(2000);
 
         addLog("✓ Test 6 Complete - Verify messages in AR view", "pass");
@@ -480,7 +512,10 @@
         setValues(45, 30);
         await sleep(2000);
 
-        addLog("Expected Coaching: 'Your heart rate is low. Please rest and call a nurse.'", "");
+        addLog(
+          "Expected Coaching: 'Your heart rate is low. Please rest and call a nurse.'",
+          "",
+        );
         addLog("Expected Clinical: Bradycardia alert explanation", "");
         await sleep(3000);
 
@@ -488,7 +523,105 @@
         setValues(75, 60);
         await sleep(1000);
 
-        addLog("✓ Test 9 Complete - Verify alert messages and pulse effect", "pass");
+        addLog(
+          "✓ Test 9 Complete - Verify alert messages and pulse effect",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest10() {
+        addLog("=== Test 10: Breathing Loop ACTIVATION ===", "");
+        testRunning = true;
+
+        addLog("Setting CALM state first (HR: 70, HRV: 65)...", "");
+        setValues(70, 65);
+        await sleep(2000);
+
+        addLog("⚡ ACTIVATING HIGH_STRESS (HR: 115, HRV: 22)...", "");
+        setValues(115, 22);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA: Bottom panel should now alternate:", "");
+        addLog("   - '保持呼吸... BREATHE IN ⬆️' (4 sec)", "");
+        addLog("   - '保持呼吸... BREATHE OUT ⬇️' (4 sec)", "");
+        addLog("Observing for 12 seconds (3 cycles)...", "");
+        await sleep(12000);
+
+        addLog("✓ Test 10 Complete - Check AR view for breathing loop", "pass");
+        testRunning = false;
+      }
+
+      async function runTest11() {
+        addLog("=== Test 11: 4-SECOND TIMING TEST ===", "");
+        testRunning = true;
+
+        addLog("Setting HIGH_STRESS (HR: 110, HRV: 25)...", "");
+        setValues(110, 25);
+        await sleep(1000);
+
+        addLog("⏱️ TIMING VERIFICATION (Medical Sweet Spot = 4 seconds):", "");
+        addLog("Starting timer...", "");
+
+        const startTime = Date.now();
+        await sleep(4000);
+        const firstSwitch = Date.now();
+        addLog(
+          `First switch at: ${((firstSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        await sleep(4000);
+        const secondSwitch = Date.now();
+        addLog(
+          `Second switch at: ${((secondSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        await sleep(4000);
+        const thirdSwitch = Date.now();
+        addLog(
+          `Third switch at: ${((thirdSwitch - startTime) / 1000).toFixed(1)}s`,
+          "",
+        );
+
+        addLog("✅ PASS CRITERIA: Each interval should be ~4.0 seconds", "");
+        addLog(
+          "✓ Test 11 Complete - Verify timing consistency in AR view",
+          "pass",
+        );
+        testRunning = false;
+      }
+
+      async function runTest12() {
+        addLog("=== Test 12: Breathing Loop DEACTIVATION ===", "");
+        testRunning = true;
+
+        addLog(
+          "Setting HIGH_STRESS to activate loop (HR: 115, HRV: 20)...",
+          "",
+        );
+        setValues(115, 20);
+        await sleep(8000); // Let breathing loop run for 2 cycles
+
+        addLog("⚡ DEACTIVATING - Switching to CALM (HR: 70, HRV: 70)...", "");
+        setValues(70, 70);
+        await sleep(1000);
+
+        addLog("✅ PASS CRITERIA:", "");
+        addLog("   1. Breathing loop must STOP immediately", "");
+        addLog("   2. Text must return to normal message:", "");
+        addLog(
+          "      'You're recovering well. Keeping the room comfortable.'",
+          "",
+        );
+        addLog("   3. NO flickering between breathing and normal messages", "");
+        await sleep(3000);
+
+        addLog("Verifying stability (observing for 6 seconds)...", "");
+        await sleep(6000);
+
+        addLog("✓ Test 12 Complete - Verify clean deactivation", "pass");
         testRunning = false;
       }
 
@@ -515,6 +648,13 @@
         await runTest8();
         await sleep(2000);
         await runTest9();
+        await sleep(2000);
+        addLog("--- Task 2.3 Breathing Loop Tests ---", "");
+        await runTest10();
+        await sleep(2000);
+        await runTest11();
+        await sleep(2000);
+        await runTest12();
 
         addLog("====================================", "");
         addLog("✅ ALL TESTS COMPLETED", "pass");
