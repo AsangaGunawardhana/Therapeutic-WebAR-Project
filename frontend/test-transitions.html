@@ -442,7 +442,7 @@
         setValues(75, 60);
         await sleep(2000);
 
-        addLog("⚠ TRIGGERING BRADYCARDIA (HR: 45)...", "fail");
+        addLog("⚠ TRIGGERING BRADYCARDIA (HR: 45)...", "");
         setValues(45, 60);
         await sleep(3000);
 
@@ -493,7 +493,7 @@
         await sleep(2000);
 
         addLog(
-          "Expected Coaching: 'Let's slow down. The room will shift to a calming mode.'",
+          "Expected Coaching: Message about slowing down and calming mode",
           "",
         );
         addLog(
@@ -577,8 +577,8 @@
         await sleep(1000);
 
         addLog("✅ PASS CRITERIA: Bottom panel should now alternate:", "");
-        addLog("   - '保持呼吸... BREATHE IN ⬆️' (4 sec)", "");
-        addLog("   - '保持呼吸... BREATHE OUT ⬇️' (4 sec)", "");
+        addLog("   - 'BREATHE IN ⬆️' (4 sec)", "");
+        addLog("   - 'BREATHE OUT ⬇️' (4 sec)", "");
         addLog("Observing for 12 seconds (3 cycles)...", "");
         await sleep(12000);
 
@@ -673,12 +673,18 @@
 
         addLog("✅ PASS CRITERIA:", "");
         addLog("   1. Vitals Panel: Blue border (#2e8bff)", "");
-        addLog("   2. Vitals Panel: Blue glow (0 0 20px rgba(46, 139, 255, 0.6))", "");
+        addLog(
+          "   2. Vitals Panel: Blue glow (0 0 20px rgba(46, 139, 255, 0.6))",
+          "",
+        );
         addLog("   3. Insights Panel: Blue border (#2e8bff)", "");
         addLog("   4. Therapeutic orb should also be blue", "");
         await sleep(4000);
 
-        addLog("✓ Test 13 Complete - Verify blue borders and glow in AR view", "pass");
+        addLog(
+          "✓ Test 13 Complete - Verify blue borders and glow in AR view",
+          "pass",
+        );
         testRunning = false;
       }
 
@@ -690,13 +696,16 @@
         setValues(75, 60);
         await sleep(2000);
 
-        addLog("⚠️ TRIGGERING BRADYCARDIA (HR: 48, HRV: 36)...", "fail");
+        addLog("⚠️ TRIGGERING BRADYCARDIA (HR: 48, HRV: 36)...", "");
         setValues(48, 36);
         await sleep(1000);
 
         addLog("✅ PASS CRITERIA:", "");
         addLog("   1. Vitals Panel: Red border (#ff5252)", "");
-        addLog("   2. Vitals Panel: Red glow (0 0 20px rgba(255, 82, 82, 0.6))", "");
+        addLog(
+          "   2. Vitals Panel: Red glow (0 0 20px rgba(255, 82, 82, 0.6))",
+          "",
+        );
         addLog("   3. Insights Panel: Red border (#ff5252)", "");
         addLog("   4. Therapeutic orb should pulse with white light", "");
         await sleep(4000);
@@ -705,7 +714,10 @@
         setValues(75, 60);
         await sleep(2000);
 
-        addLog("✓ Test 14 Complete - Verify red borders and glow in AR view", "pass");
+        addLog(
+          "✓ Test 14 Complete - Verify red borders and glow in AR view",
+          "pass",
+        );
         testRunning = false;
       }
 
