@@ -247,9 +247,12 @@
       let patientMessage = ""; // Store the HIGH_STRESS message context
 
       function startBreathingLoop(contextMessage = "") {
-        if (breathingInterval) return; // Already running
+        // Update patient message even if interval is already running
+        // (vitals may change while still in HIGH_STRESS)
+        patientMessage = contextMessage;
 
-        patientMessage = contextMessage; // Store for reuse in interval
+        if (breathingInterval) return; // Interval already running, message updated
+
         const coachingElement = document.getElementById("coachingText");
 
         // Set initial message immediately (don't wait for first interval)
@@ -264,12 +267,13 @@
             coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
             currentBreathingStep = "IN";
           }
-        }, 4000); // 4 seconds for a natural therapeutic breath
+        }, 4000); // 4 seconds per phase (8-second complete cycle)
       }
 
       function stopBreathingLoop() {
         clearInterval(breathingInterval);
         breathingInterval = null;
+        currentBreathingStep = null; // Reset phase for next cycle
       }
 
       // -----------------------------

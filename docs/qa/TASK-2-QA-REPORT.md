@@ -402,7 +402,7 @@ Task 2.2 (Dynamic Message Mapping) has been successfully implemented and tested.
 
 ## Implementation Details
 
-**Code Changes:** [frontend/ar.html](frontend/ar.html#L250-L252)
+**Code Changes:** [frontend/ar.html](../../frontend/ar.html#L250-L252)
 
 ```javascript
 socket.on("ar:command", (data) => {
@@ -772,7 +772,7 @@ Task 2.3 (Rhythmic Breathing Loop) has been successfully implemented and tested.
 
 ## Implementation Details
 
-**Code Changes:** [frontend/ar.html](frontend/ar.html)
+**Code Changes:** [frontend/ar.html](../../frontend/ar.html)
 
 ### 1. Breathing Variables
 
@@ -877,7 +877,7 @@ if (data.state === "HIGH_STRESS") {
 
 **Clinical Validation:**
 
-- 4-second interval between IN/OUT transitions = 8-second complete breath cycle = 7.5 breaths/minute
+- 4-second interval per phase (IN/OUT) = 8-second complete breath cycle = 7.5 breaths/minute (0.125 Hz resonance frequency)
 - Optimal for reducing sympathetic nervous system activity
 - Aligns with evidence-based cardiac coherence protocols
 
@@ -1043,7 +1043,7 @@ The rhythmic breathing loop is a **masterclass feature** that elevates the syste
 **Key Achievements:**
 
 - 4/4 test criteria passed (Trigger, Rhythm, Cleanup, Visual Clarity)
-- Clinically validated 4-second breathing cycle
+- Clinically validated breathing intervention (4 seconds per phase, 8-second total cycle)
 - Clean activation/deactivation logic
 - Zero performance or memory issues
 - Professional UX with arrow icon guidance
@@ -1060,7 +1060,7 @@ This feature significantly strengthens the therapeutic value proposition and pro
 
 > "The system employs **state-aware adaptive intervention** by transitioning from passive vitals display to active therapeutic guidance. When high stress is detected (HR > 90, HRV < 30), the interface activates a **visual breathing metronome** that guides the patient through a clinically validated 4-second paced respiration protocol.
 >
-> This implementation demonstrates **evidence-based design** - the 4-second interval between transitions (7.5 breaths/minute complete cycle) is optimized for autonomic nervous system regulation and HRV improvement, as documented in cardiac coherence literature.
+> This implementation demonstrates **evidence-based design** - the 4-second interval per phase (8-second complete cycle, 7.5 breaths/minute = 0.125 Hz resonance frequency) is optimized for autonomic nervous system regulation and HRV improvement, as documented in cardiac coherence literature.
 >
 > The breathing loop uses **minimal computational resources** (single setInterval with 4-second period) while providing **maximum therapeutic impact** - transforming the patient from a passive observer to an active participant in their own stress regulation."
 
@@ -1073,7 +1073,7 @@ feat(frontend): Implement rhythmic breathing loop for HIGH_STRESS (Task 2.3)
 
 Add visual breathing metronome for active therapeutic intervention
 - Breathing loop activates exclusively during HIGH_STRESS state
-- 4-second cycle: "BREATHE IN ⬆️" / "BREATHE OUT ⬇️"
+- 4-second per phase cycle: "BREATHE IN ⬆️" / "BREATHE OUT ⬇️"
 - Evidence-based timing (7.5 breaths/min complete cycle) for autonomic regulation
 - Clean deactivation with proper interval cleanup
 - Arrow icons provide language-independent visual cues
