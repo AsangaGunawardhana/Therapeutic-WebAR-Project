@@ -244,21 +244,24 @@
       // -----------------------------
       // 3.5) Breathing Loop Functions (Task 2.3)
       // -----------------------------
-      function startBreathingLoop() {
+      let patientMessage = ""; // Store the HIGH_STRESS message context
+
+      function startBreathingLoop(contextMessage = "") {
         if (breathingInterval) return; // Already running
 
+        patientMessage = contextMessage; // Store for reuse in interval
         const coachingElement = document.getElementById("coachingText");
 
         // Set initial message immediately (don't wait for first interval)
-        coachingElement.textContent = "BREATHE IN ⬆️";
+        coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
         currentBreathingStep = "IN";
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
-            coachingElement.textContent = "BREATHE OUT ⬇️";
+            coachingElement.textContent = patientMessage + " BREATHE OUT ⬇️";
             currentBreathingStep = "OUT";
           } else {
-            coachingElement.textContent = "BREATHE IN ⬆️";
+            coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
             currentBreathingStep = "IN";
           }
         }, 4000); // 4 seconds for a natural therapeutic breath
@@ -305,7 +308,7 @@
 
         // Handle breathing loop for HIGH_STRESS state (Task 2.3)
         if (data.state === "HIGH_STRESS") {
-          startBreathingLoop();
+          startBreathingLoop(data.message_patient);
         } else {
           stopBreathingLoop();
           // Reset to the default message from the server if not stressed
