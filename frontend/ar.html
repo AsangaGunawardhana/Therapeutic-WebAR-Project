@@ -220,12 +220,26 @@
       });
       const therapeuticOrb = new THREE.Mesh(geometry, material);
       scene.add(therapeuticOrb);
-      
+
       // AR Positioning: Move orb down for more natural AR experience
       therapeuticOrb.position.set(0, -0.5, 0); // Moves it down by 0.5 units
-      
-      // AR Polish: Add soft glow effect for better visibility in real environments
-      therapeuticOrb.material.emissiveIntensity = 0.5; // Soft magical glow
+
+      // HCI Enhancement: Glowing Orb Effect (Visual Focus & Bloom)
+      // Enhances visibility and creates a premium, professional look
+      therapeuticOrb.material.emissiveIntensity = 0.8; // Increased glow intensity
+      therapeuticOrb.material.transparent = true;
+      therapeuticOrb.material.opacity = 0.9;
+
+      // Add Glow Mesh (The Aura) - Creates a soft outer glow effect
+      const glowGeometry = new THREE.SphereGeometry(0.45, 64, 64); // Slightly larger than orb
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: therapeuticOrb.material.color,
+        transparent: true,
+        opacity: 0.2, // Subtle transparency for aura effect
+        side: THREE.BackSide, // Render from inside to create glow
+      });
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      therapeuticOrb.add(glowMesh); // Attach glow to orb so they move together
 
       // Resize
       function resize() {
