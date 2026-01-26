@@ -2,7 +2,11 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Mobile AR Optimization: Prevents zooming and ensures proper scaling on mobile devices -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>AR Client (Three.js Mock)</title>
     <style>
       body {
@@ -14,6 +18,17 @@
         width: 100vw;
         height: 100vh;
         display: block;
+      }
+      /* Mobile AR Camera Feed Styling */
+      /* This video element displays the phone's rear camera feed */
+      #video-background {
+        position: fixed; /* Stays in place, doesn't scroll */
+        top: 0;
+        left: 0;
+        width: 100vw; /* Full viewport width */
+        height: 100vh; /* Full viewport height */
+        object-fit: cover; /* Fills screen without distortion */
+        z-index: -1; /* Behind all other elements (HUD & Orb) */
       }
     </style>
   </head>
@@ -194,7 +209,8 @@
       scene.add(dir);
 
       // Therapeutic Orb
-      const geometry = new THREE.SphereGeometry(0.8, 64, 64);
+      // Mobile AR Optimization: Reduced size from 0.8 to 0.4 for better visibility on small screens
+      const geometry = new THREE.SphereGeometry(0.4, 64, 64);
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color("#ffffff"),
         emissive: new THREE.Color("#000000"),
@@ -388,6 +404,38 @@
         renderer.render(scene, camera);
       }
       animate(); // Start the animation loop
+
+      // ========================================
+      // MOBILE AR: Camera Activation Function
+      // ========================================
+      // This function requests access to the phone's rear camera
+      // and displays the live feed behind the 3D scene
+      async function startCamera() {
+        try {
+          // Request camera access - 'environment' = rear camera
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+
+          // Create a <video> element to display the camera feed
+          const video = document.createElement("video");
+          video.id = "video-background"; // Links to CSS styling above
+          video.autoplay = true; // Starts playing automatically
+          video.playsInline = true; // Required for iOS/Safari to play inline
+          video.srcObject = stream; // Connect camera stream to video element
+          document.body.appendChild(video); // Add to page
+
+          // Make Three.js background transparent so camera feed shows through
+          renderer.setClearColor(0x000000, 0); // (color, alpha) - alpha 0 = fully transparent
+        } catch (err) {
+          // If user denies camera permission or camera not available
+          alert("Camera Error: Please allow camera access.");
+          console.error(err);
+        }
+      }
+
+      // Start camera automatically when page finishes loading
+      window.addEventListener("load", startCamera);
     </script>
   </body>
 </html>
