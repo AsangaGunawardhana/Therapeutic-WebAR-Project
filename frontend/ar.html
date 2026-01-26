@@ -257,7 +257,8 @@
         // Update UI immediately with current step and new message
         if (breathingInterval) {
           // Interval already running - update current display with new message
-          const currentStep = currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
+          const currentStep =
+            currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
           coachingElement.textContent = patientMessage + " " + currentStep;
           return;
         }
