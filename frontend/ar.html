@@ -30,6 +30,97 @@
         object-fit: cover; /* Fills screen without distortion */
         z-index: -1; /* Behind all other elements (HUD & Orb) */
       }
+
+      /* HCI Enhancement: Smooth UI Transitions (Reduces Cognitive Load) */
+      /* Creates a premium, professional feel with gradual entrance animation */
+      #medicalHUD {
+        animation: slideUp 1.2s ease-out forwards;
+      }
+
+      @keyframes slideUp {
+        0% {
+          transform: translateY(100px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* HCI Enhancement: Responsive Design for Mobile */
+      /* Professional layout: Top = Coaching, Center = Orb, Bottom = Dashboard Zone */
+      @media (max-width: 768px) {
+        /* Coaching Text - Top only, clear focus */
+        #coachingText {
+          bottom: auto !important;
+          top: 15px !important;
+          left: 50% !important;
+          right: auto !important;
+          width: 90% !important;
+          transform: translateX(-50%) !important;
+          max-width: none !important;
+          background: rgba(0, 100, 150, 0.9) !important;
+          padding: 14px 18px !important;
+          font-size: 15px !important;
+          font-weight: 600 !important;
+          border: 1px solid rgba(100, 200, 255, 0.6) !important;
+          border-radius: 10px !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          text-align: center !important;
+        }
+
+        /* Dashboard Zone: Vitals Panel - Bottom area (very close to insights) */
+        #vitalsPanel {
+          top: 100px !important;
+          bottom: auto !important; /* Just above insights - compact dashboard */
+          left: 5% !important;
+          right: 5% !important;
+          width: 30% !important;
+          min-width: auto !important;
+          max-width: none !important;
+          background: rgba(0, 20, 40, 0.92) !important;
+          padding: 8px 8px !important;
+          border-radius: 10px !important;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+
+        /* Dashboard Zone: Insights Panel - Very bottom */
+        #insightsPanel {
+          top: 100px !important;
+          bottom: auto !important; /* Very bottom of screen */
+          left: 55% !important;
+          right: 55% !important;
+          width: 30% !important;
+          min-width: auto !important;
+          max-width: none !important;
+          background: rgba(20, 20, 20, 0.92) !important;
+          padding: 6px 8px !important;
+          border-radius: 10px !important;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          max-height: 180px !important; /* Compact height */
+          overflow-y: auto !important; /* Scroll if needed */
+        }
+
+        /* Compact text for narrow screens */
+        #vitalsPanel div,
+        #insightsPanel div {
+          font-size: 11px !important;
+          line-height: 1.4 !important;
+        }
+
+        #liveHR,
+        #liveHRV {
+          font-size: 22px !important;
+        }
+
+        #liveState {
+          font-size: 14px !important;
+        }
+      }
     </style>
   </head>
   <body>
