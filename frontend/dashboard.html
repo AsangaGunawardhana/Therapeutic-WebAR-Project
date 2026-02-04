@@ -1,45 +1,242 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Dashboard (Biometric Simulator)</title>
-</head>
-<body>
-  <h2>Dashboard (Biometric Simulator)</h2>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Dashboard (Biometric Simulator)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-  <label>HR: <b id="hrVal">80</b></label><br/>
-  <input type="range" id="hr" min="40" max="160" value="80" />
-  <br/><br/>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
 
-  <label>HRV: <b id="hrvVal">60</b></label><br/>
-  <input type="range" id="hrv" min="10" max="120" value="60" />
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
 
-  <p>Socket: <b id="status">Disconnected</b></p>
-  <p>Last sent: <span id="sent">-</span></p>
+      h2 {
+        margin: 0 0 25px 0;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 600;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
-    const hr = document.getElementById("hr");
-    const hrv = document.getElementById("hrv");
-    const hrVal = document.getElementById("hrVal");
-    const hrvVal = document.getElementById("hrvVal");
-    const status = document.getElementById("status");
-    const sent = document.getElementById("sent");
+      .control-group {
+        margin-bottom: 25px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 18px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
 
-    socket.on("connect", () => status.textContent = "Connected");
-    socket.on("disconnect", () => status.textContent = "Disconnected");
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 16px;
+        font-weight: 500;
+      }
 
-    function sendUpdate() {
-      const data = { hr: Number(hr.value), hrv: Number(hrv.value) };
-      socket.emit("bio:update", data);
-      sent.textContent = JSON.stringify(data);
-    }
+      label b {
+        color: #64c8ff;
+        font-size: 28px;
+        margin-left: 8px;
+      }
 
-    hr.addEventListener("input", () => { hrVal.textContent = hr.value; sendUpdate(); });
-    hrv.addEventListener("input", () => { hrvVal.textContent = hrv.value; sendUpdate(); });
+      input[type="range"] {
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        outline: none;
+        -webkit-appearance: none;
+        margin-top: 10px;
+      }
 
-    sendUpdate(); // send once when page loads
-  </script>
-</body>
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #64c8ff;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(100, 200, 255, 0.5);
+        transition: all 0.2s ease;
+      }
+
+      input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+        background: #4fc3f7;
+      }
+
+      input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #64c8ff;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 8px rgba(100, 200, 255, 0.5);
+        transition: all 0.2s ease;
+      }
+
+      input[type="range"]::-moz-range-thumb:hover {
+        transform: scale(1.1);
+        background: #4fc3f7;
+      }
+
+      .status-info {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        border-left: 4px solid #64c8ff;
+      }
+
+      .status-info p {
+        margin: 8px 0;
+        font-size: 14px;
+      }
+
+      .status-info b {
+        color: #64c8ff;
+        font-weight: 600;
+      }
+
+      /* Mobile responsive adjustments */
+      @media (max-width: 768px) {
+        body {
+          padding: 15px;
+        }
+
+        .container {
+          padding: 20px;
+        }
+
+        h2 {
+          font-size: 20px;
+          margin-bottom: 20px;
+        }
+
+        .control-group {
+          padding: 15px;
+          margin-bottom: 20px;
+        }
+
+        label {
+          font-size: 14px;
+        }
+
+        label b {
+          font-size: 24px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 10px;
+        }
+
+        .container {
+          padding: 15px;
+        }
+
+        h2 {
+          font-size: 18px;
+          margin-bottom: 15px;
+        }
+
+        .control-group {
+          padding: 12px;
+          margin-bottom: 15px;
+        }
+
+        label {
+          font-size: 13px;
+        }
+
+        label b {
+          font-size: 20px;
+        }
+
+        .status-info {
+          padding: 12px;
+        }
+
+        .status-info p {
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Dashboard (Biometric Simulator)</h2>
+
+      <div class="control-group">
+        <label>HR: <b id="hrVal">80</b></label>
+        <input type="range" id="hr" min="40" max="160" value="80" />
+      </div>
+
+      <div class="control-group">
+        <label>HRV: <b id="hrvVal">60</b></label>
+        <input type="range" id="hrv" min="10" max="120" value="60" />
+      </div>
+
+      <div class="status-info">
+        <p>Socket: <b id="status">Disconnected</b></p>
+        <p>Last sent: <span id="sent">-</span></p>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const hr = document.getElementById("hr");
+      const hrv = document.getElementById("hrv");
+      const hrVal = document.getElementById("hrVal");
+      const hrvVal = document.getElementById("hrvVal");
+      const status = document.getElementById("status");
+      const sent = document.getElementById("sent");
+
+      socket.on("connect", () => (status.textContent = "Connected"));
+      socket.on("disconnect", () => (status.textContent = "Disconnected"));
+
+      function sendUpdate() {
+        const data = { hr: Number(hr.value), hrv: Number(hrv.value) };
+        socket.emit("bio:update", data);
+        sent.textContent = JSON.stringify(data);
+      }
+
+      hr.addEventListener("input", () => {
+        hrVal.textContent = hr.value;
+        sendUpdate();
+      });
+      hrv.addEventListener("input", () => {
+        hrvVal.textContent = hrv.value;
+        sendUpdate();
+      });
+
+      sendUpdate(); // send once when page loads
+    </script>
+  </body>
 </html>
