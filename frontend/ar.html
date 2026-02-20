@@ -384,7 +384,6 @@
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color("#ffffff"),
         emissive: new THREE.Color("#000000"),
-        emissiveIntensity: 0.2,
         roughness: 0.4,
         metalness: 0.1,
       });
@@ -403,7 +402,7 @@
       // Add Glow Mesh (The Aura) - Creates a soft outer glow effect
       const glowGeometry = new THREE.SphereGeometry(0.45, 64, 64); // Slightly larger than orb
       const glowMaterial = new THREE.MeshBasicMaterial({
-        color: therapeuticOrb.material.color,
+        color: 0xffffff, // Initial color; will be synced to orb color in animate loop
         transparent: true,
         opacity: 0.2, // Subtle transparency for aura effect
         side: THREE.BackSide, // Render from inside to create glow
@@ -585,6 +584,9 @@
         // Apply color to ambient light (room wash effect)
         ambientLight.color.copy(currentColor);
 
+        // Sync glow aura color to match orb during state transitions
+        glowMesh.material.color.copy(currentColor);
+
         // Pulse animation for bradycardia alert
         if (isPulsing) {
           const scale = 1.0 + Math.sin(Date.now() * 0.005) * 0.15; // Pulse between 0.85 and 1.15
@@ -600,10 +602,13 @@
       // ========================================
       // This function requests access to the phone's rear camera
       // and displays the live feed behind the 3D scene
+      // Note: Requires HTTPS or localhost for getUserMedia to work
+      let cameraStream = null; // Store stream reference for cleanup
+
       async function startCamera() {
         try {
           // Request camera access - 'environment' = rear camera
-          const stream = await navigator.mediaDevices.getUserMedia({
+          cameraStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" },
           });
 
@@ -612,17 +617,24 @@
           video.id = "video-background"; // Links to CSS styling above
           video.autoplay = true; // Starts playing automatically
           video.playsInline = true; // Required for iOS/Safari to play inline
-          video.srcObject = stream; // Connect camera stream to video element
+          video.srcObject = cameraStream; // Connect camera stream to video element
           document.body.appendChild(video); // Add to page
 
           // Make Three.js background transparent so camera feed shows through
           renderer.setClearColor(0x000000, 0); // (color, alpha) - alpha 0 = fully transparent
         } catch (err) {
           // If user denies camera permission or camera not available
-          alert("Camera Error: Please allow camera access.");
+          alert("Camera Error: Please allow camera access. Note: Camera requires HTTPS or localhost.");
           console.error(err);
         }
       }
+
+      // Cleanup camera stream when page is closed
+      window.addEventListener("beforeunload", () => {
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+        }
+      });
 
       // Start camera automatically when page finishes loading
       window.addEventListener("load", startCamera);
