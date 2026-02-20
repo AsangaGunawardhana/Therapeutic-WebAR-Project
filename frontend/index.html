@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
-    <title>Socket.IO Latency Test</title>
+    <title>Therapeutic Environment Setup</title>
     <style>
       * {
         box-sizing: border-box;
@@ -17,38 +17,179 @@
         padding: 20px;
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: #fff;
+        background: linear-gradient(135deg, #e8f4f8 0%, #f7f9fc 100%);
+        color: #2c3e50;
         min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .setup-container {
+        max-width: 500px;
+        width: 100%;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e1e8ed;
       }
 
       h2 {
         text-align: center;
-        margin: 0 0 25px 0;
-        font-size: 24px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        margin: 0 0 12px 0;
+        font-size: 26px;
+        font-weight: 600;
+        color: #1a365d;
       }
 
-      #log {
-        max-width: 800px;
-        margin: 0 auto;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        max-height: 70vh;
-        overflow-y: auto;
-      }
-
-      #log p {
-        margin: 8px 0;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        border-left: 3px solid #64c8ff;
-        border-radius: 4px;
+      .subtitle {
+        text-align: center;
+        margin: 0 0 32px 0;
         font-size: 14px;
-        word-wrap: break-word;
+        color: #64748b;
+        line-height: 1.6;
+      }
+
+      .form-group {
+        margin-bottom: 28px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #334155;
+      }
+
+      select {
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #1e293b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+
+      select:hover {
+        border-color: #cbd5e1;
+        background: #ffffff;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .toggle-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        padding: 16px 18px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        margin-bottom: 32px;
+        transition: all 0.2s ease;
+      }
+
+      .toggle-group:hover {
+        background: #ffffff;
+        border-color: #cbd5e1;
+      }
+
+      .toggle-group label {
+        margin: 0;
+        font-size: 14px;
+        color: #334155;
+      }
+
+      /* Custom Toggle Switch */
+      .toggle-switch {
+        position: relative;
+        width: 52px;
+        height: 28px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #cbd5e1;
+        transition: 0.3s;
+        border-radius: 28px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: #3b82f6;
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(24px);
+      }
+
+      #launchBtn {
+        width: 100%;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #ffffff;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      #launchBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+      }
+
+      #launchBtn:active {
+        transform: translateY(0);
+      }
+
+      .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: 8px;
+        padding: 2px 8px;
+        background: #dbeafe;
+        color: #1e40af;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
       }
 
       @media (max-width: 768px) {
@@ -56,18 +197,17 @@
           padding: 15px;
         }
 
+        .setup-container {
+          padding: 28px 24px;
+        }
+
         h2 {
-          font-size: 20px;
-          margin-bottom: 20px;
+          font-size: 22px;
         }
 
-        #log {
-          padding: 15px;
-        }
-
-        #log p {
+        .subtitle {
           font-size: 13px;
-          padding: 8px;
+          margin-bottom: 24px;
         }
       }
 
@@ -76,56 +216,45 @@
           padding: 10px;
         }
 
+        .setup-container {
+          padding: 24px 20px;
+        }
+
         h2 {
-          font-size: 18px;
-          margin-bottom: 15px;
-        }
-
-        #log {
-          padding: 12px;
-        }
-
-        #log p {
-          font-size: 12px;
-          padding: 6px;
+          font-size: 20px;
         }
       }
     </style>
   </head>
   <body>
-    <h2>Socket.IO Connection Test</h2>
-    <div id="log"></div>
+    <div class="setup-container">
+      <h2>Therapeutic Environment Setup</h2>
+      <p class="subtitle">Configure your personalized calming spectrum to begin your recovery session</p>
+      
+      <div class="form-group">
+        <label for="userPalette">
+          Select Your Preferred Calming Spectrum
+          <span class="info-badge">⚕️ Evidence-Based</span>
+        </label>
+        <select id="userPalette">
+          <option value="AMBER">🟡 Amber — Cortisol Reduction</option>
+          <option value="VIOLET">🟣 Violet — Nervous System Recovery</option>
+          <option value="PINK">🌸 Soft Pink — Emotional Soothing</option>
+          <option value="EARTH">🟤 Earth Tones — Stability & Grounding</option>
+        </select>
+      </div>
 
-    <!-- 1. Load Socket.IO client script from the server -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      // 2. Connect to the server
-      const socket = io();
+      <div class="toggle-group">
+        <label for="chatbotToggle">Enable Interactive Chatbot Guidance</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="chatbotToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-      const logDiv = document.getElementById("log");
-      function log(message) {
-        const p = document.createElement("p");
-        p.textContent = message;
-        logDiv.appendChild(p);
-      }
+      <button id="launchBtn">Initialize AR Recovery Room</button>
+    </div>
 
-      // 3. When connected
-      socket.on("connect", () => {
-        log("Connected to server. Socket ID: " + socket.id);
-      });
-
-      // 4. Send ping every 1 second with current time
-      setInterval(() => {
-        const now = Date.now(); // current timestamp in ms
-        socket.emit("ping_test", now);
-      }, 1000);
-
-      // 5. When we get pong back, calculate latency
-      socket.on("pong_test", (sentTime) => {
-        const now = Date.now();
-        const latency = now - sentTime;
-        log("Latency: " + latency + " ms");
-      });
-    </script>
+    <script src="main.js"></script>
   </body>
 </html>
