@@ -1,8 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Socket.IO Latency Test</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        min-height: 100vh;
+      }
+
+      h2 {
+        text-align: center;
+        margin: 0 0 25px 0;
+        font-size: 24px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      #log {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      #log p {
+        margin: 8px 0;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 3px solid #64c8ff;
+        border-radius: 4px;
+        font-size: 14px;
+        word-wrap: break-word;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 15px;
+        }
+
+        h2 {
+          font-size: 20px;
+          margin-bottom: 20px;
+        }
+
+        #log {
+          padding: 15px;
+        }
+
+        #log p {
+          font-size: 13px;
+          padding: 8px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 10px;
+        }
+
+        h2 {
+          font-size: 18px;
+          margin-bottom: 15px;
+        }
+
+        #log {
+          padding: 12px;
+        }
+
+        #log p {
+          font-size: 12px;
+          padding: 6px;
+        }
+      }
+    </style>
   </head>
   <body>
     <h2>Socket.IO Connection Test</h2>

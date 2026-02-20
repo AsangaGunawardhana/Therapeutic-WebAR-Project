@@ -2,7 +2,11 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Mobile AR Optimization: Prevents zooming and ensures proper scaling on mobile devices -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>AR Client (Three.js Mock)</title>
     <style>
       body {
@@ -14,6 +18,187 @@
         width: 100vw;
         height: 100vh;
         display: block;
+      }
+      /* Mobile AR Camera Feed Styling */
+      /* This video element displays the phone's rear camera feed */
+      #video-background {
+        position: fixed; /* Stays in place, doesn't scroll */
+        top: 0;
+        left: 0;
+        width: 100vw; /* Full viewport width */
+        height: 100vh; /* Full viewport height */
+        object-fit: cover; /* Fills screen without distortion */
+        z-index: -1; /* Behind all other elements (HUD & Orb) */
+      }
+
+      /* HCI Enhancement: Smooth UI Transitions (Reduces Cognitive Load) */
+      /* Creates a premium, professional feel with gradual entrance animation */
+      #medicalHUD {
+        animation: slideUp 1.2s ease-out forwards;
+      }
+
+      @keyframes slideUp {
+        0% {
+          transform: translateY(100px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* HCI Enhancement: Responsive Design for Mobile */
+      /* Professional layout: Top = Coaching, Center = Orb, Bottom = Dashboard Zone */
+
+      /* Tablet and smaller screens */
+      @media (max-width: 1024px) {
+        #vitalsPanel,
+        #insightsPanel {
+          min-width: 220px !important;
+          max-width: 280px !important;
+          padding: 12px 15px !important;
+        }
+      }
+
+      /* Mobile screens - landscape and portrait */
+      @media (max-width: 768px) {
+        /* Coaching Text - Top only, clear focus */
+        #coachingText {
+          bottom: auto !important;
+          top: 12px !important;
+          left: 50% !important;
+          right: auto !important;
+          width: 80% !important;
+          transform: translateX(-50%) !important;
+          max-width: 320px !important;
+          background: rgba(0, 100, 150, 0.9) !important;
+          padding: 10px 14px !important;
+          font-size: 14px !important;
+          font-weight: 600 !important;
+          border: 1px solid rgba(100, 200, 255, 0.6) !important;
+          border-radius: 8px !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          text-align: center !important;
+          line-height: 1.3 !important;
+        }
+
+        /* Dashboard Zone: Vitals Panel - Left side, compact */
+        #vitalsPanel {
+          top: 80px !important;
+          bottom: auto !important;
+          left: 8px !important;
+          right: auto !important;
+          width: auto !important;
+          min-width: 140px !important;
+          max-width: 180px !important;
+          background: rgba(0, 20, 40, 0.92) !important;
+          padding: 10px 12px !important;
+          border-radius: 8px !important;
+          border-width: 1.5px !important;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+
+        /* Dashboard Zone: Insights Panel - Right side */
+        #insightsPanel {
+          top: 80px !important;
+          bottom: auto !important;
+          left: auto !important;
+          right: 8px !important;
+          width: auto !important;
+          min-width: 140px !important;
+          max-width: 180px !important;
+          background: rgba(20, 20, 20, 0.92) !important;
+          padding: 10px 12px !important;
+          border-radius: 8px !important;
+          border-width: 1.5px !important;
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          max-height: 240px !important;
+          overflow-y: auto !important;
+        }
+
+        /* Compact text for narrow screens */
+        #vitalsPanel div,
+        #insightsPanel div {
+          font-size: 10px !important;
+          line-height: 1.35 !important;
+          margin-bottom: 6px !important;
+        }
+
+        #liveHR,
+        #liveHRV {
+          font-size: 20px !important;
+          display: inline-block !important;
+        }
+
+        #liveState {
+          font-size: 12px !important;
+        }
+
+        /* Adjust header text sizes */
+        #vitalsPanel > div:first-child,
+        #insightsPanel > div:first-child {
+          font-size: 10px !important;
+          margin-bottom: 8px !important;
+        }
+      }
+
+      /* Extra small screens - better stacking */
+      @media (max-width: 480px) {
+        #coachingText {
+          top: 8px !important;
+          width: 95% !important;
+          padding: 8px 12px !important;
+          font-size: 13px !important;
+        }
+
+        #vitalsPanel {
+          left: 5px !important;
+          min-width: 130px !important;
+          max-width: 160px !important;
+          padding: 8px 10px !important;
+        }
+
+        #insightsPanel {
+          right: 5px !important;
+          min-width: 130px !important;
+          max-width: 160px !important;
+          padding: 8px 10px !important;
+          max-height: 200px !important;
+        }
+
+        #vitalsPanel div,
+        #insightsPanel div {
+          font-size: 9px !important;
+          margin-bottom: 5px !important;
+        }
+
+        #liveHR,
+        #liveHRV {
+          font-size: 18px !important;
+        }
+
+        #liveState {
+          font-size: 11px !important;
+        }
+      }
+
+      /* Landscape orientation optimization */
+      @media (max-width: 768px) and (orientation: landscape) {
+        #coachingText {
+          top: 5px !important;
+          padding: 6px 10px !important;
+          font-size: 12px !important;
+        }
+
+        #vitalsPanel,
+        #insightsPanel {
+          top: 40px !important;
+          max-height: calc(100vh - 50px) !important;
+        }
       }
     </style>
   </head>
@@ -114,7 +299,7 @@
           font-size: 16px;
           color: #fff;
           text-align: center;
-          max-width: 600px;
+          max-width: 350px;
         "
       >
         Breathe naturally and focus on the light...
@@ -194,16 +379,36 @@
       scene.add(dir);
 
       // Therapeutic Orb
-      const geometry = new THREE.SphereGeometry(0.8, 64, 64);
+      // Mobile AR Optimization: Reduced size from 0.8 to 0.4 for better visibility on small screens
+      const geometry = new THREE.SphereGeometry(0.4, 64, 64);
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color("#ffffff"),
         emissive: new THREE.Color("#000000"),
-        emissiveIntensity: 0.2,
         roughness: 0.4,
         metalness: 0.1,
       });
       const therapeuticOrb = new THREE.Mesh(geometry, material);
       scene.add(therapeuticOrb);
+
+      // AR Positioning: Move orb down for more natural AR experience
+      therapeuticOrb.position.set(0, -0.5, 0); // Moves it down by 0.5 units
+
+      // HCI Enhancement: Glowing Orb Effect (Visual Focus & Bloom)
+      // Enhances visibility and creates a premium, professional look
+      therapeuticOrb.material.emissiveIntensity = 0.8; // Increased glow intensity
+      therapeuticOrb.material.transparent = true;
+      therapeuticOrb.material.opacity = 0.9;
+
+      // Add Glow Mesh (The Aura) - Creates a soft outer glow effect
+      const glowGeometry = new THREE.SphereGeometry(0.45, 64, 64); // Slightly larger than orb
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff, // Initial color; will be synced to orb color in animate loop
+        transparent: true,
+        opacity: 0.2, // Subtle transparency for aura effect
+        side: THREE.BackSide, // Render from inside to create glow
+      });
+      const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+      therapeuticOrb.add(glowMesh); // Attach glow to orb so they move together
 
       // Resize
       function resize() {
@@ -257,7 +462,8 @@
         // Update UI immediately with current step and new message
         if (breathingInterval) {
           // Interval already running - update current display with new message
-          const currentStep = currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
+          const currentStep =
+            currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
           coachingElement.textContent = patientMessage + " " + currentStep;
           return;
         }
@@ -378,6 +584,9 @@
         // Apply color to ambient light (room wash effect)
         ambientLight.color.copy(currentColor);
 
+        // Sync glow aura color to match orb during state transitions
+        glowMesh.material.color.copy(currentColor);
+
         // Pulse animation for bradycardia alert
         if (isPulsing) {
           const scale = 1.0 + Math.sin(Date.now() * 0.005) * 0.15; // Pulse between 0.85 and 1.15
@@ -387,6 +596,48 @@
         renderer.render(scene, camera);
       }
       animate(); // Start the animation loop
+
+      // ========================================
+      // MOBILE AR: Camera Activation Function
+      // ========================================
+      // This function requests access to the phone's rear camera
+      // and displays the live feed behind the 3D scene
+      // Note: Requires HTTPS or localhost for getUserMedia to work
+      let cameraStream = null; // Store stream reference for cleanup
+
+      async function startCamera() {
+        try {
+          // Request camera access - 'environment' = rear camera
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+
+          // Create a <video> element to display the camera feed
+          const video = document.createElement("video");
+          video.id = "video-background"; // Links to CSS styling above
+          video.autoplay = true; // Starts playing automatically
+          video.playsInline = true; // Required for iOS/Safari to play inline
+          video.srcObject = cameraStream; // Connect camera stream to video element
+          document.body.appendChild(video); // Add to page
+
+          // Make Three.js background transparent so camera feed shows through
+          renderer.setClearColor(0x000000, 0); // (color, alpha) - alpha 0 = fully transparent
+        } catch (err) {
+          // If user denies camera permission or camera not available
+          alert("Camera Error: Please allow camera access. Note: Camera requires HTTPS or localhost.");
+          console.error(err);
+        }
+      }
+
+      // Cleanup camera stream when page is closed
+      window.addEventListener("beforeunload", () => {
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+        }
+      });
+
+      // Start camera automatically when page finishes loading
+      window.addEventListener("load", startCamera);
     </script>
   </body>
 </html>
