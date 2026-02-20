@@ -71,8 +71,8 @@ function safeEmit(command) {
 io.on("connection", (socket) => {
   console.log("✅ Client connected:", socket.id);
 
-  socket.on("bio:update", ({ hr, hrv }) => {
-    const command = getEbdPrescription(hr, hrv); // already locked schema
+  socket.on("bio:update", ({ hr, hrv, userPalette }) => {
+    const command = getEbdPrescription(hr, hrv, userPalette); // Pass palette preference
     safeEmit(command);
   });
 

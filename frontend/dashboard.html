@@ -222,7 +222,12 @@
       socket.on("disconnect", () => (status.textContent = "Disconnected"));
 
       function sendUpdate() {
-        const data = { hr: Number(hr.value), hrv: Number(hrv.value) };
+        const userPalette = localStorage.getItem('selectedPalette') || 'AMBER'; // Get user preference
+        const data = { 
+          hr: Number(hr.value), 
+          hrv: Number(hrv.value),
+          userPalette: userPalette
+        };
         socket.emit("bio:update", data);
         sent.textContent = JSON.stringify(data);
       }

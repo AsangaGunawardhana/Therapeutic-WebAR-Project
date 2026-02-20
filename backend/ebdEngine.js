@@ -1,10 +1,42 @@
 // EBD Logic Engine (Stage 1)
-// Input: hr, hrv
+// Input: hr, hrv, userPalette
 // Output: state + lighting prescription
 
-function getEbdPrescription(hr, hrv) {
+// Therapeutic Color Palettes - Evidence-Based Chromotherapy
+const colorMapping = {
+  AMBER: {
+    stress: "#FFBF00", // Amber - Cortisol reduction, warm comfort
+    calm: "#FFD700",   // Gold - Sustained warmth, stability
+    wavelength: 590,   // Yellow-orange spectrum
+  },
+  VIOLET: {
+    stress: "#4B0082", // Indigo - Deep nervous system calming
+    calm: "#EE82EE",   // Violet - Gentle recovery, spiritual calm
+    wavelength: 420,   // Violet spectrum
+  },
+  PINK: {
+    stress: "#FFB6C1", // Light Pink - Emotional soothing
+    calm: "#FFC0CB",   // Pink - Nurturing, gentle comfort
+    wavelength: 495,   // Pink-purple spectrum
+  },
+  EARTH: {
+    stress: "#8B7355", // Brown - Grounding, stability
+    calm: "#D2B48C",   // Tan - Natural, earthy calm
+    wavelength: 580,   // Yellow-brown spectrum
+  },
+  DEFAULT: {
+    stress: "#2E8BFF", // Soft Blue - Universal calming (fallback)
+    calm: "#87CEEB",   // Sky Blue - General relaxation
+    wavelength: 475,   // Blue spectrum
+  }
+};
+
+function getEbdPrescription(hr, hrv, userPalette = 'AMBER') {
   hr = Number(hr);
   hrv = Number(hrv);
+
+  // Validate userPalette, fallback to DEFAULT if invalid
+  const palette = colorMapping[userPalette] || colorMapping.DEFAULT;
 
   if (!Number.isFinite(hr) || !Number.isFinite(hrv)) {
     return buildCommand({
@@ -18,7 +50,7 @@ function getEbdPrescription(hr, hrv) {
   }
 
   const state = classifyState(hr, hrv);
-  const p = prescriptionFromState(state);
+  const p = prescriptionFromState(state, palette);
 
   return buildCommand({
     state,
@@ -46,7 +78,7 @@ function classifyState(hr, hrv) {
   return "MODERATE";
 }
 
-function prescriptionFromState(state) {
+function prescriptionFromState(state, palette) {
   if (state === "BRADYCARDIA_ALERT") {
     return {
       state,
@@ -63,11 +95,11 @@ function prescriptionFromState(state) {
     return {
       state,
       lightingMode: "COLOR",
-      colorHex: "#2E8BFF", // soft blue (preview)
-      wavelengthNm: 475,
+      colorHex: palette.stress, // Dynamic color based on user preference
+      wavelengthNm: palette.wavelength,
       intensity: 0.6,
       justification:
-        "High stress state. Soothing blue light (475 nm) promotes relaxation by reducing sympathetic nervous system activity and cortisol levels.",
+        `High stress state. Therapeutic ${palette.stress} light (${palette.wavelength} nm) promotes relaxation by reducing sympathetic nervous system activity and cortisol levels.`,
     };
   }
 
@@ -85,11 +117,12 @@ function prescriptionFromState(state) {
   if (state === "CALM_RECOVERY") {
     return {
       state,
-      lightingMode: "CCT",
-      cctKelvin: 4000,
+      lightingMode: "COLOR",
+      colorHex: palette.calm, // Dynamic color for calm state
+      wavelengthNm: palette.wavelength,
       intensity: 0.7,
       justification:
-        "Calm recovery state. Neutral daylight supports circadian alignment and accelerates physiological healing.",
+        `Calm recovery state. Therapeutic ${palette.calm} light supports circadian alignment and accelerates physiological healing.`,
     };
   }
 
