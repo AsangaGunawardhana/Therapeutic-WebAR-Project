@@ -14,8 +14,7 @@ A real-time WebAR therapeutic application that uses biometric data (Heart Rate a
 4. Wait for extraction to complete
 
 ### Step 2: Verify Extraction
-git add README.md
-git commit -m "Add project README with documentation"
+
 Navigate to the extracted folder and ensure you see:
 
 ```
@@ -140,15 +139,33 @@ You need your computer's local IP address so your mobile device can connect to i
 
 1. **Ensure your mobile device is on the same WiFi network as your computer**
 2. Open a browser on your mobile device (Chrome recommended)
-3. Enter the URL using your computer's IP address:
+3. Choose one of the following options:
+
+   **Option A: Testing on the Same Computer (Localhost)**
    ```
-   http://YOUR_IP_ADDRESS:3000/ar.html
+   http://localhost:3000/ar.html
    ```
-   Example: `http://192.168.0.105:3000/ar.html`
+
+   **Option B: Testing on Mobile Device (Requires HTTPS)**
+   
+   ⚠️ **Important:** Modern browsers require **HTTPS or localhost** for camera access. Plain HTTP via IP address (e.g., `http://192.168.0.105:3000/ar.html`) will **NOT work** for camera access.
+
+   **Solution - Use ngrok for HTTPS:**
+   
+   1. Install ngrok: [https://ngrok.com/download](https://ngrok.com/download)
+   2. In a new terminal, run:
+      ```bash
+      ngrok http 3000
+      ```
+   3. Copy the HTTPS URL provided (e.g., `https://abc123.ngrok.app`)
+   4. On your mobile device, open:
+      ```
+      https://YOUR_NGROK_URL.ngrok.app/ar.html
+      ```
 
 ### Step 6: Grant Camera Permissions
 
-1. When prompted, **allow camera access** on your mobile device
+1. When prompted, **allow camera access** on your device
 2. The browser will request permission to use your rear camera
 3. Click/tap "Allow" or "Accept"
 
