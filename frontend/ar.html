@@ -9,6 +9,11 @@
     />
     <title>AR Client (Three.js Mock)</title>
     <style>
+      /* CSS Variables for Therapeutic Color Management */
+      :root {
+        --therapeutic-color: rgba(255, 191, 0, 0); /* Default transparent; synced with EBD Engine */
+      }
+
       body {
         margin: 0;
         font-family: Arial, sans-serif;
@@ -200,6 +205,22 @@
           max-height: calc(100vh - 50px) !important;
         }
       }
+
+      /* Interactive Room Tint Layer */
+      /* Uses CSS mix-blend-mode: multiply to mathematically combine virtual color with real-world light */
+      /* Background color is controlled by --therapeutic-color CSS variable (synced with EBD Engine) */
+      #room-tint-layer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none; /* Allows clicking through to 3D objects */
+        z-index: 5; /* Above camera feed but below HUD (z-index: 100) */
+        mix-blend-mode: multiply; /* Mathematically combines color with real walls */
+        background-color: var(--therapeutic-color);
+        transition: background-color 2.0s ease-in-out; /* Smooth color transitions */
+      }
     </style>
   </head>
   <body>
@@ -341,6 +362,11 @@
       </div>
     </div>
 
+    <!-- Interactive Room Tint Layer -->
+    <!-- Uses CSS mix-blend-mode: multiply to blend therapeutic color with real-world camera feed -->
+    <!-- Color is controlled by --therapeutic-color CSS variable, synced with EBD Engine stress levels -->
+    <div id="room-tint-layer"></div>
+
     <canvas id="scene"></canvas>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -370,9 +396,28 @@
       const camera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
       camera.position.set(0, 0, 3);
 
-      // Light (soft)
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // White light, soft intensity
+      // Step 6: Link to User Preference from Setup Screen (Must be declared early)
+      // Read the therapeutic palette the patient selected
+      const selectedPalette = localStorage.getItem('selectedPalette') || 'AMBER';
+      // Palette colors synced with backend ebdEngine.js colorMapping (stress colors)
+      const paletteColorMap = {
+        'AMBER': '#FFBF00',   // Amber - Cortisol reduction, warm comfort
+        'VIOLET': '#4B0082',  // Indigo - Deep nervous system calming
+        'PINK': '#FFB6C1',    // Light Pink - Emotional soothing
+        'EARTH': '#8B7355'    // Brown - Grounding, stability
+      };
+      const initialVignetteColor = paletteColorMap[selectedPalette] || '#FFBF00';
+
+      // Step 7: Ambient Wash Light (Tints the room walls with therapeutic color)
+      // This creates the "Room Redesign" effect by staining the physical environment
+      const ambientLight = new THREE.AmbientLight(initialVignetteColor, 0.3); // Starts with user's palette
       scene.add(ambientLight);
+      
+      // Target ambient values for smooth transitions
+      const targetAmbientColor = new THREE.Color(initialVignetteColor);
+      const currentAmbientColor = new THREE.Color(initialVignetteColor);
+      let targetAmbientIntensity = 0.3; // Subtle baseline
+      let currentAmbientIntensity = 0.3;
 
       const dir = new THREE.DirectionalLight(0xffffff, 0.8);
       dir.position.set(2, 2, 3);
@@ -410,6 +455,87 @@
       const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
       therapeuticOrb.add(glowMesh); // Attach glow to orb so they move together
 
+      // -----------------------------
+      // Vignette HUD Plane (Breathing Glow Effect)
+      // -----------------------------
+      // Scientific Logic: Transparent center ensures patients can see medication/exits (NFR3 Accessibility)
+      // Creates a calming peripheral glow that breathes with the therapeutic guidance
+      
+      function createVignetteTexture() {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Create radial gradient: transparent center, white edges
+        const gradient = ctx.createRadialGradient(
+          size / 2, size / 2, size * 0.3, // Inner circle (30% radius - clear center)
+          size / 2, size / 2, size / 2    // Outer circle (50% radius - full edge)
+        );
+        
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');    // Fully transparent center
+        gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0)');  // Stay transparent
+        gradient.addColorStop(0.85, 'rgba(255, 255, 255, 0.4)'); // Begin fade
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.7)');  // Solid at edges
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+      const vignetteTexture = createVignetteTexture();
+      
+      // Use the palette color initialized earlier (see Step 6 above)
+      const vignetteMaterial = new THREE.MeshBasicMaterial({
+        map: vignetteTexture,
+        color: new THREE.Color(initialVignetteColor), // Apply user's therapeutic preference
+        transparent: true,
+        opacity: 0, // Start invisible
+        depthTest: false,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending // Creates soft glow effect
+      });
+
+      // Create plane that fills camera view
+      const vignetteGeometry = new THREE.PlaneGeometry(2, 2);
+      const vignetteMesh = new THREE.Mesh(vignetteGeometry, vignetteMaterial);
+      
+      // Parent to camera so it follows patient's view
+      vignetteMesh.position.z = -1; // Position just in front of camera near plane
+      camera.add(vignetteMesh);
+      scene.add(camera); // Ensure camera is in scene for child to render
+
+      // ========================================
+      // FULL ROOM TINT (The Color Wash Plane)
+      // ========================================
+      // Full-screen overlay that 'stains' the entire room with therapeutic color
+      // This plane covers the entire screen and sits between camera and 3D orb
+      // MultiplyBlending ensures walls change color (e.g., white wall + Violet = Violet room)
+      const roomTintGeo = new THREE.PlaneGeometry(2, 2);
+      const roomTintMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(initialVignetteColor), // Use user's therapeutic palette
+        transparent: true,
+        opacity: 0, // Starts invisible
+        blending: THREE.MultiplyBlending, // CRITICAL: Multiply acts like "color wash" - stains the real-world walls
+        depthTest: false,
+        depthWrite: false
+      });
+
+      const roomTintMesh = new THREE.Mesh(roomTintGeo, roomTintMat);
+      roomTintMesh.position.z = -0.15; // Positioned behind UI but in front of 3D orb
+      camera.add(roomTintMesh);
+
+      // Breathing animation variables
+      let vignetteTargetOpacity = 0;
+      let vignetteCurrentOpacity = 0;
+      let roomTintTargetOpacity = 0; // Full-room tint target (responsive to stress level)
+      let roomTintCurrentOpacity = 0; // Smooth lerp value for room redesign
+      const VIGNETTE_FADE_SPEED = 0.05; // Slow lerp for cardiac patient safety
+
       // Resize
       function resize() {
         const w = window.innerWidth;
@@ -442,6 +568,67 @@
         return "#FFFFFF"; // cool/white
       }
 
+      // ========================================
+      // Room Color Synchronization (Interactive Layer)
+      // ========================================
+      // Updates the --therapeutic-color CSS variable based on EBD Engine stress level
+      // This synchronizes the DOM-based room tint layer with the Three.js rendering
+      function syncRoomColor(hexColor, stressLevel) {
+        const root = document.documentElement;
+        
+        // Parse hex color to RGB components
+        // Format: #RRGGBB → r, g, b (0-255)
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
+        
+        // Apply tint opacity only during HIGH_STRESS
+        // Otherwise, keep transparent for normal viewing
+        const alpha = (stressLevel === 'HIGH_STRESS') ? 0.3 : 0;
+        
+        // Update the CSS variable - This changes the entire room's color tint
+        // mix-blend-mode: multiply makes white walls become the therapeutic color
+        root.style.setProperty('--therapeutic-color', `rgba(${r}, ${g}, ${b}, ${alpha})`);
+      }
+
+      // ========================================
+      // Global Lighting Update (Ambient Method)
+      // ========================================
+      // Tints every 3D object in the scene by updating the ambient light color
+      // Objects with MeshStandardMaterial or MeshPhongMaterial react to this light
+      // Creates an immersive effect where the entire room appears to be under colored light
+      function updateGlobalLighting(targetHex) {
+        const color = new THREE.Color(targetHex);
+        
+        // Smoothly transition ambient light color using lerp
+        // 0.05 = slow transition (medical-grade smoothness for cardiac patients)
+        ambientLight.color.lerp(color, 0.05);
+      }
+
+      // ========================================
+      // Furniture Material Update (Material Swap Method)
+      // ========================================
+      // Directly updates material colors on furniture objects when stress level changes
+      // Creates the effect of the room being "physically repainted" to the therapeutic color
+      // Traverses all mesh nodes in the furniture group and transitions their colors
+      function updateFurnitureColor(newHex) {
+        // Check if furniture group exists in the scene
+        // furnitureGroup should be defined if 3D models are loaded
+        if (typeof furnitureGroup !== 'undefined' && furnitureGroup) {
+          const newColor = new THREE.Color(newHex);
+          
+          // Traverse all child nodes in the furniture group
+          furnitureGroup.traverse((node) => {
+            // Only update mesh objects (skip lights, cameras, etc.)
+            if (node.isMesh && node.material) {
+              // Smoothly transition each furniture piece's material color
+              // 0.05 = slow transition for smooth visual experience
+              node.material.color.lerp(newColor, 0.05);
+            }
+          });
+        }
+      }
+
       function stopPulse() {
         isPulsing = false;
         therapeuticOrb.scale.set(1, 1, 1);
@@ -471,14 +658,17 @@
         // Set initial message immediately (don't wait for first interval)
         coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
         currentBreathingStep = "IN";
+        vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
             coachingElement.textContent = patientMessage + " BREATHE OUT ⬇️";
             currentBreathingStep = "OUT";
+            vignetteTargetOpacity = 0.15; // Breathe OUT = glow fades
           } else {
             coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
             currentBreathingStep = "IN";
+            vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
           }
         }, 4000); // 4 seconds per phase (8-second complete cycle)
       }
@@ -487,6 +677,7 @@
         clearInterval(breathingInterval);
         breathingInterval = null;
         currentBreathingStep = null; // Reset phase for next cycle
+        vignetteTargetOpacity = 0; // Fade out vignette when stopping
       }
 
       // -----------------------------
@@ -546,12 +737,45 @@
           return;
         }
 
+        // Step 8: Perfect Orb-Vignette-Room Synchronization
         // Update target colors (lerp will handle smooth transition)
         targetColor.set(hex);
         targetEmissive.set(hex);
 
         // Update emissive intensity
         targetEmissiveIntensity = Math.max(0, Math.min(1, v.intensity)) * 2.0;
+
+        // Sync vignette color with therapeutic palette (The Glow)
+        vignetteMaterial.color.set(hex);
+        roomTintMat.color.set(hex); // Also sync the room tint plane color
+        
+        // Sync ambient light for wall wash effect (The Room Tint)
+        targetAmbientColor.set(hex);
+        
+        // Trigger room redesign based on stress level
+        // When stressed, apply 20-30% color wash to stain the entire room
+        if (data.state === 'HIGH_STRESS') {
+          targetAmbientIntensity = 0.6; // Stronger color wash during stress
+          roomTintTargetOpacity = 0.25; // Apply 25% color wash over entire room during high stress
+        } else if (data.state === 'BRADYCARDIA_ALERT') {
+          targetAmbientIntensity = 0.5; // Moderate intensity for alerts
+          roomTintTargetOpacity = 0.0; // No room tint for alerts
+        } else {
+          targetAmbientIntensity = 0.3; // Baseline ambient
+          roomTintTargetOpacity = 0.0; // No tint when calm
+        }
+
+        // Sync the DOM-based room tint layer with the EBD Engine
+        // This updates the --therapeutic-color CSS variable for the interactive layer
+        syncRoomColor(hex, data.state);
+
+        // Update global lighting to tint all objects in the scene
+        // Objects with MeshStandardMaterial/MeshPhongMaterial react to ambient light color
+        updateGlobalLighting(hex);
+
+        // Update furniture materials directly for immersive "physically repainted" effect
+        // Creates the sense that the room environment has been therapeutically redesigned
+        updateFurnitureColor(hex);
 
         // Handle bradycardia pulse effect
         if (data.state === "BRADYCARDIA_ALERT") {
@@ -576,16 +800,28 @@
         currentEmissiveIntensity +=
           (targetEmissiveIntensity - currentEmissiveIntensity) * 0.1;
 
-        // Apply smoothed colors to orb material
+        // Apply smoothed colors to orb material (The Source)
         therapeuticOrb.material.color.copy(currentColor);
         therapeuticOrb.material.emissive.copy(currentEmissive);
         therapeuticOrb.material.emissiveIntensity = currentEmissiveIntensity;
 
-        // Apply color to ambient light (room wash effect)
-        ambientLight.color.copy(currentColor);
-
         // Sync glow aura color to match orb during state transitions
         glowMesh.material.color.copy(currentColor);
+        
+        // Step 7 Continued: Smooth ambient wash transitions (The Room)
+        currentAmbientColor.lerp(targetAmbientColor, 0.05); // Slower lerp for subtle wall tint
+        currentAmbientIntensity += (targetAmbientIntensity - currentAmbientIntensity) * 0.05;
+        ambientLight.color.copy(currentAmbientColor);
+        ambientLight.intensity = currentAmbientIntensity;
+
+        // Breathing vignette animation (slow lerp prevents startling cardiac patients)
+        vignetteCurrentOpacity += (vignetteTargetOpacity - vignetteCurrentOpacity) * VIGNETTE_FADE_SPEED;
+        vignetteMaterial.opacity = vignetteCurrentOpacity;
+
+        // Full room tint animation (smooth color wash during stress)
+        // MultiplyBlending ensures the walls are 'stained' with the therapeutic color
+        roomTintCurrentOpacity += (roomTintTargetOpacity - roomTintCurrentOpacity) * VIGNETTE_FADE_SPEED;
+        roomTintMat.opacity = roomTintCurrentOpacity;
 
         // Pulse animation for bradycardia alert
         if (isPulsing) {
