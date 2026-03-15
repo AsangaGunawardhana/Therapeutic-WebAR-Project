@@ -2,6 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <!-- Favicon to suppress 404 error -->
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=">
     <!-- Mobile AR Optimization: Prevents zooming and ensures proper scaling on mobile devices -->
     <meta
       name="viewport"
@@ -11,7 +13,7 @@
     <style>
       /* CSS Variables for Therapeutic Color Management */
       :root {
-        --therapeutic-color: rgba(255, 191, 0, 0); /* Default transparent; synced with EBD Engine */
+        --therapeutic-color: rgba(255, 191, 0, 0); 
       }
 
       body {
@@ -19,345 +21,293 @@
         font-family: Arial, sans-serif;
         overflow: hidden;
       }
+      
       #scene {
         width: 100vw;
         height: 100vh;
         display: block;
       }
+      
       /* Mobile AR Camera Feed Styling */
-      /* This video element displays the phone's rear camera feed */
       #video-background {
-        position: fixed; /* Stays in place, doesn't scroll */
+        position: fixed; 
         top: 0;
         left: 0;
-        width: 100vw; /* Full viewport width */
-        height: 100vh; /* Full viewport height */
-        object-fit: cover; /* Fills screen without distortion */
-        z-index: -1; /* Behind all other elements (HUD & Orb) */
+        width: 100vw; 
+        height: 100vh; 
+        object-fit: cover; 
+        z-index: -1; 
       }
 
-      /* HCI Enhancement: Smooth UI Transitions (Reduces Cognitive Load) */
-      /* Creates a premium, professional feel with gradual entrance animation */
+      /* HUD Animation */
       #medicalHUD {
-        animation: slideUp 1.2s ease-out forwards;
+        animation: slideUp 0.8s ease-out forwards;
       }
 
       @keyframes slideUp {
-        0% {
-          transform: translateY(100px);
-          opacity: 0;
-        }
-        100% {
-          transform: translateY(0);
-          opacity: 1;
-        }
+        0% { transform: translateY(-30px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
       }
 
-      /* HCI Enhancement: Responsive Design for Mobile */
-      /* Professional layout: Top = Coaching, Center = Orb, Bottom = Dashboard Zone */
-
-      /* Tablet and smaller screens */
-      @media (max-width: 1024px) {
-        #vitalsPanel,
-        #insightsPanel {
-          min-width: 220px !important;
-          max-width: 280px !important;
-          padding: 12px 15px !important;
-        }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+        100% { transform: scale(1); }
       }
-
-      /* Mobile screens - landscape and portrait */
-      @media (max-width: 768px) {
-        /* Coaching Text - Top only, clear focus */
-        #coachingText {
-          bottom: auto !important;
-          top: 12px !important;
-          left: 50% !important;
-          right: auto !important;
-          width: 80% !important;
-          transform: translateX(-50%) !important;
-          max-width: 320px !important;
-          background: rgba(0, 100, 150, 0.9) !important;
-          padding: 10px 14px !important;
-          font-size: 14px !important;
-          font-weight: 600 !important;
-          border: 1px solid rgba(100, 200, 255, 0.6) !important;
-          border-radius: 8px !important;
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          text-align: center !important;
-          line-height: 1.3 !important;
-        }
-
-        /* Dashboard Zone: Vitals Panel - Left side, compact */
-        #vitalsPanel {
-          top: 80px !important;
-          bottom: auto !important;
-          left: 8px !important;
-          right: auto !important;
-          width: auto !important;
-          min-width: 140px !important;
-          max-width: 180px !important;
-          background: rgba(0, 20, 40, 0.92) !important;
-          padding: 10px 12px !important;
-          border-radius: 8px !important;
-          border-width: 1.5px !important;
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-        }
-
-        /* Dashboard Zone: Insights Panel - Right side */
-        #insightsPanel {
-          top: 80px !important;
-          bottom: auto !important;
-          left: auto !important;
-          right: 8px !important;
-          width: auto !important;
-          min-width: 140px !important;
-          max-width: 180px !important;
-          background: rgba(20, 20, 20, 0.92) !important;
-          padding: 10px 12px !important;
-          border-radius: 8px !important;
-          border-width: 1.5px !important;
-          backdrop-filter: blur(6px);
-          -webkit-backdrop-filter: blur(6px);
-          max-height: 240px !important;
-          overflow-y: auto !important;
-        }
-
-        /* Compact text for narrow screens */
-        #vitalsPanel div,
-        #insightsPanel div {
-          font-size: 10px !important;
-          line-height: 1.35 !important;
-          margin-bottom: 6px !important;
-        }
-
-        #liveHR,
-        #liveHRV {
-          font-size: 20px !important;
-          display: inline-block !important;
-        }
-
-        #liveState {
-          font-size: 12px !important;
-        }
-
-        /* Adjust header text sizes */
-        #vitalsPanel > div:first-child,
-        #insightsPanel > div:first-child {
-          font-size: 10px !important;
-          margin-bottom: 8px !important;
-        }
+      
+      /* Modern Slider Styling */
+      input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(0,0,0,0.4);
+        cursor: pointer;
+        margin-top: -6.5px;
       }
-
-      /* Extra small screens - better stacking */
-      @media (max-width: 480px) {
-        #coachingText {
-          top: 8px !important;
-          width: 95% !important;
-          padding: 8px 12px !important;
-          font-size: 13px !important;
-        }
-
-        #vitalsPanel {
-          left: 5px !important;
-          min-width: 130px !important;
-          max-width: 160px !important;
-          padding: 8px 10px !important;
-        }
-
-        #insightsPanel {
-          right: 5px !important;
-          min-width: 130px !important;
-          max-width: 160px !important;
-          padding: 8px 10px !important;
-          max-height: 200px !important;
-        }
-
-        #vitalsPanel div,
-        #insightsPanel div {
-          font-size: 9px !important;
-          margin-bottom: 5px !important;
-        }
-
-        #liveHR,
-        #liveHRV {
-          font-size: 18px !important;
-        }
-
-        #liveState {
-          font-size: 11px !important;
-        }
-      }
-
-      /* Landscape orientation optimization */
-      @media (max-width: 768px) and (orientation: landscape) {
-        #coachingText {
-          top: 5px !important;
-          padding: 6px 10px !important;
-          font-size: 12px !important;
-        }
-
-        #vitalsPanel,
-        #insightsPanel {
-          top: 40px !important;
-          max-height: calc(100vh - 50px) !important;
-        }
+      
+      input[type=range]::-moz-range-thumb {
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(0,0,0,0.4);
+        cursor: pointer;
+        border: none;
       }
 
       /* Interactive Room Tint Layer */
-      /* Uses CSS mix-blend-mode: multiply to mathematically combine virtual color with real-world light */
-      /* Background color is controlled by --therapeutic-color CSS variable (synced with EBD Engine) */
       #room-tint-layer {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        pointer-events: none; /* Allows clicking through to 3D objects */
-        z-index: 5; /* Above camera feed but below HUD (z-index: 100) */
-        mix-blend-mode: multiply; /* Mathematically combines color with real walls */
+        pointer-events: none; 
+        z-index: 5; 
+        mix-blend-mode: multiply; 
         background-color: var(--therapeutic-color);
-        transition: background-color 2.0s ease-in-out; /* Smooth color transitions */
+        transition: background-color 2.0s ease-in-out; 
+      }
+
+      /* ===== SESSION REPORT MODAL - MOBILE RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        #sessionReportModal { padding: 10px !important; }
+        #reportContent { max-width: 90vw !important; width: 95% !important; padding: 20px !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 10px !important; }
+        #reportContent h2 { font-size: 20px !important; margin-bottom: 15px !important; }
+        #reportContent div[style*="padding: 15px"] { padding: 12px !important; margin-bottom: 15px !important; }
+        #report-baseline, #report-ending, #report-peak { font-size: 18px !important; }
+        #report-improvement { font-size: 20px !important; }
+        #reportContent button { padding: 10px 15px !important; font-size: 12px !important; margin-top: 8px !important; }
+      }
+
+      @media (max-width: 480px) {
+        #sessionReportModal { padding: 5px !important; }
+        #reportContent { max-width: 100vw !important; width: 98% !important; padding: 15px !important; max-height: 95vh !important; border-radius: 8px !important; }
+        #reportContent h2 { font-size: 18px !important; margin-bottom: 12px !important; }
+        #report-baseline, #report-ending, #report-peak { font-size: 16px !important; }
+        #report-improvement { font-size: 18px !important; }
+        #report-improvement-percent { font-size: 12px !important; }
+        #reportContent div[style*="padding: 15px"] { padding: 10px !important; margin-bottom: 12px !important; }
+        #reportContent button { width: 100% !important; padding: 10px 10px !important; font-size: 11px !important; margin-bottom: 8px !important; }
+      }
+
+      /* ===== END THERAPY BUTTON - MOBILE RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        #endTherapyContainer { width: 95vw !important; max-width: 90vw !important; margin: 0 auto !important; }
+        #endSessionBtn { padding: 10px 20px !important; font-size: 12px !important; width: 100% !important; box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4) !important; }
+        #endSessionBtn:active { transform: scale(0.95); background: #ff3838 !important; }
+      }
+
+      @media (max-width: 480px) {
+        #endTherapyContainer { width: 90vw !important; }
+        #endSessionBtn { padding: 12px 16px !important; font-size: 14px !important; border-radius: 10px !important; touch-action: manipulation; }
+        #endSessionBtn:active { transform: scale(0.98); }
+      }
+
+      @media (max-width: 320px) {
+        #endSessionBtn { padding: 10px 12px !important; font-size: 12px !important; }
       }
     </style>
   </head>
   <body>
     <!-- Medical HUD Overlay -->
-    <div
-      id="medicalHUD"
-      style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        font-family: &quot;Segoe UI&quot;, Tahoma, Geneva, Verdana, sans-serif;
-        color: #e0e0e0;
-        z-index: 100;
-      "
-    >
-      <!-- Top-Left: Vitals Panel -->
-      <div
-        id="vitalsPanel"
-        style="
-          position: absolute;
-          top: 20px;
-          left: 20px;
-          background: rgba(0, 20, 40, 0.85);
-          border: 2px solid rgba(100, 200, 255, 0.6);
-          border-radius: 8px;
-          padding: 15px 20px;
-          min-width: 280px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        "
-      >
-        <div
-          style="
-            font-size: 12px;
-            color: #64c8ff;
-            font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-          "
-        >
-          ⚕ PATIENT VITALS
+    <div id="medicalHUD" style="position: fixed; top: 0; left: 0; width: 100vw; pointer-events: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 100; display: flex; justify-content: center; padding-top: 15px;">
+      
+      <div style="width: 92%; max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
+        
+        <div id="paletteIndicator" style="align-self: center; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 20px; padding: 6px 16px; text-align: center; color: white; font-size: 11px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; pointer-events: auto;">
+          🎨 <span id="paletteNameDisplay">AMBER</span> Palette Active
         </div>
-        <div style="margin-bottom: 8px">
-          <span style="color: #888; font-size: 11px">Heart Rate:</span><br />
-          <span
-            id="liveHR"
-            style="color: #4fc3f7; font-size: 28px; font-weight: bold"
-            >--</span
-          >
-          <span style="color: #888; font-size: 14px">bpm</span>
-        </div>
-        <div style="margin-bottom: 8px">
-          <span style="color: #888; font-size: 11px">HRV (RMSSD):</span><br />
-          <span
-            id="liveHRV"
-            style="color: #81c784; font-size: 28px; font-weight: bold"
-            >--</span
-          >
-          <span style="color: #888; font-size: 14px">ms</span>
-        </div>
-        <div
-          style="
-            border-top: 1px solid rgba(100, 200, 255, 0.3);
-            padding-top: 8px;
-            margin-top: 8px;
-          "
-        >
-          <span style="color: #888; font-size: 11px">Clinical State:</span
-          ><br />
-          <span
-            id="liveState"
-            style="
-              color: #ffb74d;
-              font-size: 16px;
-              font-weight: bold;
-              text-transform: uppercase;
-            "
-            >--</span
-          >
-        </div>
-      </div>
 
-      <!-- Bottom-Center: Coaching Text -->
-      <div
-        id="coachingText"
-        style="
-          position: absolute;
-          bottom: 40px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(0, 0, 0, 0.7);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          border-radius: 6px;
-          padding: 12px 24px;
-          font-size: 16px;
-          color: #fff;
-          text-align: center;
-          max-width: 350px;
-        "
-      >
-        Breathe naturally and focus on the light...
-      </div>
+        <div style="display: flex; gap: 8px; width: 100%; pointer-events: auto;">
+          
+          <div id="vitalsPanel" style="flex: 1; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 16px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); color: white; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">⚕ VITALS</div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <div style="font-size: 10px; color: #cbd5e1;">HR</div>
+              <div style="font-size: 18px; font-weight: 800; color: #4fc3f7;"><span id="liveHR">--</span> <span style="font-size: 9px; color: #94a3b8;">bpm</span></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <div style="font-size: 10px; color: #cbd5e1;">HRV</div>
+              <div style="font-size: 16px; font-weight: 800; color: #81c784;"><span id="liveHRV">--</span> <span style="font-size: 9px; color: #94a3b8;">ms</span></div>
+            </div>
+            
+            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 10px; color: #cbd5e1;">State</div>
+              <div style="font-size: 10px; font-weight: 800; color: #ffb74d; text-transform: uppercase;"><span id="liveState">--</span></div>
+            </div>
+          </div>
 
-      <!-- Top-Right: Clinical Insights -->
+          <div id="insightsPanel" style="flex: 1; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 16px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); color: white; display: flex; flex-direction: column;">
+            <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">📊 INSIGHTS</div>
+            <div id="insightText" style="font-size: 11px; color: #cbd5e1; line-height: 1.4; flex-grow: 1; display: flex; align-items: center;">
+              Monitoring patient response...
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile-Responsive End Therapy Button -->
+        <div id="endTherapyContainer" style="display: flex; justify-content: center; width: 100%; pointer-events: auto;">
+          <button id="endSessionBtn" onclick="generateSessionReport()" style="background: #ff4757; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; width: 100%; max-width: 300px; box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);">
+            🛑 End Therapy Session
+          </button>
+        </div>
+        
+      </div>
+    </div>
+
+    <div id="ar-subtitle" style="position: fixed; bottom: 12%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; font-weight: 600; text-shadow: 0px 2px 10px rgba(0,0,0,0.8); opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; z-index: 99;"></div>
+
+
+      <!-- SESSION OUTCOME REPORT (Modal Window) -->
+      <!-- Shown after therapy session ends to display clinical metrics -->
       <div
-        id="insightsPanel"
+        id="sessionReportModal"
         style="
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          background: rgba(20, 20, 20, 0.85);
-          border: 2px solid rgba(150, 150, 150, 0.4);
-          border-radius: 8px;
-          padding: 15px 20px;
-          min-width: 250px;
-          max-width: 300px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.85);
+          display: none;
+          z-index: 1000;
+          align-items: center;
+          justify-content: center;
+          backdrop-filter: blur(5px);
+          -webkit-backdrop-filter: blur(5px);
         "
       >
         <div
+          id="reportContent"
           style="
-            font-size: 12px;
-            color: #aaa;
-            font-weight: 600;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
+            background: rgba(15, 15, 15, 0.95);
+            border: 2px solid rgba(100, 200, 255, 0.7);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            color: white;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
           "
         >
-          📊 CLINICAL INSIGHTS
-        </div>
-        <div
-          id="insightText"
-          style="font-size: 13px; color: #ccc; line-height: 1.6"
-        >
-          Monitoring patient response...
+          <h2 style="margin-top: 0; color: #64c8ff; text-align: center; margin-bottom: 25px">
+            📊 SESSION OUTCOME REPORT
+          </h2>
+
+          <div style="background: rgba(100, 200, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px">
+            <!-- Baseline -->
+            <div style="margin-bottom: 15px">
+              <span style="color: #888; font-size: 12px">Baseline Heart Rate</span><br>
+              <span id="report-baseline" style="color: #64c8ff; font-size: 24px; font-weight: bold">-- BPM</span>
+            </div>
+
+            <!-- Ending -->
+            <div style="margin-bottom: 15px">
+              <span style="color: #888; font-size: 12px">Ending Heart Rate</span><br>
+              <span id="report-ending" style="color: #64c8ff; font-size: 24px; font-weight: bold">-- BPM</span>
+            </div>
+
+            <!-- Peak -->
+            <div style="margin-bottom: 15px">
+              <span style="color: #888; font-size: 12px">Peak Heart Rate</span><br>
+              <span id="report-peak" style="color: #ffb74d; font-size: 20px; font-weight: bold">-- BPM</span>
+            </div>
+
+            <!-- Improvement -->
+            <div style="padding: 12px; background: rgba(129, 199, 132, 0.3); border-radius: 6px; border-left: 4px solid #81c784">
+              <span style="color: #888; font-size: 12px">Heart Rate Improvement</span><br>
+              <span id="report-improvement" style="color: #81c784; font-size: 24px; font-weight: bold">+0 BPM</span><br>
+              <span id="report-improvement-percent" style="color: #66bb6a; font-size: 14px">(0% improvement)</span>
+            </div>
+          </div>
+
+          <!-- Session Details -->
+          <div style="background: rgba(200, 150, 100, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px">
+            <div style="margin-bottom: 10px">
+              <span style="color: #888; font-size: 12px">Session Duration</span><br>
+              <span id="report-duration" style="color: #d4a574; font-size: 16px">-- seconds</span>
+            </div>
+
+            <div style="margin-bottom: 10px">
+              <span style="color: #888; font-size: 12px">Distraction Mode</span><br>
+              <span id="report-mode" style="color: #d4a574; font-size: 16px">--</span>
+            </div>
+
+            <div>
+              <span style="color: #888; font-size: 12px">Color Palette</span><br>
+              <span id="report-palette" style="color: #d4a574; font-size: 16px">--</span>
+            </div>
+          </div>
+
+          <!-- Clinical Interpretation -->
+          <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #64c8ff">
+            <span style="color: #888; font-size: 12px">CLINICAL INTERPRETATION</span><br>
+            <span id="report-interpretation" style="color: #ccc; font-size: 14px; line-height: 1.6">
+              Analyzing session outcome...
+            </span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 10px; justify-content: center">
+            <button
+              id="closeSessionBtn"
+              onclick="closeSessionReport()"
+              style="
+                padding: 10px 25px;
+                background: #555;
+                color: white;
+                border: 1px solid #777;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+              "
+            >
+              CLOSE
+            </button>
+            <button
+              id="downloadReportBtn"
+              onclick="downloadSessionReport()"
+              style="
+                padding: 10px 25px;
+                background: #2e8bff;
+                color: white;
+                border: 1px solid #2e8bff;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+              "
+            >
+              📥 DOWNLOAD REPORT
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -375,14 +325,679 @@
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 
     <script>
-      // -----------------------------
+      // ========================================
+      // CLINICAL SESSION TRACKING & BASELINES
+      // ========================================
+      // Baseline calibration phase (medical grade)
+      let isCalibrated = false;
+      let calibrationStartTime = Date.now();
+      let calibrationBPMData = []; // Array to store BPM readings during calibration
+      let sessionBaselineBPM = 0; // Locked baseline after calibration
+      let sessionStartTime = null;
+      let sessionEndTime = null;
+      
+      // Session metrics for outcome report
+      let sessionMetrics = {
+        baselineBPM: 0,
+        peakBPM: 0,
+        averageBPM: 0,
+        endingBPM: 0,
+        bpmReadings: [],
+        modesUsed: [],
+        paletteSelected: localStorage.getItem('selectedPalette') || 'AMBER',
+        sessionDurationSeconds: 0,
+        improvement: 0 // delta = baseline - ending
+      };
+
+      // Safety Constants (Medical Device Safety Thresholds)
+      const SAFETY_THRESHOLDS = {
+        MIN_BPM: 50,           // Below this = Bradycardia (medical alert)
+        MAX_BPM: 130,          // Above this = Clamped for visual safety
+        NEUTRAL_BPM: 75,       // Resting baseline
+        CALIBRATION_DURATION_MS: 30000 // 30 seconds for baseline
+      };
+
+      // ========================================
+      // GAP 1 FIX: deltaTime-based animation clock
+      // ========================================
+      // Frame-based lerp behaves DIFFERENTLY on slow phones.
+      // deltaTime normalises every lerp to wall-clock time so a Samsung A12
+      // running at 20 fps produces identical visual behaviour to a 60 fps desktop.
+      let lastFrameTime = performance.now();
+
+      // ========================================
+      // GAP 3 FIX: Chatbot stress-history short memory
+      // ========================================
+      // Tracks the last 5 stress state events to detect persistent / recurring stress.
+      // This turns static automated messages into context-aware personalization.
+      const STRESS_HISTORY_LENGTH = 5;
+      let stressHistory = []; // Ring buffer of recent state strings
+
+      /**
+       * recordStressEvent(state)
+       * Called every time a new stress state arrives (from socket or HR slider).
+       * Keeps only the last STRESS_HISTORY_LENGTH readings.
+       */
+      function recordStressEvent(state) {
+        stressHistory.push(state);
+        if (stressHistory.length > STRESS_HISTORY_LENGTH) stressHistory.shift();
+      }
+
+      /**
+       * getStressHistoryContext()
+       * Analyses recent history to classify session context for chatbot messaging.
+       * @returns {'PERSISTENT_STRESS'|'RECURRING_STRESS'|'NORMAL'}
+       */
+      function getStressHistoryContext() {
+        const highCount = stressHistory.filter(s => s === 'HIGH_STRESS').length;
+        if (highCount >= 3) return 'PERSISTENT_STRESS'; // 3+ of last 5 were high
+        if (highCount >= 2) return 'RECURRING_STRESS';  // 2 of last 5 were high
+        return 'NORMAL';
+      }
+
+      /**
+       * getNormalizedStress(bpm)
+       * Medical safety function: Clamps BPM to safe range and applies non-linear mapping
+       * This ensures particles never escalate beyond a safe stimulation threshold
+       * 
+       * @param {number} bpm - Heart rate in beats per minute
+       * @returns {number} - Normalized stress level (0.0 to 1.0, clamped for safety)
+       */
+      function getNormalizedStress(bpm) {
+        // 1. SAFETY CLAMP: Prevent escalation beyond safe visual threshold
+        const clampedBPM = Math.max(
+          SAFETY_THRESHOLDS.MIN_BPM,
+          Math.min(bpm, SAFETY_THRESHOLDS.MAX_BPM)
+        );
+
+        // 2. NON-LINEAR MAPPING: Heart stress response is not linear
+        // Use sigmoid-like curve: Sensitivity increases gradually, plateaus at top
+        // This prevents sudden visual panic escalations
+        const normalizedRange = (clampedBPM - SAFETY_THRESHOLDS.MIN_BPM) / 
+          (SAFETY_THRESHOLDS.MAX_BPM - SAFETY_THRESHOLDS.MIN_BPM);
+
+        // Apply subtle sigmoid curve for more natural stress response
+        // Keeps calm zone calm, gradually escalates middle zone, caps high zone
+        const stressLevel = (normalizedRange * 0.8) + 
+          (Math.sin(normalizedRange * Math.PI - Math.PI / 2) * 0.1);
+
+        return Math.max(0, Math.min(1.0, stressLevel)); // Ensure [0.0, 1.0]
+      }
+
+      /**
+       * recordBPMReading(bpm)
+       * Track BPM for session metrics and baseline calibration
+       */
+      function recordBPMReading(bpm) {
+        if (!isCalibrated) {
+          // During calibration: collect readings
+          calibrationBPMData.push(bpm);
+        }
+        
+        // Always track for session metrics
+        sessionMetrics.bpmReadings.push(bpm);
+        
+        // Update peak and current ending BPM
+        if (sessionMetrics.peakBPM === 0) {
+          sessionMetrics.peakBPM = bpm;
+        } else {
+          sessionMetrics.peakBPM = Math.max(sessionMetrics.peakBPM, bpm);
+        }
+        sessionMetrics.endingBPM = bpm;
+      }
+
+      /**
+       * completeCalibration()
+       * Lock in baseline BPM after 30-second stabilization
+       */
+      function completeCalibration() {
+        if (calibrationBPMData.length > 0) {
+          // Calculate baseline: average of all readings during calibration
+          sessionMetrics.baselineBPM = 
+            calibrationBPMData.reduce((a, b) => a + b, 0) / calibrationBPMData.length;
+          sessionBaselineBPM = sessionMetrics.baselineBPM;
+        } else {
+          // Fallback if no data received (use neutral baseline)
+          sessionBaselineBPM = SAFETY_THRESHOLDS.NEUTRAL_BPM;
+          sessionMetrics.baselineBPM = SAFETY_THRESHOLDS.NEUTRAL_BPM;
+        }
+
+        isCalibrated = true;
+        sessionStartTime = Date.now();
+        
+        // Display message (keep it longer - 10 seconds instead of 6)
+        const subtitle = document.getElementById('ar-subtitle');
+        subtitle.innerText = "🟢 Baseline locked. Therapeutic session starting...";
+        subtitle.style.opacity = 1;
+        clearTimeout(subtitleTimeout);
+        subtitleTimeout = setTimeout(() => {
+          subtitle.style.opacity = 0;
+        }, 10000); // 10 seconds instead of 6
+        
+        console.log(`✅ CALIBRATION COMPLETE`);
+        console.log(`   Baseline BPM: ${sessionMetrics.baselineBPM.toFixed(1)}`);
+        console.log(`   Readings collected: ${calibrationBPMData.length}`);
+        console.log(`   Message displayed: 🟢 Baseline locked. Therapeutic session starting...`);
+      }
+
+      // === AUTO-CALIBRATION TIMER ===
+      // Check every 500ms if 30 seconds have passed
+      // If yes, auto-complete calibration (for testing or when no data flows)
+      setInterval(() => {
+        if (!isCalibrated && Date.now() - calibrationStartTime > SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS) {
+          completeCalibration();
+        }
+      }, 500);
+
+      /**
+       * generateSessionReport()
+       * Creates a comprehensive outcome report with metrics
+       */
+      function generateSessionReport() {
+        console.log("🔴 BUTTON CLICKED: generateSessionReport() called");
+        
+        // === DEBUG: Check if calibration completed ===
+        if (!isCalibrated) {
+          console.error("❌ isCalibrated =", isCalibrated);
+          alert("⚠️ Calibration not complete! Please wait 30 seconds before ending session.");
+          console.warn("Button clicked but calibration not finished yet!");
+          return;
+        }
+        
+        console.log("✅ Calibration check passed");
+        
+        if (!sessionStartTime) {
+          console.error("❌ sessionStartTime =", sessionStartTime);
+          alert("⚠️ Session not started! Try dragging the HR slider first.");
+          console.warn("sessionStartTime is null - session may not have started");
+          return;
+        }
+        
+        console.log("✅ Session start time check passed:", sessionStartTime);
+        console.log("📊 sessionMetrics =", sessionMetrics);
+        
+        console.log("✅ Generating session report...");
+        sessionEndTime = Date.now();
+        const durationSeconds = Math.round((sessionEndTime - sessionStartTime) / 1000);
+        sessionMetrics.sessionDurationSeconds = durationSeconds;
+        console.log("✅ Duration calculated:", durationSeconds, "seconds");
+
+        // Calculate improvement (lower BPM = better)
+        const improvement = sessionMetrics.baselineBPM - sessionMetrics.endingBPM;
+        sessionMetrics.improvement = improvement;
+        console.log("✅ Improvement calculated:", improvement, "BPM");
+
+        // Calculate average BPM during session
+        if (sessionMetrics.bpmReadings.length > 0) {
+          sessionMetrics.averageBPM = 
+            sessionMetrics.bpmReadings.reduce((a, b) => a + b, 0) / 
+            sessionMetrics.bpmReadings.length;
+        }
+        console.log("✅ Average BPM calculated:", sessionMetrics.averageBPM);
+
+        // Determine clinical interpretation
+        let interpretation = "";
+        const improvementPercent = (improvement / sessionMetrics.baselineBPM) * 100;
+        console.log("✅ Improvement percent:", improvementPercent + "%");
+
+        if (improvement > 10) {
+          interpretation = `✅ Excellent response. Heart rate reduced by ${improvementPercent.toFixed(1)}%. Patient shows strong therapeutic response to ${selectedPalette} palette and ${activeMode} mode.`;
+        } else if (improvement > 5) {
+          interpretation = `✅ Good response. Heart rate reduced by ${improvementPercent.toFixed(1)}%. Session was therapeutically beneficial.`;
+        } else if (improvement > 0) {
+          interpretation = `⚠️ Mild response. Heart rate reduced by ${improvementPercent.toFixed(1)}%. Consider adjusting mode or palette in next session.`;
+        } else if (improvement > -5) {
+          interpretation = `⚠️ Neutral to slight increase. No significant reduction. Session may need optimization.`;
+        } else {
+          interpretation = `🔴 Heart rate increased by ${Math.abs(improvementPercent).toFixed(1)}%. Session may have been overstimulating. Recommend lower-intensity mode next time.`;
+        }
+
+        console.log("✅ Interpretation:", interpretation);
+
+        // Populate report UI with error handling
+        try {
+          console.log("📝 Populating report UI...");
+          
+          const modal = document.getElementById("sessionReportModal");
+          if (!modal) {
+            console.error("❌ Modal element not found! Looking for id='sessionReportModal'");
+            alert("❌ Report modal element missing from HTML!");
+            return;
+          }
+          console.log("✅ Modal element found");
+          
+          document.getElementById("report-baseline").textContent = sessionMetrics.baselineBPM.toFixed(1) + " BPM";
+          console.log("✅ Baseline set");
+          
+          document.getElementById("report-ending").textContent = sessionMetrics.endingBPM.toFixed(1) + " BPM";
+          console.log("✅ Ending BPM set");
+          
+          document.getElementById("report-peak").textContent = sessionMetrics.peakBPM.toFixed(1) + " BPM";
+          console.log("✅ Peak BPM set");
+          
+          const improvementText = improvement > 0 ? "+"+improvement.toFixed(1) : improvement.toFixed(1);
+          document.getElementById("report-improvement").textContent = improvementText + " BPM";
+          console.log("✅ Improvement text set");
+          
+          document.getElementById("report-improvement-percent").textContent = 
+            `(${improvementPercent.toFixed(1)}% improvement)`;
+          console.log("✅ Improvement percent set");
+          
+          document.getElementById("report-duration").textContent = durationSeconds + " seconds";
+          console.log("✅ Duration set");
+          
+          document.getElementById("report-mode").textContent = activeMode || "PARTICLES";
+          console.log("✅ Mode set");
+          
+          document.getElementById("report-palette").textContent = sessionMetrics.paletteSelected;
+          console.log("✅ Palette set");
+          
+          document.getElementById("report-interpretation").textContent = interpretation;
+          console.log("✅ Interpretation set");
+
+          // Show report modal
+          console.log("🎯 Showing modal...");
+          document.getElementById("sessionReportModal").style.display = "flex";
+          console.log("✅✅✅ REPORT MODAL DISPLAYED ✅✅✅");
+          
+        } catch (error) {
+          console.error("❌ ERROR populating report:", error);
+          alert("❌ Error: " + error.message);
+          return;
+        }
+      }
+
+      /**
+       * closeSessionReport()
+       * Hide the report modal
+       */
+      function closeSessionReport() {
+        document.getElementById("sessionReportModal").style.display = "none";
+      }
+
+      // === ATTACH BUTTON CLICK HANDLER (Delayed to ensure DOM is ready) ===
+      // Wait for DOM to be fully loaded before attaching
+      function attachButtonListener() {
+        const endSessionBtn = document.getElementById("endSessionBtn");
+        console.log("🔍 [" + new Date().toLocaleTimeString() + "] Looking for endSessionBtn...", endSessionBtn);
+        console.log("🔍 Button visible?", endSessionBtn ? (endSessionBtn.offsetParent !== null ? 'YES' : 'NO (hidden)') : 'N/A');
+        
+        if (endSessionBtn) {
+          // Add direct onclick listener (most direct approach)
+          endSessionBtn.addEventListener("click", function(event) {
+            console.log("🔴🔴🔴 END SESSION BUTTON CLICKED (addEventListener)");
+            console.log("Event target:", event.target);
+            console.log("Event target ID:", event.target.id);
+            event.preventDefault();
+            event.stopPropagation();
+            generateSessionReport();
+          }, true); // capture phase
+          
+          console.log("✅ Button listener attached via addEventListener");
+        } else {
+          console.error("❌ Could not find endSessionBtn element!");
+          const allButtons = document.querySelectorAll("button");
+          console.log("📋 All buttons on page:", allButtons.length);
+          allButtons.forEach((btn, idx) => {
+            console.log("  Button " + idx + ":", btn.id, btn.textContent);
+          });
+        }
+      }
+      
+      // Try multiple times to ensure button is found
+      setTimeout(attachButtonListener, 300);
+      setTimeout(attachButtonListener, 800);
+      setTimeout(attachButtonListener, 1500);
+
+      /**
+       * downloadSessionReport()
+       * Generate and download a beautifully formatted report for the patient
+       * Creates an HTML document with clinical metrics and therapeutic interpretation
+       */
+      function downloadSessionReport() {
+        const now = new Date();
+        const timestamp = now.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        // Calculate metrics from the modal display (what was shown to patient)
+        const improvement = sessionMetrics.baselineBPM - sessionMetrics.endingBPM;
+        const improvementPercent = (improvement / sessionMetrics.baselineBPM) * 100;
+
+        // Determine clinical category
+        let clinicalCategory = "";
+        let categoryEmoji = "";
+        if (improvement > 10) {
+          clinicalCategory = "EXCELLENT RESPONSE";
+          categoryEmoji = "✅";
+        } else if (improvement > 5) {
+          clinicalCategory = "GOOD RESPONSE";
+          categoryEmoji = "✅";
+        } else if (improvement > 0) {
+          clinicalCategory = "MILD RESPONSE";
+          categoryEmoji = "⚠️";
+        } else if (improvement > -5) {
+          clinicalCategory = "NEUTRAL/SLIGHT INCREASE";
+          categoryEmoji = "⚠️";
+        } else {
+          clinicalCategory = "HEART RATE INCREASED";
+          categoryEmoji = "🔴";
+        }
+
+        // Create beautifully formatted HTML report
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Therapeutic Session Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .metric-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+        .improvement-box {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            grid-column: 1 / -1;
+            color: white;
+        }
+        .improvement-box .metric-label {
+            color: rgba(255,255,255,0.8);
+        }
+        .improvement-box .metric-value {
+            color: white;
+            font-size: 36px;
+        }
+        .clinical-box {
+            background: #e8f4f8;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 5px solid #2e8bff;
+            margin-top: 20px;
+        }
+        .clinical-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2e8bff;
+            margin-bottom: 12px;
+        }
+        .clinical-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .recommendation-box {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #ffc107;
+            margin-top: 20px;
+        }
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .recommendation-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        .timestamp {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #999;
+        }
+        .category-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        @media (max-width: 600px) {
+            .metric-row {
+                grid-template-columns: 1fr;
+            }
+            .improvement-box .metric-value {
+                font-size: 28px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Therapeutic Session Report</h1>
+            <p>AR-Based Stress Reduction & Biofeedback Therapy</p>
+        </div>
+
+        <div class="content">
+            <!-- Session Overview -->
+            <div class="section">
+                <div class="section-title">Session Overview</div>
+                <div class="metric-row">
+                    <div class="metric-box">
+                        <div class="metric-label">Session Duration</div>
+                        <div class="metric-value">${sessionMetrics.sessionDurationSeconds}s</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Distraction Mode</div>
+                        <div class="metric-value" style="font-size: 20px;">${activeMode || 'MAGNETIC'}</div>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-box">
+                        <div class="metric-label">Therapeutic Palette</div>
+                        <div class="metric-value" style="font-size: 20px;">${sessionMetrics.paletteSelected}</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Session Date</div>
+                        <div class="metric-value" style="font-size: 16px;">${now.toLocaleDateString()}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heart Rate Metrics -->
+            <div class="section">
+                <div class="section-title">💓 Heart Rate Metrics</div>
+                <div class="metric-row">
+                    <div class="metric-box">
+                        <div class="metric-label">Baseline Heart Rate</div>
+                        <div class="metric-value">${sessionMetrics.baselineBPM.toFixed(1)} BPM</div>
+                        <small style="color: #999; margin-top: 5px; display: block;">Initial measurement</small>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Ending Heart Rate</div>
+                        <div class="metric-value">${sessionMetrics.endingBPM.toFixed(1)} BPM</div>
+                        <small style="color: #999; margin-top: 5px; display: block;">Final measurement</small>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric-box">
+                        <div class="metric-label">Peak Heart Rate</div>
+                        <div class="metric-value">${sessionMetrics.peakBPM.toFixed(1)} BPM</div>
+                        <small style="color: #999; margin-top: 5px; display: block;">Highest during session</small>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Average Heart Rate</div>
+                        <div class="metric-value">${sessionMetrics.averageBPM.toFixed(1)} BPM</div>
+                        <small style="color: #999; margin-top: 5px; display: block;">Mean across session</small>
+                    </div>
+                </div>
+                <div class="improvement-box">
+                    <div class="metric-label">Heart Rate Improvement</div>
+                    <div class="metric-value">${improvement > 0 ? '+' : ''}${improvement.toFixed(1)} BPM</div>
+                    <div style="font-size: 20px; margin-top: 10px;">(${improvementPercent.toFixed(1)}% improvement)</div>
+                </div>
+            </div>
+
+            <!-- Clinical Interpretation -->
+            <div class="section">
+                <div class="section-title">🔬 Clinical Interpretation</div>
+                <div class="clinical-box">
+                    <div style="font-size: 24px; margin-bottom: 10px;">${categoryEmoji} ${clinicalCategory}</div>
+                    <div class="clinical-text">
+                        The patient demonstrated a ${improvement > 0 ? 'positive' : 'neutral to negative'} response to the therapeutic AR intervention. 
+                        A reduction of ${Math.abs(improvement.toFixed(1))} BPM (${Math.abs(improvementPercent).toFixed(1)}%) was measured between baseline and session end.
+                        <br><br>
+                        This session utilized the <strong>${sessionMetrics.paletteSelected}</strong> color palette and 
+                        <strong>${activeMode || 'MAGNETIC'}</strong> distraction mode to provide personalized biofeedback-responsive visualization.
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="recommendation-box">
+                    <div class="recommendation-title">💡 Recommendations for Next Session</div>
+                    <div class="recommendation-text">
+                        ${improvement > 10 ? 
+                          '✅ Continue with current therapeutic parameters. Patient shows excellent response. Consider extending session duration.' :
+                        improvement > 5 ? 
+                          '✅ Good progress. Consider experimenting with different color palettes or distraction modes to optimize response.' :
+                        improvement > 0 ? 
+                          '⚠️ Mild response detected. Try adjusting the distraction mode or palette in the next session for better engagement.' :
+                        improvement > -5 ?
+                          '⚠️ Neutral response. The current settings may not be optimally tuned. Consult with your therapist about alternative modes.' :
+                          '🔴 Heart rate increased during session. The current parameters may be overstimulating. Choose a calmer mode or lower-intensity palette.'}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Disclaimer -->
+            <div class="section" style="border-top: 2px solid #e0e0e0; padding-top: 20px;">
+                <small style="color: #999; line-height: 1.8;">
+                    <strong>Medical Disclaimer:</strong> This report documents objective biometric measurements from an AR-based therapeutic intervention. 
+                    It is not a diagnosis and should not replace professional medical advice. 
+                    Results may vary by individual. Consult with a healthcare provider for medical concerns.
+                </small>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="timestamp">Generated: ${timestamp}</div>
+            <div class="timestamp">Device: Therapeutic WebAR System v1.0</div>
+            <div class="timestamp">This report is confidential and intended for the patient's personal records.</div>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        // Create and download the HTML report
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Therapeutic-Session-Report-${Date.now()}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        console.log("📥 Patient-friendly report downloaded");
+      }
+
+      // ========================================
       // 1) Socket
-      // -----------------------------
+      // ========================================
       const socket = io();
 
-      // -----------------------------
+      // ========================================
       // 2) Three.js scene + orb
-      // -----------------------------
+      // ========================================
       const canvas = document.getElementById("scene");
       const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -399,6 +1014,15 @@
       // Step 6: Link to User Preference from Setup Screen (Must be declared early)
       // Read the therapeutic palette the patient selected
       const selectedPalette = localStorage.getItem('selectedPalette') || 'AMBER';
+      
+      // ✅ ENSURE ALL 4 PALETTES ARE ALWAYS AVAILABLE
+      // Even if dashboard doesn't offer all options, patients can still use all 4
+      const AVAILABLE_PALETTES = ['AMBER', 'VIOLET', 'PINK', 'EARTH'];
+      if (!AVAILABLE_PALETTES.includes(selectedPalette)) {
+        localStorage.setItem('selectedPalette', 'AMBER');
+        console.warn(`❌ Invalid palette: ${selectedPalette}. Resetting to AMBER`);
+      }
+      
       // Palette colors synced with backend ebdEngine.js colorMapping (stress colors)
       const paletteColorMap = {
         'AMBER': '#FFBF00',   // Amber - Cortisol reduction, warm comfort
@@ -406,6 +1030,20 @@
         'PINK': '#FFB6C1',    // Light Pink - Emotional soothing
         'EARTH': '#8B7355'    // Brown - Grounding, stability
       };
+      
+      // Read distraction style/mode (PARTICLES, TREE, LOTUS)
+      const distractionStyle = localStorage.getItem('distractionStyle') || 'PARTICLES';
+      console.log(`🎨 Distraction Mode: ${distractionStyle} | Palette: ${selectedPalette}`);
+      
+      // Update the palette indicator on the screen
+      const paletteIndicator = document.getElementById('paletteIndicator');
+      if (paletteIndicator) {
+        paletteIndicator.style.display = 'block';
+        document.getElementById('paletteNameDisplay').textContent = selectedPalette;
+        // Color the border to match the selected palette
+        paletteIndicator.style.borderColor = paletteColorMap[selectedPalette] || '#FFBF00';
+      }
+      
       const initialVignetteColor = paletteColorMap[selectedPalette] || '#FFBF00';
 
       // Step 7: Ambient Wash Light (Tints the room walls with therapeutic color)
@@ -438,7 +1076,415 @@
       // AR Positioning: Move orb down for more natural AR experience
       therapeuticOrb.position.set(0, -0.5, 0); // Moves it down by 0.5 units
 
-      // HCI Enhancement: Glowing Orb Effect (Visual Focus & Bloom)
+      // ========================================
+      // MULTI-MODE DISTRACTION THERAPY SYSTEM
+      // ========================================
+      // Particle-based therapeutic visualization
+      // Single mode with three interactive touch styles:
+      // 1. MAGNETIC: Particles follow finger
+      // 2. RIPPLE: Particles repel from finger
+      // 3. BREATH_CORE: Particles expand/contract with touch
+      
+      // Particle system objects
+      let particleSystem = null;
+      let particleGeometry = null;
+      let particleMaterial = null;
+      let particleVelocities = null;
+      let particleCount = 800; // Needed by animate loop
+      let activeMode = distractionStyle;
+      
+      // ========================================
+      // GLOBAL COLORS (Prevent mobile memory leak from creating objects 60x/sec)
+      // ========================================
+      const panicColorTree = new THREE.Color(0x8B0000);
+      const panicColorLotus = new THREE.Color(0xFF6B6B);
+      const calmColor = new THREE.Color(initialVignetteColor);
+      
+      // ========================================
+      // MODE 1: PARTICLE SYSTEM (Zenspace Approach)
+      // ========================================
+      function initParticles() {
+        particleGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        particleVelocities = new Float32Array(particleCount * 3);
+        
+        // Initialize particle positions (random cloud around orb)
+        for (let i = 0; i < particleCount; i++) {
+          positions[i * 3] = (Math.random() - 0.5) * 4; // X: -2 to +2
+          positions[i * 3 + 1] = (Math.random() - 0.5) * 4; // Y: -2 to +2
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 4; // Z: -2 to +2
+          
+          // Random velocity for subtle floating motion
+          particleVelocities[i * 3] = (Math.random() - 0.5) * 0.02;
+          particleVelocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
+          particleVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+        }
+        
+        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        particleMaterial = new THREE.PointsMaterial({
+          color: new THREE.Color(initialVignetteColor),
+          size: 0.06,
+          transparent: true,
+          opacity: 0.8,
+          blending: THREE.AdditiveBlending
+        });
+        
+        particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+        scene.add(particleSystem);
+        
+        console.log(`✅ Particle Mode: Initialized ${particleCount} glowing particles`);
+      }
+      
+
+      
+      // ========================================
+      // MEMORY MANAGEMENT: Clean up unused modes
+      // ========================================
+      function clearScene() {
+        // Remove old objects to save RAM on mobile
+        if (particleSystem) {
+          scene.remove(particleSystem);
+          particleSystem = null;
+        }
+        console.log('🧹 Scene cleared - particle system reset');
+      }
+      
+      // ========================================
+      // Initialize selected distraction mode (Particle-Based)
+      // ========================================
+      function initMode() {
+        clearScene(); // Remove old particles first
+        
+        // All modes now use particles with different touch interaction styles
+        initParticles();
+        const style = localStorage.getItem('distractionStyle') || 'MAGNETIC';
+        activeMode = style;
+        
+        // Store original positions for RIPPLE mode (needed for return-to-rest effect)
+        if (style === 'RIPPLE' && particleGeometry) {
+          window.rippleOriginalPositions = new Float32Array(particleGeometry.attributes.position.array);
+        }
+        
+        console.log(`🎨 Mode initialized: ${activeMode}`);
+      }
+      
+      // Initialize the selected mode on startup
+      initMode();
+
+      // ========================================
+      // ========================================
+      // CINEMATIC SUBTITLE SYSTEM (Modern AR)
+      // ========================================
+      // Replaces clunky chat windows with gentle, fading subtitles
+      let subtitleTimeout; // Keeps track of the timer
+
+      function botMessage(text) {
+        const subtitle = document.getElementById('ar-subtitle');
+        
+        // Set the new text
+        subtitle.innerText = text;
+        
+        // Fade it IN
+        subtitle.style.opacity = 1;
+
+        // Clear any old timers so it doesn't fade out too early
+        clearTimeout(subtitleTimeout);
+
+        // Fade it OUT after 6 seconds (giving the patient plenty of time to read)
+        subtitleTimeout = setTimeout(() => {
+          subtitle.style.opacity = 0;
+        }, 6000);
+      }
+
+      // ========================================
+      // Personalized Chatbot Greeting (Clinical Metaphors)
+      // ========================================
+      function greetUser() {
+        // Check if user even wants the chatbot
+        if (localStorage.getItem('chatbotEnabled') === 'false') return; 
+
+        const style = localStorage.getItem('distractionStyle') || 'MAGNETIC';
+        
+        let welcomeMessage = "";
+        
+        if (style === 'MAGNETIC') {
+          welcomeMessage = "🐠 School of Light: Touch the screen to command a swarm of glowing particles like a school of fish. Lead them with your finger for active mental focus.";
+        } else if (style === 'RIPPLE') {
+          welcomeMessage = "💧 Glowing Pond: Touch to create ripples that push particles like droplets of water. Tap repeatedly or drag to create wave patterns. Feel the grounding control.";
+        } else if (style === 'BREATH_CORE') {
+          welcomeMessage = "⭐ Pulsing Star: Hold your finger down to inhale. Watch the particles expand like lungs filling with air. Release to exhale and watch them contract. Synchronize your breath with the light.";
+        }
+
+        // Display using modern cinematic subtitle system
+        botMessage(welcomeMessage);
+      }
+
+      // Call this right after scene finishes loading
+      greetUser();
+      
+      // Particle-specific variables (only used in PARTICLES mode)
+      // Window-level reference for mode switching from dashboard
+      window.switchDistractonMode = function(newStyle) {
+        localStorage.setItem('distractionStyle', newStyle);
+        initMode();
+        console.log(`✅ Switched to: ${newStyle}`);
+      };
+      
+      const touchPosition = new THREE.Vector3(0, 0, 0);
+      let isTouching = false;
+      const attractionForce = 0.008;
+      const maxParticleSpeed = 0.1;
+
+      // ========================================
+      // Playable Touch Interaction Function
+      // ========================================
+      // Applies different touch behaviors based on the user's selected distraction style
+      // ========================================
+      // ADVANCED TOUCH INTERACTION SYSTEM
+      // ========================================
+      // Mode 1: MAGNETIC - School of fish attraction with momentum
+      // Mode 2: RIPPLE - Wave physics with particle repulsion  
+      // Mode 3: BREATH_CORE - Synchronized breathing with particle aggregation
+      //
+      // GAP 2 + GAP 4 FIX: Clinical safety gates are enforced HERE first,
+      // before any mode function is ever called.
+      function applyTouchInteraction(style, touchPoint, isTouching) {
+        if (!particleGeometry || !particleGeometry.attributes.position) return;
+
+        // ── GAP 4 SAFETY GATE: BRADYCARDIA FREEZE ───────────────────────────
+        // BRADYCARDIA is medical caution time — no stimulation whatsoever.
+        // Block ALL touch interaction. Particles continue their own slow drift
+        // but cannot be driven by patient input.
+        if (currentStressLevel === 'BRADYCARDIA_ALERT') {
+          return; // Hard stop — no mode function runs
+        }
+
+        // ── GAP 2 SAFETY GATE: HIGH_STRESS MODE RESTRICTION ─────────────────
+        // MAGNETIC (high-stimulation chase) is not allowed when HR is elevated.
+        // RIPPLE and BREATH_CORE are therapeutically safe and still allowed.
+        if (currentStressLevel === 'HIGH_STRESS' && style === 'MAGNETIC') {
+          // applyMagneticMode itself also guards this, but we stop here for clarity
+          return;
+        }
+        // ────────────────────────────────────────────────────────────────────
+
+        const positions = particleGeometry.attributes.position.array;
+        
+        if (style === 'MAGNETIC') {
+          applyMagneticMode(positions, touchPoint, isTouching);
+        } else if (style === 'RIPPLE') {
+          applyRippleMode(positions, touchPoint, isTouching);
+        } else if (style === 'BREATH_CORE') {
+          applyBreathCoreMode(positions, isTouching);
+        }
+        
+        particleGeometry.attributes.position.needsUpdate = true;
+      }
+      
+      // ========================================
+      // MAGNETIC MODE: School of Fish Behavior
+      // ========================================
+      // GAP 2 FIX: Track last broadcast state for one-time chatbot notice
+      let _lastMagneticNoticeState = null;
+
+      function applyMagneticMode(positions, touchPoint, isTouching) {
+        // ── SAFETY GUARD (GAP 2 FIX) ────────────────────────────────────────
+        // High-stimulation finger-follow is medically UNSAFE when HR is already
+        // elevated. During HIGH_STRESS we disable attraction entirely and let
+        // particles decelerate naturally. This matches the supervisor requirement:
+        // "Mode restriction logic based on clinical state."
+        if (currentStressLevel === 'HIGH_STRESS') {
+          // Inform patient once when state first becomes HIGH_STRESS
+          if (_lastMagneticNoticeState !== 'HIGH_STRESS') {
+            _lastMagneticNoticeState = 'HIGH_STRESS';
+            botMessage("💆 Swarm paused — focusing on breathing to calm your heart rate first.");
+          }
+          // Apply damping only — let particles drift gently to rest
+          for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            particleVelocities[i3]     *= 0.95;
+            particleVelocities[i3 + 1] *= 0.95;
+            particleVelocities[i3 + 2] *= 0.95;
+          }
+          return; // Skip finger attraction completely
+        }
+        // Clear the notice flag once stress drops
+        if (_lastMagneticNoticeState === 'HIGH_STRESS') {
+          _lastMagneticNoticeState = null;
+          botMessage("✅ Heart rate calming. Swarm interaction restored.");
+        }
+        // ────────────────────────────────────────────────────────────────────
+
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          const vx_idx = i3;
+          const vy_idx = i3 + 1;
+          
+          if (isTouching) {
+            // Calculate direction to finger
+            const dx = touchPoint.x - positions[i3];
+            const dy = touchPoint.y - positions[i3 + 1];
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0.05) { // Avoid division issues
+              // Apply acceleration force (momentum-based)
+              // Creates smooth chasing behavior rather than snapping
+              const acceleration = 0.001; // Slowed down for lazy drifting motion
+              particleVelocities[vx_idx] += (dx / distance) * acceleration;
+              particleVelocities[vy_idx] += (dy / distance) * acceleration;
+            }
+          } else {
+            // When finger lifted: gently drift back to calm, random cloud
+            // Apply damping + slight centering force for a soothing return
+            particleVelocities[vx_idx] *= 0.97; // Friction
+            particleVelocities[vy_idx] *= 0.97;
+            
+            // Soft center pull (prevents particles from drifting off screen)
+            const distanceFromCenter = Math.sqrt(positions[i3] * positions[i3] + positions[i3 + 1] * positions[i3 + 1]);
+            if (distanceFromCenter > 3.0) {
+              const centerPull = 0.0005;
+              particleVelocities[vx_idx] -= (positions[i3] / distanceFromCenter) * centerPull;
+              particleVelocities[vy_idx] -= (positions[i3 + 1] / distanceFromCenter) * centerPull;
+            }
+          }
+        }
+      }
+      
+      // ========================================
+      // RIPPLE MODE: Wave Physics
+      // ========================================
+      function applyRippleMode(positions, touchPoint, isTouching) {
+        const rippleRadius = 1.5; // How far the ripple reaches
+        const ripplePower = 0.02;  // How hard particles are pushed (slowed down)
+        const returnSpeed = 0.004; // How quickly they return to original positions (slowed down)
+        
+        // Store original positions on mode switch (done in initMode)
+        if (!window.rippleOriginalPositions) {
+          window.rippleOriginalPositions = new Float32Array(positions);
+        }
+        
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          const origX = window.rippleOriginalPositions[i3];
+          const origY = window.rippleOriginalPositions[i3 + 1];
+          
+          if (isTouching) {
+            // Calculate distance from touch point
+            const dx = touchPoint.x - positions[i3];
+            const dy = touchPoint.y - positions[i3 + 1];
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Create expanding ripple effect (particles push away)
+            if (distance < rippleRadius) {
+              const force = (1 - distance / rippleRadius) * ripplePower; // Power decreases with distance
+              
+              if (distance > 0.05) {
+                // Push particle away from touch point
+                positions[i3] += (positions[i3] - touchPoint.x) / distance * force;
+                positions[i3 + 1] += (positions[i3 + 1] - touchPoint.y) / distance * force;
+              }
+            }
+          } else {
+            // When finger lifted: particles slowly flow back to original spread positions
+            // This creates a 'water filling void' effect
+            positions[i3] += (origX - positions[i3]) * returnSpeed;
+            positions[i3 + 1] += (origY - positions[i3 + 1]) * returnSpeed;
+          }
+        }
+      }
+      
+      // ========================================
+      // BREATH_CORE MODE: Pulsing Lung/Star
+      // ========================================
+      // Particles form dense sphere at center, expand on hold, contract on release
+      function applyBreathCoreMode(positions, isTouching) {
+        // Smooth breathing expansion/contraction
+        const minRadius = 0.3;  // Exhale: small tight core
+        const maxRadius = 2.2;  // Inhale: fully expanded lung
+        const transitionSpeed = 0.01; // How fast particles move (slowed down for therapeutic pacing)
+        
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          
+          // Get current distance from center (0,0,0)
+          const currentRadius = Math.sqrt(positions[i3] * positions[i3] + positions[i3 + 1] * positions[i3 + 1]);
+          
+          // Target radius based on touch state
+          const targetRadius = isTouching ? maxRadius : minRadius;
+          
+          if (currentRadius > 0.1) {
+            // Calculate how much to move toward target radius
+            const radiusDiff = targetRadius - currentRadius;
+            const moveAmount = radiusDiff * transitionSpeed;
+            
+            // Move particle radially outward/inward
+            const radialFactor = (currentRadius > 0) ? (currentRadius + moveAmount) / currentRadius : 1;
+            positions[i3] *= radialFactor;
+            positions[i3 + 1] *= radialFactor;
+          } else {
+            // Particle is too close to center; push it out slightly
+            const angle = Math.random() * Math.PI * 2;
+            const radius = minRadius + Math.random() * 0.2;
+            positions[i3] = Math.cos(angle) * radius;
+            positions[i3 + 1] = Math.sin(angle) * radius;
+          }
+        }
+      }
+      
+      // Particle visual state
+      let targetParticleOpacity = 0.8;
+      let targetParticleRotationSpeed = 0.001;
+      let currentParticleRotationSpeed = 0.001;
+      
+      // Legacy code wrapper (for backward compatibility with old code)
+      // If you have old particle initialization, it will be ignored
+
+      // ========================================
+      // Refined Particle Animation (State-Based Feedback)
+      // ========================================
+      // Updates particle system visual behavior based on clinical state
+      // Creates nuanced distraction therapy that adapts to patient condition
+      function animateParticles(state) {
+        // Set behavior parameters based on clinical state
+        let speedMult = 1.0;
+        let particleGlow = 0.5;
+        
+        switch(state) {
+          case 'HIGH_STRESS': // HR > 100 BPM
+            speedMult = 1.5; // 50% faster, hypnotic swirling
+            particleGlow = 1.0; // Full brightness for engaging distraction
+            console.log(`🔴 HIGH_STRESS: Particles accelerating to hypnotic state`);
+            break;
+            
+          case 'MODERATE': // HR 85-100 BPM
+            speedMult = 1.0; // Baseline motion
+            particleGlow = 0.7; // Medium brightness
+            console.log(`🟡 MODERATE: Particles at baseline engagement`);
+            break;
+            
+          case 'CALM_RECOVERY': // HR 60-80 BPM
+            speedMult = 0.6; // 40% slower, soothing motion
+            particleGlow = 0.3; // Dimmer, more subtle
+            console.log(`🟢 CALM_RECOVERY: Particles slowing to soothing rhythm`);
+            break;
+            
+          case 'BRADYCARDIA_ALERT': // HR < 50 BPM
+            speedMult = 0.3; // Very slow, pulsing
+            particleGlow = 0.4; // Medium (alert state needs some engagement)
+            console.log(`🟠 BRADYCARDIA_ALERT: Particles pulsing gently for alert`);
+            break;
+            
+          default:
+            speedMult = 1.0;
+            particleGlow = 0.5;
+        }
+        
+        // Update target values (actual updates happen in animate loop with lerp)
+        targetParticleRotationSpeed = 0.005 * speedMult;
+        targetParticleOpacity = particleGlow;
+      }
+
       // Enhances visibility and creates a premium, professional look
       therapeuticOrb.material.emissiveIntensity = 0.8; // Increased glow intensity
       therapeuticOrb.material.transparent = true;
@@ -561,6 +1607,10 @@
       let breathingInterval = null;
       let currentBreathingStep = "IN"; // Alternates between IN and OUT
 
+      // Biofeedback-driven particle behavior
+      let currentStressLevel = "MODERATE"; // Track stress level for particle animation
+      let particleSwirl = 0; // Animation accumulator for swirling motion
+
       function cctToHex(cctK) {
         // Simple mapping (enough for mock)
         if (cctK <= 3000) return "#FFD8A8"; // warm
@@ -606,24 +1656,27 @@
       }
 
       // ========================================
-      // Furniture Material Update (Material Swap Method)
+      // Multi-Mode Color Update (Material Swap Method)
       // ========================================
-      // Directly updates material colors on furniture objects when stress level changes
-      // Creates the effect of the room being "physically repainted" to the therapeutic color
-      // Traverses all mesh nodes in the furniture group and transitions their colors
+      // Updates visualization colors when stress level changes
       function updateFurnitureColor(newHex) {
-        // Check if furniture group exists in the scene
-        // furnitureGroup should be defined if 3D models are loaded
-        if (typeof furnitureGroup !== 'undefined' && furnitureGroup) {
-          const newColor = new THREE.Color(newHex);
-          
-          // Traverse all child nodes in the furniture group
-          furnitureGroup.traverse((node) => {
-            // Only update mesh objects (skip lights, cameras, etc.)
-            if (node.isMesh && node.material) {
-              // Smoothly transition each furniture piece's material color
-              // 0.05 = slow transition for smooth visual experience
-              node.material.color.lerp(newColor, 0.05);
+        if (activeMode === 'PARTICLES' && particleMaterial) {
+          // Update particle color
+          particleMaterial.color.set(newHex);
+        } else if (activeMode === 'TREE' && stressTree) {
+          // Update tree leaves color
+          stressTree.traverse((node) => {
+            if (node.name === 'Leaves' && node.material) {
+              node.material.color.lerp(new THREE.Color(newHex), 0.05);
+              node.material.emissive.set(newHex);
+            }
+          });
+        } else if (activeMode === 'LOTUS' && breathingLotus) {
+          // Update lotus petal color
+          breathingLotus.traverse((node) => {
+            if (node.name && node.name.startsWith('Petal_') && node.material) {
+              node.material.color.lerp(new THREE.Color(newHex), 0.05);
+              node.material.emissive.set(newHex);
             }
           });
         }
@@ -644,29 +1697,28 @@
         // (vitals may change while still in HIGH_STRESS)
         patientMessage = contextMessage;
 
-        const coachingElement = document.getElementById("coachingText");
-
         // Update UI immediately with current step and new message
         if (breathingInterval) {
           // Interval already running - update current display with new message
           const currentStep =
             currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
-          coachingElement.textContent = patientMessage + " " + currentStep;
+          botMessage(patientMessage + " " + currentStep);
           return;
         }
 
         // Set initial message immediately (don't wait for first interval)
-        coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
+        const initialStep = "BREATHE IN ⬆️";
+        botMessage(patientMessage + " " + initialStep);
         currentBreathingStep = "IN";
         vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
-            coachingElement.textContent = patientMessage + " BREATHE OUT ⬇️";
+            botMessage(patientMessage + " BREATHE OUT ⬇️");
             currentBreathingStep = "OUT";
             vignetteTargetOpacity = 0.15; // Breathe OUT = glow fades
           } else {
-            coachingElement.textContent = patientMessage + " BREATHE IN ⬆️";
+            botMessage(patientMessage + " BREATHE IN ⬆️");
             currentBreathingStep = "IN";
             vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
           }
@@ -682,12 +1734,57 @@
 
       // -----------------------------
       // 4) Socket listener - Handle ar:command from server
+      // ===== MEDICAL DEVICE PROTOCOL =====
+      // Phase 1: CALIBRATION (0-30s) - Collect baseline BPM
+      // Phase 2: THERAPY (30s+) - Apply stress-responsive visuals
+      // Phase 3: REPORT - Generate session outcome metrics
       // -----------------------------
       socket.on("ar:command", (data) => {
+        // === PHASE 1: CALIBRATION ===
+        if (!isCalibrated) {
+          // During calibration: record BPM, ignore stress visualization
+          recordBPMReading(data.vitals.hr);
+          
+          // Show calibration message
+          const secondsRemaining = Math.max(0, Math.ceil(
+            (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS - 
+            (Date.now() - calibrationStartTime)) / 1000
+          ));
+          botMessage(`📊 Measuring baseline heart rate... ${secondsRemaining}s`);
+          
+          // Update display but don't apply stress animation yet
+          document.getElementById("liveHR").textContent = data.vitals.hr;
+          document.getElementById("liveHRV").textContent = data.vitals.hrv;
+          document.getElementById("liveState").textContent = "CALIBRATING";
+          
+          return; // Don't proceed to stress visualization
+        }
+
+        // === PHASE 2: THERAPY (post-calibration) ===
+        // Record BPM for session metrics
+        recordBPMReading(data.vitals.hr);
+        
+        // SAFETY: Always use the clamped, non-linear stress mapping
+        // This prevents "dangerous escalation" mentioned in supervisor review
+        const normalizedStress = getNormalizedStress(data.vitals.hr);
+        
+        // Store current stress level for biofeedback particle animation
+        currentStressLevel = data.state;
+
+        // GAP 3 FIX: Record this state into short-term stress history
+        // Enables chatbot to detect persistent/recurring stress patterns
+        recordStressEvent(data.state);
+        
+        // Trigger refined particle animation based on state
+        animateParticles(currentStressLevel);
+        
         // Update live display at top
         document.getElementById("liveHR").textContent = data.vitals.hr;
         document.getElementById("liveHRV").textContent = data.vitals.hrv;
         document.getElementById("liveState").textContent = data.state;
+        
+        // DEBUG: Show normalized stress in console
+        console.log(`HR: ${data.vitals.hr} BPM → Normalized Stress: ${normalizedStress.toFixed(2)} | State: ${data.state}`);
 
         // Map the clinical/scientific reasoning to the top right panel
         document.getElementById("insightText").textContent =
@@ -697,31 +1794,42 @@
         const vPanel = document.getElementById("vitalsPanel");
         const iPanel = document.getElementById("insightsPanel");
 
+        // Use therapeutic color for panel accents (not hardcoded blue/red)
+        // This keeps the patient's chosen color consistent throughout the session
+        const accentColor = hex; // Use the therapeutic palette color
+        
         if (data.state === "HIGH_STRESS") {
-          // Apply Calming Blue Glow
-          vPanel.style.borderColor = "#2e8bff";
-          vPanel.style.boxShadow = "0 0 20px rgba(46, 139, 255, 0.6)";
-          iPanel.style.borderColor = "#2e8bff";
+          // Highlight without overriding patient's color choice
+          vPanel.style.borderColor = accentColor;
+          vPanel.style.boxShadow = `0 0 20px rgba(255, 255, 255, 0.4)`; // White glow highlighting
+          iPanel.style.borderColor = accentColor;
         } else if (data.state === "BRADYCARDIA_ALERT") {
-          // Apply Urgent Red Glow
+          // Alert state - subtle blend of alert + therapeutic color
           vPanel.style.borderColor = "#ff5252";
           vPanel.style.boxShadow = "0 0 20px rgba(255, 82, 82, 0.6)";
           iPanel.style.borderColor = "#ff5252";
         } else {
-          // Reset to Neutral
-          vPanel.style.borderColor = "rgba(100, 200, 255, 0.6)";
+          // Calm state - use therapeutic color
+          vPanel.style.borderColor = accentColor;
           vPanel.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.5)";
           iPanel.style.borderColor = "rgba(150, 150, 150, 0.4)";
         }
 
-        // Handle breathing loop for HIGH_STRESS state (Task 2.3)
+        // Handle breathing loop for HIGH_STRESS state (GAP 3 FIX applied here)
+        // Chatbot message now reflects short-term stress history, not just current state
         if (data.state === "HIGH_STRESS") {
-          startBreathingLoop(data.message_patient);
+          const historyCtx = getStressHistoryContext();
+          let breathMessage = data.message_patient; // Default: server message
+          if (historyCtx === 'PERSISTENT_STRESS') {
+            breathMessage = "⚠️ Heart rate has been elevated multiple times. Let's slow down together. ";
+          } else if (historyCtx === 'RECURRING_STRESS') {
+            breathMessage = "💛 You're doing well. Let's try a slower breath this time. ";
+          }
+          startBreathingLoop(breathMessage);
         } else {
           stopBreathingLoop();
           // Reset to the default message from the server if not stressed
-          document.getElementById("coachingText").textContent =
-            data.message_patient;
+          botMessage(data.message_patient);
         }
 
         const v = data.visual;
@@ -785,6 +1893,104 @@
         }
       });
 
+      // ========================================
+      // HYBRID DISTRACTION: Procedural Base + Particle Morphing
+      // ========================================
+      // Morph 800 particles into shape formations with smooth LERP (not snapping)
+      // Uses time-based animation for swirling effect and memory-safe color references
+      function morphParticlesToShape(shape, radius) {
+        if (!particleGeometry || !particleGeometry.attributes.position) return;
+        
+        const positionAttribute = particleGeometry.attributes.position;
+        const posArray = positionAttribute.array;
+        const time = Date.now() * 0.001; // Continuous time variable for swirling
+        
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          let targetX, targetY, targetZ;
+          
+          if (shape === 'SPHERE_CLOUD') {
+            // TREE MODE: Particles swirl around tree top as glowing leaf cloud
+            const theta = (i / particleCount) * Math.PI * 2;
+            const phi = (i * 1.618) % Math.PI; // Golden angle distribution
+            
+            // Added "+ time * 0.2" so cloud slowly rotates/swirls (not frozen)
+            targetX = Math.sin(phi) * Math.cos(theta + time * 0.2) * radius;
+            targetY = 0.3 + Math.cos(phi) * radius; // Tree top
+            targetZ = Math.sin(phi) * Math.sin(theta + time * 0.2) * radius;
+            
+          } else if (shape === 'RING') {
+            // LOTUS MODE: Particles form ring around lotus, rotating and breathing
+            const angle = (i / particleCount) * Math.PI * 2;
+            const ringVariation = (Math.sin(i * 0.1 + time) * 0.1);
+            
+            // Ring rotates while petals breathe
+            targetX = Math.cos(angle + time * 0.1) * (radius + ringVariation);
+            // Fixed pseudo-random depth (no jitter)
+            targetY = (Math.sin(i * 123.45) * 0.3);
+            targetZ = Math.sin(angle + time * 0.1) * (radius + ringVariation);
+          }
+          
+          // THE MAGIC LERP: Smoothly glide particles to target position (not snapping)
+          // 0.05 speed = fluid 2-4 frame transition time
+          // Prevents visible "jumping" when mode switches
+          posArray[i3] += (targetX - posArray[i3]) * 0.05;
+          posArray[i3 + 1] += (targetY - posArray[i3 + 1]) * 0.05;
+          posArray[i3 + 2] += (targetZ - posArray[i3 + 2]) * 0.05;
+        }
+        
+        positionAttribute.needsUpdate = true;
+      }
+      
+      // Update visuals based on active therapeutic mode
+      // Uses GLOBAL color objects (prevents memory leak from creating 60 colors/sec)
+      function updateTherapeuticVisuals(state) {
+        const style = localStorage.getItem('distractionStyle');
+        
+        if (style === 'TREE' && stressTree) {
+          // 1. Update tree leaf color based on stress state (using global colors)
+          const leaves = stressTree.getObjectByName('Leaves');
+          if (leaves && leaves.material) {
+            const targetColor = (state === 'HIGH_STRESS') ? panicColorTree : calmColor;
+            
+            leaves.material.color.lerp(targetColor, 0.05);
+            leaves.material.emissive.lerp(targetColor, 0.05);
+            
+            // Breathing leaf scale (gentle pulsing)
+            const breathFactor = Math.sin(Date.now() * 0.002) * 0.1;
+            leaves.scale.set(1.0 + breathFactor, 1.0 + breathFactor, 1.0 + breathFactor);
+          }
+          
+          // 2. Morph particles into sphere cloud around tree (smooth LERP movement)
+          morphParticlesToShape('SPHERE_CLOUD', 0.5);
+          
+        } else if (style === 'LOTUS' && breathingLotus) {
+          // 1. Lotus petals breathing animation (respiratory rhythm: ~6 breaths/min)
+          const breathFactor = Math.sin(Date.now() * 0.002) * 0.4;
+          
+          breathingLotus.children.forEach((child, index) => {
+            if (child.name.startsWith('Petal')) {
+              // Petals open/close with breathing
+              child.rotation.x = breathFactor * 0.5;
+              
+              // Fixed rotation: index-based spiral + sine sway (no infinite spinning)
+              // Each petal maintains its position in spiral pattern while swaying
+              child.rotation.z = (index * 0.1) + Math.sin(Date.now() * 0.001) * 0.1;
+              
+              // Update petal color (stress-responsive, using global colors)
+              if (child.material) {
+                const targetColor = (state === 'HIGH_STRESS') ? panicColorLotus : calmColor;
+                child.material.color.lerp(targetColor, 0.05);
+                child.material.emissive.lerp(targetColor, 0.05);
+              }
+            }
+          });
+          
+          // 2. Morph particles into petal ring around lotus (smooth LERP movement)
+          morphParticlesToShape('RING', 0.7);
+        }
+      }
+
       // -----------------------------
       // 5) Render loop (smooth transitions + pulse)
       // -----------------------------
@@ -794,11 +2000,22 @@
       function animate() {
         requestAnimationFrame(animate);
 
-        // Smooth color transitions using lerp (10% per frame = ~1.5 sec fade)
-        currentColor.lerp(targetColor, 0.1);
-        currentEmissive.lerp(targetEmissive, 0.1);
+        // ── GAP 1 FIX: deltaTime normalisation ───────────────────────────────
+        // Every lerp alpha is now multiplied by deltaTime so the visual speed is
+        // identical on a 20fps Samsung A12 and a 60fps desktop.
+        // Formula:  lerp(a, b, speed * deltaTime)   where speed is calibrated at 60fps.
+        // Cap deltaTime at 3× (50ms) to prevent a single tab-switch spike from
+        // teleporting all values — especially important for cardiac-safe animations.
+        const now = performance.now();
+        const deltaTime = Math.min((now - lastFrameTime) / 16.667, 3.0); // normalised to 60fps
+        lastFrameTime = now;
+        // ─────────────────────────────────────────────────────────────────────
+
+        // Smooth color transitions (speed calibrated for ~1.5s at 60fps)
+        currentColor.lerp(targetColor, 0.1 * deltaTime);
+        currentEmissive.lerp(targetEmissive, 0.1 * deltaTime);
         currentEmissiveIntensity +=
-          (targetEmissiveIntensity - currentEmissiveIntensity) * 0.1;
+          (targetEmissiveIntensity - currentEmissiveIntensity) * (0.1 * deltaTime);
 
         // Apply smoothed colors to orb material (The Source)
         therapeuticOrb.material.color.copy(currentColor);
@@ -809,25 +2026,140 @@
         glowMesh.material.color.copy(currentColor);
         
         // Step 7 Continued: Smooth ambient wash transitions (The Room)
-        currentAmbientColor.lerp(targetAmbientColor, 0.05); // Slower lerp for subtle wall tint
-        currentAmbientIntensity += (targetAmbientIntensity - currentAmbientIntensity) * 0.05;
+        currentAmbientColor.lerp(targetAmbientColor, 0.05 * deltaTime);
+        currentAmbientIntensity += (targetAmbientIntensity - currentAmbientIntensity) * (0.05 * deltaTime);
         ambientLight.color.copy(currentAmbientColor);
         ambientLight.intensity = currentAmbientIntensity;
 
         // Breathing vignette animation (slow lerp prevents startling cardiac patients)
-        vignetteCurrentOpacity += (vignetteTargetOpacity - vignetteCurrentOpacity) * VIGNETTE_FADE_SPEED;
+        vignetteCurrentOpacity += (vignetteTargetOpacity - vignetteCurrentOpacity) * (VIGNETTE_FADE_SPEED * deltaTime);
         vignetteMaterial.opacity = vignetteCurrentOpacity;
 
         // Full room tint animation (smooth color wash during stress)
-        // MultiplyBlending ensures the walls are 'stained' with the therapeutic color
-        roomTintCurrentOpacity += (roomTintTargetOpacity - roomTintCurrentOpacity) * VIGNETTE_FADE_SPEED;
+        roomTintCurrentOpacity += (roomTintTargetOpacity - roomTintCurrentOpacity) * (VIGNETTE_FADE_SPEED * deltaTime);
         roomTintMat.opacity = roomTintCurrentOpacity;
 
         // Pulse animation for bradycardia alert
         if (isPulsing) {
-          const scale = 1.0 + Math.sin(Date.now() * 0.005) * 0.15; // Pulse between 0.85 and 1.15
+          const scale = 1.0 + Math.sin(Date.now() * 0.005) * 0.15;
           therapeuticOrb.scale.set(scale, scale, scale);
         }
+
+        // ========================================
+        // Apply Touch Interaction for Current Mode
+        // ========================================
+        applyTouchInteraction(activeMode, touchPosition, isTouching);
+
+        // ========================================
+        // Update Particle System (Soft Fascination Interaction)
+        // ========================================
+        if (particleGeometry && particleGeometry.attributes.position) {
+          const positionAttribute = particleGeometry.attributes.position;
+          const posArray = positionAttribute.array;
+          
+          // Biofeedback: Stress level controls particle behavior intensity
+          let stressMultiplier = 1.0;
+          let swirlingSpeed = 0.003;
+          
+          if (currentStressLevel === 'HIGH_STRESS') {
+            stressMultiplier = 1.5;
+            swirlingSpeed = 0.015;
+          } else if (currentStressLevel === 'CALM_RECOVERY') {
+            stressMultiplier = 0.6;
+            swirlingSpeed = 0.0015;
+          } else if (currentStressLevel === 'BRADYCARDIA_ALERT') {
+            stressMultiplier = 0.8;
+            swirlingSpeed = 0.009;
+          }
+          
+          // GAP 1 FIX: swirlingSpeed accumulation is now deltaTime-scaled
+          // so particle motion speed is identical on all frame rates
+          particleSwirl += swirlingSpeed * stressMultiplier * deltaTime;
+          
+          // Update each particle
+          for (let i = 0; i < particleCount; i++) {
+            const i3 = i * 3;
+            
+            const px = posArray[i3];
+            const py = posArray[i3 + 1];
+            const pz = posArray[i3 + 2];
+            
+            let vx = particleVelocities[i3];
+            let vy = particleVelocities[i3 + 1];
+            let vz = particleVelocities[i3 + 2];
+            
+            // ====== BIOFEEDBACK SWIRLING (deltaTime-scaled forces) ======
+            const angle = particleSwirl + (i / particleCount) * Math.PI * 2;
+            const radius = 1.5;
+            const swirledY = Math.sin(angle) * radius * stressMultiplier;
+            const swirledZ = Math.cos(angle * 0.5) * radius * stressMultiplier;
+            
+            vx += Math.sin(particleSwirl + i) * 0.0006 * stressMultiplier * deltaTime;
+            vy += swirledY * 0.003 * stressMultiplier * deltaTime;
+            vz += swirledZ * 0.01 * stressMultiplier * deltaTime;
+            
+            // Apply attraction to touch point if touching
+            if (isTouching) {
+              const dx = touchPosition.x - px;
+              const dy = touchPosition.y - py;
+              const dz = touchPosition.z - pz;
+              const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+              
+              if (distance > 0.1) {
+                vx += (dx / distance) * attractionForce * deltaTime;
+                vy += (dy / distance) * attractionForce * deltaTime;
+                vz += (dz / distance) * attractionForce * deltaTime;
+              }
+            }
+            
+            // Random walk (organic floating)
+            vx += (Math.random() - 0.5) * 0.005 * stressMultiplier * deltaTime;
+            vy += (Math.random() - 0.5) * 0.005 * stressMultiplier * deltaTime;
+            vz += (Math.random() - 0.5) * 0.005 * stressMultiplier * deltaTime;
+            
+            // Speed cap
+            const maxSpeed = maxParticleSpeed * (1 + stressMultiplier * 0.3);
+            const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
+            if (speed > maxSpeed) {
+              vx = (vx / speed) * maxSpeed;
+              vy = (vy / speed) * maxSpeed;
+              vz = (vz / speed) * maxSpeed;
+            }
+            
+            // Damping (deltaTime-scaled so friction is frame-rate-independent)
+            const dampingFactor = Math.pow(0.98, deltaTime);
+            vx *= dampingFactor;
+            vy *= dampingFactor;
+            vz *= dampingFactor;
+            
+            // Update position
+            posArray[i3]     += vx;
+            posArray[i3 + 1] += vy;
+            posArray[i3 + 2] += vz;
+            
+            // Boundary wrap
+            const boundary = 3;
+            if (Math.abs(posArray[i3])     > boundary) posArray[i3]     = -Math.sign(posArray[i3])     * boundary;
+            if (Math.abs(posArray[i3 + 1]) > boundary) posArray[i3 + 1] = -Math.sign(posArray[i3 + 1]) * boundary;
+            if (Math.abs(posArray[i3 + 2]) > boundary) posArray[i3 + 2] = -Math.sign(posArray[i3 + 2]) * boundary;
+            
+            particleVelocities[i3]     = vx;
+            particleVelocities[i3 + 1] = vy;
+            particleVelocities[i3 + 2] = vz;
+          }
+          
+          positionAttribute.needsUpdate = true;
+        }
+
+        // ========================================
+        // Apply State-Based Particle Visuals
+        // ========================================
+        currentParticleRotationSpeed += (targetParticleRotationSpeed - currentParticleRotationSpeed) * (0.1 * deltaTime);
+        if (particleSystem) {
+          particleSystem.rotation.y += currentParticleRotationSpeed * deltaTime;
+          particleMaterial.opacity += (targetParticleOpacity - particleMaterial.opacity) * (0.05 * deltaTime);
+        }
+
 
         renderer.render(scene, camera);
       }
@@ -871,6 +2203,215 @@
           cameraStream.getTracks().forEach(track => track.stop());
         }
       });
+
+      // ========================================
+      // TOUCH INTERACTION: Particle Attraction
+      // ========================================
+      // Converts screen touches to 3D coordinates and attracts particles
+      
+      // ========================================
+      // HR SLIDER TEST CONTROL
+      // ========================================
+      // Local testing slider that simulates watch HR input
+      // Uses same biofeedback logic that will connect to real watch on Wednesday
+      const hrSlider = document.getElementById("hr-slider");
+      if (hrSlider) {
+        hrSlider.addEventListener("input", (e) => {
+        const hr = Number(e.target.value);
+        document.getElementById("hr-display").innerText = hr;
+        
+        // ===== TESTING FEATURE: Feed slider data to calibration system =====
+        // During local testing, slider changes should drive the baseline measurement
+        recordBPMReading(hr);
+        
+        // === SHOW CALIBRATION COUNTDOWN (for local testing) ===
+        if (!isCalibrated) {
+          const secondsRemaining = Math.max(0, Math.ceil(
+            (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS - 
+            (Date.now() - calibrationStartTime)) / 1000
+          ));
+          const readingsCollected = calibrationBPMData.length;
+          botMessage(`📊 Measuring baseline... ${secondsRemaining}s (${readingsCollected} samples)`);
+        }
+        
+        // Mirror backend logic (EBD Engine) for state classification
+        // This is the EXACT same logic the watch will use
+        let stateFromHR = "MODERATE"; // Default
+        
+        if (hr < 50) {
+          stateFromHR = "BRADYCARDIA_ALERT";
+        } else if (hr > 100) {
+          stateFromHR = "HIGH_STRESS";
+        } else if (hr >= 85 && hr <= 100) {
+          stateFromHR = "MODERATE";
+        } else if (hr >= 60 && hr <= 80) {
+          stateFromHR = "CALM_RECOVERY";
+        }
+        
+        // Update UI display
+        document.getElementById("hr-state").textContent = `State: ${stateFromHR}`;
+        
+        // Map state to color feedback
+        let stateColor = "#81c784"; // Default green
+        if (stateFromHR === "HIGH_STRESS") {
+          stateColor = "#ff6b6b"; // Red
+        } else if (stateFromHR === "BRADYCARDIA_ALERT") {
+          stateColor = "#ffa726"; // Orange
+        } else if (stateFromHR === "CALM_RECOVERY") {
+          stateColor = "#4fc3f7"; // Blue
+        }
+        document.getElementById("hr-state").style.color = stateColor;
+        
+        // Immediately update particle behavior (same as watch would do)
+        currentStressLevel = stateFromHR;
+
+        // GAP 3 FIX: Record state into short-term history so chatbot can detect patterns
+        recordStressEvent(stateFromHR);
+        
+        // Trigger refined particle animation based on state
+        animateParticles(currentStressLevel);
+
+        // GAP 3 FIX: Context-aware chatbot message for sustained stress
+        if (stateFromHR === "HIGH_STRESS") {
+          const historyCtx = getStressHistoryContext();
+          let breathMessage = "🌬️ Heart rate elevated. Let's breathe together. ";
+          if (historyCtx === 'PERSISTENT_STRESS') {
+            breathMessage = "⚠️ Heart rate has been elevated multiple times. Let's slow down together. ";
+          } else if (historyCtx === 'RECURRING_STRESS') {
+            breathMessage = "💛 You're doing well. Let's try a slower breath this time. ";
+          }
+          startBreathingLoop(breathMessage);
+        } else if (stateFromHR !== "BRADYCARDIA_ALERT") {
+          // Stop breathing loop for calm/moderate states
+          stopBreathingLoop();
+        }
+
+        // GAP 4B FIX: BRADYCARDIA automatic safety palette override
+        // Forces room color to a calm, alert-safe warm white to stop therapeutic
+        // stimulation and signal the caution state visually.
+        if (stateFromHR === "BRADYCARDIA_ALERT") {
+          const safetyColor = '#C8B89A'; // Warm desaturated EARTH tone — grounding, non-stimulating
+          targetColor.set(safetyColor);
+          targetEmissive.set(safetyColor);
+          targetAmbientColor.set(safetyColor);
+          if (particleMaterial) particleMaterial.color.set(safetyColor);
+          botMessage("🟠 Low heart rate detected. Please rest and breathe steadily. Interaction paused.");
+        }
+        
+        console.log(`🧪 TEST: HR changed to ${hr} bpm → State: ${stateFromHR} | History: ${getStressHistoryContext()}`);
+        });
+      }
+      
+      // Helper: Check if click is within any modal button's bounding box (canvas-agnostic)
+      // The canvas covers the buttons visually, so we check client coordinates instead
+      // Returns: null if no button, or the button element if click is within bounds
+      function getClickedButton(clientX, clientY) {
+        const buttonIds = ["endSessionBtn", "closeSessionBtn", "downloadReportBtn"];
+        
+        for (const btnId of buttonIds) {
+          const btn = document.getElementById(btnId);
+          if (!btn) continue;
+          
+          const rect = btn.getBoundingClientRect();
+          if (clientX >= rect.left && clientX <= rect.right &&
+              clientY >= rect.top && clientY <= rect.bottom) {
+            return btn; // Found clicked button
+          }
+        }
+        return null; // No button clicked
+      }
+
+      window.addEventListener("touchstart", (event) => {
+        // Check if touch is within any button's bounding box
+        const touch = event.touches[0];
+        const clickedBtn = getClickedButton(touch.clientX, touch.clientY);
+        
+        if (clickedBtn) {
+          console.log("🛑 Touch on button detected:", clickedBtn.id, "- TRIGGERING click");
+          clickedBtn.click(); // Programmatically trigger the clicked button
+          return; // Prevent 3D processing
+        }
+        
+        isTouching = true;
+        updateTouchPosition(event.touches[0]);
+      });
+      
+      window.addEventListener("touchmove", (event) => {
+        // Check if touch is within any button's bounding box
+        const touch = event.touches[0];
+        const clickedBtn = getClickedButton(touch.clientX, touch.clientY);
+        
+        if (clickedBtn) {
+          return; // Don't process 3D updates while on button
+        }
+        
+        if (isTouching) {
+          updateTouchPosition(event.touches[0]);
+        }
+      });
+      
+      window.addEventListener("touchend", () => {
+        isTouching = false;
+      });
+      
+      // Mouse support for desktop testing
+      window.addEventListener("mousedown", (event) => {
+        // Check if click is within any button's bounding box
+        const clickedBtn = getClickedButton(event.clientX, event.clientY);
+        console.log("🖱️ MOUSEDOWN at:", event.clientX, event.clientY, "| Clicked button:", clickedBtn ? clickedBtn.id : "none");
+        
+        if (clickedBtn) {
+          console.log("🛑🛑🛑 Mouse click on", clickedBtn.id, "detected - TRIGGERING button click");
+          clickedBtn.click(); // Programmatically trigger the clicked button
+          return; // Prevent 3D processing
+        }
+        
+        isTouching = true;
+        updateTouchPosition(event);
+      });
+      
+      window.addEventListener("mousemove", (event) => {
+        // Check if moving over any button's bounding box
+        const clickedBtn = getClickedButton(event.clientX, event.clientY);
+        if (clickedBtn) {
+          return;
+        }
+        
+        if (isTouching) {
+          updateTouchPosition(event);
+        }
+      });
+      
+      window.addEventListener("mouseup", () => {
+        isTouching = false;
+      });
+      
+      // Convert 2D screen coordinates to 3D world coordinates
+      function updateTouchPosition(event) {
+        const clientX = event.clientX || event.touches[0].clientX;
+        const clientY = event.clientY || event.touches[0].clientY;
+        
+        // Normalize to -1 to +1 (NDC - Normalized Device Coordinates)
+        const x = (clientX / window.innerWidth) * 2 - 1;
+        const y = -(clientY / window.innerHeight) * 2 + 1;
+        
+        // Create a raycaster from camera through screen point
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera({x, y}, camera);
+        
+        // Create a plane at distance 1.5 from camera (where orb approximately is)
+        const planeNormal = new THREE.Vector3(0, 0, 1);
+        const planePoint = new THREE.Vector3(0, 0, -1.5);
+        const plane = new THREE.Plane(planeNormal, 0);
+        plane.setFromNormalAndCoplanarPoint(planeNormal, planePoint);
+        
+        // Find intersection point with plane
+        const intersection = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, intersection);
+        
+        touchPosition.copy(intersection);
+        console.log(`👆 Touch at 3D position: (${touchPosition.x.toFixed(2)}, ${touchPosition.y.toFixed(2)}, ${touchPosition.z.toFixed(2)})`);
+      }
 
       // Start camera automatically when page finishes loading
       window.addEventListener("load", startCamera);
