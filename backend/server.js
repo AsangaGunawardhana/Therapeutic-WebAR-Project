@@ -12,11 +12,24 @@ const server = http.createServer(app);
 // 3. Attach Socket.IO to the server
 const io = new Server(server);
 
-// 4. Serve static files from this folder (so index.html can be loaded)
+// 4. Redirect root to login page — auth entry point
+app.get('/', (req, res) => res.redirect('/login.html'));
+
+// 5. COOP header — required for Google Identity Services popup flow.
+//    Without this, Chrome blocks the OAuth popup from posting the
+//    credential token back to the opener window.
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html') || req.path === '/') {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  }
+  next();
+});
+
+// 6. Serve static files from the frontend folder
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 const DEBOUNCE_MS = 1200; // wait before reacting
-const HOLD_MS = 7000; // stay in one state
+const HOLD_MS = 3000; // stay in one state
 
 let lastState = null;
 let lastHR = null;
@@ -81,6 +94,105 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
   });
 });
+
+// ========================================
+// ⌚ HARDWARE BRIDGE: TIZEN WATCH LISTENER
+// ========================================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.all('/hr', (req, res) => {
+    let hrValue = req.query.hr || req.query.heartrate || req.body.hr || req.body.heartrate;
+    if (!hrValue && Object.keys(req.body).length > 0) hrValue = Object.keys(req.body)[0];
+
+    if (hrValue) {
+        const liveHR = parseInt(hrValue, 10);
+        console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM`);
+
+        let currentState = "MODERATE";
+        if (liveHR < 50) currentState = "BRADYCARDIA_ALERT";
+        else if (liveHR > 100) currentState = "HIGH_STRESS";
+        else if (liveHR >= 60 && liveHR <= 80) currentState = "CALM_RECOVERY";
+
+        io.emit('ar:command', {
+            state: currentState,
+            vitals: { hr: liveHR, hrv: 60 },
+            visual: { colorOrCCT: "#FFBF00", intensity: 0.8 },
+            message_patient: "Live hardware connection active.",
+            message_clinical: "Monitoring physical watch telemetry."
+        });
+        res.status(200).send('OK');
+    } else {
+        res.status(400).send('Awaiting HR data');
+    }
+});
+
+// =====================================================
+// ⌚ LIVE WATCH BRIDGE: HYPERATE WEBSOCKET
+// =====================================================
+const WebSocket = require('ws');
+
+const HYPERATE_SESSION = '5038D';
+const HYPERATE_TOKEN   = 'Q5Ag4eAQBL4VJqG33DK3FPyItfEHsmgmVp1z9kk7';
+
+function connectHypeRate() {
+    const hrSocket = new WebSocket(
+        `wss://app.hyperate.io/socket/websocket?token=${HYPERATE_TOKEN}&vsn=2.0.0`
+    );
+
+    hrSocket.on('open', () => {
+        console.log(`✅ HypeRate connected — watching: ${HYPERATE_SESSION}`);
+        hrSocket.send(JSON.stringify({
+            "topic": `hr:${HYPERATE_SESSION}`,
+            "event": "phx_join",
+            "payload": {},
+            "ref": 0
+        }));
+        // Phoenix heartbeat — required every 10 seconds
+        const hb = setInterval(() => {
+            if (hrSocket.readyState === WebSocket.OPEN) {
+                hrSocket.send(JSON.stringify({
+                    "topic": "phoenix", "event": "heartbeat",
+                    "payload": {}, "ref": 0
+                }));
+            } else {
+                clearInterval(hb);
+            }
+        }, 10000);
+    });
+
+    hrSocket.on('message', (data) => {
+        try {
+            const msg = JSON.parse(data);
+            if (msg.event === 'hr_update') {
+                const hr = msg.payload.hr;
+                console.log(`❤️ LIVE HR: ${hr} BPM`);
+                const state = hr < 50  ? 'BRADYCARDIA_ALERT'
+                            : hr > 100 ? 'HIGH_STRESS'
+                            : hr < 80  ? 'CALM_RECOVERY'
+                            : 'MODERATE';
+                safeEmit({
+                    state,
+                    vitals: { hr },
+                    message_clinical: "Live Apple Watch via HypeRate",
+                    message_patient: "Syncing with your heart..."
+                });
+            }
+        } catch (e) {}
+    });
+
+    hrSocket.on('error', (err) => {
+        console.error('❌ HypeRate error:', err.message);
+    });
+
+    hrSocket.on('close', (code) => {
+        console.warn(`⚠️ HypeRate closed (code: ${code}). Retrying in 30s...`);
+        setTimeout(connectHypeRate, 30000); // auto-reconnect
+    });
+}
+
+connectHypeRate();
+
 
 // 8. Start the server on port 3000
 const PORT = 3000;
