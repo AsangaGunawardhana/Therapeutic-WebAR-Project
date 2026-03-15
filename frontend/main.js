@@ -29,29 +29,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle launch button click
     launchBtn.addEventListener('click', () => {
-        const palette = paletteSelect.value;
-        const chatbot = chatbotToggle.checked;
+        // 1. Get the selections
+        const selectedColor = document.getElementById('userPalette').value;
+        const selectedStyle = document.getElementById('distraction-style-select').value;
+        const isChatbotEnabled = document.getElementById('chatbotToggle').checked;
 
-        // Client-side validation: ensure palette is valid before saving
-        if (!VALID_PALETTES.includes(palette)) {
-            console.error(`Invalid palette selection: "${palette}". Using default.`);
-            localStorage.setItem('selectedPalette', DEFAULT_PALETTE);
-            alert('Invalid color palette selected. Using default Amber palette.');
-            return; // Prevent navigation with invalid data
-        }
-
-        // Save validated preferences to localStorage
-        localStorage.setItem('selectedPalette', palette);
-        localStorage.setItem('chatbotActive', chatbot);
+        // 2. Save to LocalStorage
+        localStorage.setItem('selectedPalette', selectedColor);
+        localStorage.setItem('distractionStyle', selectedStyle);
+        localStorage.setItem('chatbotEnabled', isChatbotEnabled);
 
         // Log for debugging (can be removed in production)
         console.log('Therapeutic Setup Complete:', {
-            palette,
-            chatbot,
+            selectedColor,
+            selectedStyle,
+            isChatbotEnabled,
             timestamp: new Date().toISOString()
         });
 
-        // Navigate to the AR scene
+        // 3. Launch the AR Room
         window.location.href = 'ar.html';
     });
 
