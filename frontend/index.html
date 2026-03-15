@@ -1,260 +1,834 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-    <title>Therapeutic Environment Setup</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Session Setup — Therapeutic WebAR</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-      body {
-        margin: 0;
-        padding: 20px;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-        background: linear-gradient(135deg, #e8f4f8 0%, #f7f9fc 100%);
-        color: #2c3e50;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      .setup-container {
-        max-width: 500px;
-        width: 100%;
-        background: #ffffff;
-        padding: 40px;
-        border-radius: 16px;
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8ed;
-      }
+    :root {
+      --bg:      #f0ede8;
+      --surface: #faf9f7;
+      --white:   #ffffff;
+      --border:  rgba(60,60,50,0.10);
+      --accent:  #4a8b7e;
+      --accent2: #7b8fa6;
+      --text:    #2c3a42;
+      --muted:   #7a8a8e;
+      --green:   #4e9e72;
+      --amber:   #d4913a;
+      --violet:  #7c5cbf;
+      --pink:    #c26b8a;
+      --earth:   #8a6748;
+    }
 
-      h2 {
-        text-align: center;
-        margin: 0 0 12px 0;
-        font-size: 26px;
-        font-weight: 600;
-        color: #1a365d;
-      }
+    html, body {
+      min-height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0ede8 0%, #f5f1ed 50%, #ead9c8 100%);
+      color: var(--text);
+    }
 
-      .subtitle {
-        text-align: center;
-        margin: 0 0 32px 0;
-        font-size: 14px;
-        color: #64748b;
-        line-height: 1.6;
-      }
+    /* Enhanced background texture with therapeutic mood */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 70%, rgba(74,139,126,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 70% at 80% 20%, rgba(123,143,166,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 50% 90%, rgba(212,145,58,0.08) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(240,237,232,0.3) 100%);
+      pointer-events: none;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
 
-      .form-group {
-        margin-bottom: 28px;
-      }
+    /* Animated background accent shapes */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 20%, rgba(123,143,166,0.08) 0%, transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(194,107,138,0.06) 0%, transparent 25%),
+        radial-gradient(circle at 50% 50%, rgba(212,145,58,0.04) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+      animation: breathe 12s ease-in-out infinite;
+    }
 
-      label {
-        display: block;
-        margin-bottom: 10px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #334155;
-      }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1.2; }
+    }
 
-      select {
-        width: 100%;
-        padding: 14px 16px;
-        font-size: 15px;
-        border: 2px solid #e2e8f0;
-        border-radius: 10px;
-        background: #f8fafc;
-        color: #1e293b;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: inherit;
-      }
+    /* ─── PAGE SHELL ─── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
 
-      select:hover {
-        border-color: #cbd5e1;
-        background: #ffffff;
-      }
+    /* ─── HEADER ─── */
+    .page-header {
+      width: 100%;
+      max-width: 620px;
+      margin-bottom: 32px;
+    }
 
-      select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
 
-      .toggle-group {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #f8fafc;
-        padding: 16px 18px;
-        border-radius: 10px;
-        border: 2px solid #e2e8f0;
-        margin-bottom: 32px;
-        transition: all 0.2s ease;
-      }
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #5ba394, #7b8fa6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 6px 16px rgba(74,139,126,0.25);
+      flex-shrink: 0;
+      backdrop-filter: blur(10px);
+    }
 
-      .toggle-group:hover {
-        background: #ffffff;
-        border-color: #cbd5e1;
-      }
+    .logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
 
-      .toggle-group label {
-        margin: 0;
-        font-size: 14px;
-        color: #334155;
-      }
+    .logo-text span {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 1px;
+    }
 
-      /* Custom Toggle Switch */
-      .toggle-switch {
-        position: relative;
-        width: 52px;
-        height: 28px;
-      }
+    /* User greeting row */
+    .greeting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
 
-      .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
+    .greeting-text h1 {
+      font-size: clamp(20px, 4vw, 26px);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
 
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #cbd5e1;
-        transition: 0.3s;
-        border-radius: 28px;
-      }
+    .greeting-text p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 5px;
+      line-height: 1.5;
+    }
 
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: 0.3s;
-        border-radius: 50%;
-      }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(250, 249, 247, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(74,139,126,0.15);
+      border-radius: 24px;
+      padding: 6px 10px 6px 6px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(60,60,50,0.06);
+    }
 
-      input:checked + .slider {
-        background-color: #3b82f6;
-      }
+    .user-chip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
-      input:checked + .slider:before {
-        transform: translateX(24px);
-      }
+    .user-chip span {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-      #launchBtn {
-        width: 100%;
-        padding: 16px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #ffffff;
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      }
+    /* ─── CARD ─── */
+    .card {
+      width: 100%;
+      max-width: 620px;
+      background: rgba(250, 249, 247, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(74,139,126,0.15);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(60,60,50,0.08), 
+                  inset 0 1px 0 rgba(255,255,255,0.5);
+      transition: all 0.3s ease;
+    }
 
-      #launchBtn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-      }
+    .card:hover {
+      box-shadow: 0 12px 40px rgba(60,60,50,0.12),
+                  inset 0 1px 0 rgba(255,255,255,0.6);
+      transform: translateY(-2px);
+    }
 
-      #launchBtn:active {
-        transform: translateY(0);
-      }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 6px;
+    }
 
-      .info-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-left: 8px;
-        padding: 2px 8px;
-        background: #dbeafe;
-        color: #1e40af;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 500;
-      }
+    .card-heading {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
 
-      @media (max-width: 768px) {
-        body {
-          padding: 15px;
-        }
+    .card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
 
-        .setup-container {
-          padding: 28px 24px;
-        }
+    /* ─── PALETTE CARDS ─── */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-        h2 {
-          font-size: 22px;
-        }
+    .palette-card {
+      position: relative;
+      border: 2px solid rgba(74,139,126,0.2);
+      border-radius: 14px;
+      padding: 14px 14px 12px;
+      cursor: pointer;
+      background: rgba(250, 249, 247, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      user-select: none;
+      box-shadow: 0 4px 12px rgba(60,60,50,0.05);
+    }
 
-        .subtitle {
-          font-size: 13px;
-          margin-bottom: 24px;
-        }
-      }
+    .palette-card:hover {
+      border-color: rgba(74,139,126,0.4);
+      background: rgba(250, 249, 247, 0.95);
+      box-shadow: 0 6px 20px rgba(60,60,50,0.1);
+      transform: translateY(-2px);
+    }
 
-      @media (max-width: 480px) {
-        body {
-          padding: 10px;
-        }
+    .palette-card.selected {
+      border-color: var(--accent);
+      background: rgba(74,139,126,0.08);
+      box-shadow: 0 0 0 3px rgba(74,139,126,0.15), 0 8px 24px rgba(74,139,126,0.15);
+      transform: scale(1.02);
+    }
 
-        .setup-container {
-          padding: 24px 20px;
-        }
+    .palette-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
 
-        h2 {
-          font-size: 20px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="setup-container">
-      <h2>Therapeutic Environment Setup</h2>
-      <p class="subtitle">Configure your personalized calming spectrum to begin your recovery session</p>
-      
-      <div class="form-group">
-        <label for="userPalette">
-          Select Your Preferred Calming Spectrum
-          <span class="info-badge">⚕️ Evidence-Based</span>
-        </label>
-        <select id="userPalette">
-          <option value="AMBER">🟡 Amber — Cortisol Reduction</option>
-          <option value="VIOLET">🟣 Violet — Nervous System Recovery</option>
-          <option value="PINK">🌸 Soft Pink — Emotional Soothing</option>
-          <option value="EARTH">🟤 Earth Tones — Stability & Grounding</option>
-        </select>
+    .palette-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .swatch-amber  { background: linear-gradient(135deg, #f5d08a, #d4913a22); }
+    .swatch-violet { background: linear-gradient(135deg, #c5b0e8, #7c5cbf22); }
+    .swatch-pink   { background: linear-gradient(135deg, #f0b8cc, #c26b8a22); }
+    .swatch-earth  { background: linear-gradient(135deg, #d4b896, #8a674822); }
+
+    .palette-info { flex: 1; }
+
+    .palette-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .palette-tag {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* Tick indicator */
+    .palette-card .tick {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .palette-card.selected .tick { opacity: 1; }
+
+    .palette-card .tick::after {
+      content: '';
+      width: 5px;
+      height: 9px;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    /* ─── MODE CARDS ─── */
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mode-card {
+      position: relative;
+      border: 2px solid rgba(74,139,126,0.2);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      background: rgba(250, 249, 247, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      user-select: none;
+      box-shadow: 0 4px 12px rgba(60,60,50,0.05);
+    }
+
+    .mode-card:hover {
+      border-color: rgba(74,139,126,0.4);
+      background: rgba(250, 249, 247, 0.95);
+      box-shadow: 0 6px 20px rgba(60,60,50,0.1);
+      transform: translateY(-2px);
+    }
+
+    .mode-card.selected {
+      border-color: var(--accent);
+      background: rgba(74,139,126,0.08);
+      box-shadow: 0 0 0 3px rgba(74,139,126,0.15), 0 8px 24px rgba(74,139,126,0.15);
+      transform: scale(1.01);
+    }
+
+    .mode-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mode-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(74,139,126,0.12), rgba(123,143,166,0.08));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(74,139,126,0.08);
+    }
+
+    .mode-info { flex: 1; }
+
+    .mode-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .mode-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .mode-badge {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 7px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .badge-active   { background: rgba(74,139,126,0.10); color: var(--accent); }
+    .badge-soothing { background: rgba(123,143,166,0.12); color: var(--accent2); }
+    .badge-guided   { background: rgba(78,158,114,0.10); color: var(--green); }
+
+    .mode-card .tick {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .mode-card.selected .tick { opacity: 1; }
+
+    .mode-card .tick::after {
+      content: '';
+      width: 5px;
+      height: 9px;
+      border-right: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    /* ─── CHATBOT TOGGLE ─── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .toggle-info { flex: 1; }
+
+    .toggle-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .toggle-sub {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      inset: 0;
+      background: #cdd5d9;
+      border-radius: 28px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+
+    .toggle-thumb::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      top: 4px;
+      left: 4px;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+
+    .toggle-switch input:checked + .toggle-thumb {
+      background: var(--accent);
+    }
+
+    .toggle-switch input:checked + .toggle-thumb::after {
+      transform: translateX(22px);
+    }
+
+    /* ─── CLINICAL NOTICE ─── */
+    .clinical-notice {
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(74,139,126,0.05);
+      border: 1px solid rgba(74,139,126,0.15);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .clinical-notice .notice-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .clinical-notice p {
+      font-size: 12px;
+      color: #4a6860;
+      line-height: 1.6;
+    }
+
+    /* ─── LAUNCH BUTTON ─── */
+    .launch-wrap {
+      width: 100%;
+      max-width: 620px;
+    }
+
+    #launchBtn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #4a8b7e, #3d7569);
+      color: #fff;
+      border: none;
+      border-radius: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(74,139,126,0.30);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #launchBtn:hover {
+      opacity: 0.94;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(74,139,126,0.35);
+    }
+
+    #launchBtn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(74,139,126,0.25);
+    }
+
+    .version-tag {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 10px;
+      color: rgba(90,100,100,0.35);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════ */
+
+    /* ── TABLET (≤ 680px) ── */
+    @media (max-width: 680px) {
+      .page { padding: 28px 16px 48px; }
+      .card { padding: 22px 18px; }
+      .greeting-text h1 { font-size: 20px; }
+    }
+
+    /* ── PHONE (≤ 480px) ── */
+    @media (max-width: 480px) {
+      .page { padding: 20px 14px 40px; }
+
+      .palette-grid { grid-template-columns: 1fr; }
+
+      .user-chip span { max-width: 80px; }
+
+      .card { padding: 18px 14px; border-radius: 14px; margin-bottom: 12px; }
+
+      .greeting-text h1 { font-size: 18px; }
+      .greeting-text p  { font-size: 12px; }
+
+      #launchBtn { font-size: 15px; padding: 14px; }
+
+      .version-tag { display: none; }
+    }
+
+    /* ── SMALL PHONE (≤ 360px) ── */
+    @media (max-width: 360px) {
+      .card { padding: 14px 12px; }
+      .palette-swatch { width: 30px; height: 30px; font-size: 15px; }
+      .mode-icon { width: 36px; height: 36px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <header class="page-header">
+    <div class="logo-row">
+      <div class="logo-icon">🫀</div>
+      <div class="logo-text">
+        Therapeutic WebAR
+        <span>Biofeedback Research System</span>
       </div>
-
-      <div class="toggle-group">
-        <label for="chatbotToggle">Enable Interactive Chatbot Guidance</label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="chatbotToggle" checked>
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <button id="launchBtn">Initialize AR Recovery Room</button>
     </div>
 
-    <script src="main.js"></script>
-  </body>
+    <div class="greeting-row">
+      <div class="greeting-text">
+        <h1>Set up your session</h1>
+        <p>Choose your preferences below. The AR environment will adapt to your heart rate in real time.</p>
+      </div>
+      <div class="user-chip" id="userChip" style="display:none">
+        <img id="userAvatar" src="" alt="Profile" />
+        <span id="userName"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── CARD 1: COLOUR PALETTE ── -->
+  <section class="card" aria-labelledby="paletteHeading">
+    <div class="card-title">Step 1 of 3</div>
+    <h2 class="card-heading" id="paletteHeading">Choose your calming spectrum</h2>
+    <p class="card-desc">Each palette is mapped to a specific therapeutic effect. Pick the one that feels most natural to you today.</p>
+
+    <div class="palette-grid" role="radiogroup" aria-labelledby="paletteHeading">
+
+      <label class="palette-card selected" id="label-AMBER">
+        <input type="radio" name="palette" value="AMBER" id="palette-AMBER" checked />
+        <div class="palette-swatch swatch-amber" aria-hidden="true">🟡</div>
+        <div class="palette-info">
+          <div class="palette-name">Amber</div>
+          <div class="palette-tag">Cortisol reduction &amp; warm comfort</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="palette-card" id="label-VIOLET">
+        <input type="radio" name="palette" value="VIOLET" id="palette-VIOLET" />
+        <div class="palette-swatch swatch-violet" aria-hidden="true">🟣</div>
+        <div class="palette-info">
+          <div class="palette-name">Violet</div>
+          <div class="palette-tag">Deep nervous system calming</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="palette-card" id="label-PINK">
+        <input type="radio" name="palette" value="PINK" id="palette-PINK" />
+        <div class="palette-swatch swatch-pink" aria-hidden="true">💗</div>
+        <div class="palette-info">
+          <div class="palette-name">Rose</div>
+          <div class="palette-tag">Emotional soothing &amp; self-compassion</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="palette-card" id="label-EARTH">
+        <input type="radio" name="palette" value="EARTH" id="palette-EARTH" />
+        <div class="palette-swatch swatch-earth" aria-hidden="true">🟤</div>
+        <div class="palette-info">
+          <div class="palette-name">Earth</div>
+          <div class="palette-tag">Grounding &amp; stability</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+    </div>
+  </section>
+
+  <!-- ── CARD 2: DISTRACTION MODE ── -->
+  <section class="card" aria-labelledby="modeHeading">
+    <div class="card-title">Step 2 of 3</div>
+    <h2 class="card-heading" id="modeHeading">Choose your focal point</h2>
+    <p class="card-desc">This is what you will interact with during the session. Select whatever feels most engaging or comfortable.</p>
+
+    <div class="mode-list" role="radiogroup" aria-labelledby="modeHeading">
+
+      <label class="mode-card selected" id="label-MAGNETIC">
+        <input type="radio" name="mode" value="MAGNETIC" id="mode-MAGNETIC" checked />
+        <div class="mode-icon" aria-hidden="true">🧲</div>
+        <div class="mode-info">
+          <div class="mode-name">Magnetic Swarm</div>
+          <div class="mode-desc">A school of particles follows your touch — keep them near you</div>
+        </div>
+        <span class="mode-badge badge-active">Active</span>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="mode-card" id="label-RIPPLE">
+        <input type="radio" name="mode" value="RIPPLE" id="mode-RIPPLE" />
+        <div class="mode-icon" aria-hidden="true">🌊</div>
+        <div class="mode-info">
+          <div class="mode-name">Fluid Ripples</div>
+          <div class="mode-desc">Touch the screen and watch gentle ripples expand outward</div>
+        </div>
+        <span class="mode-badge badge-soothing">Soothing</span>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="mode-card" id="label-BREATH_CORE">
+        <input type="radio" name="mode" value="BREATH_CORE" id="mode-BREATH_CORE" />
+        <div class="mode-icon" aria-hidden="true">🫁</div>
+        <div class="mode-info">
+          <div class="mode-name">Breathing Guide</div>
+          <div class="mode-desc">Hold the screen to inhale — release to exhale. Paced breathing</div>
+        </div>
+        <span class="mode-badge badge-guided">Guided</span>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+    </div>
+  </section>
+
+  <!-- ── CARD 3: CHATBOT TOGGLE ── -->
+  <section class="card" aria-labelledby="chatbotHeading">
+    <div class="card-title">Step 3 of 3</div>
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <div class="toggle-label" id="chatbotHeading">In-session guidance</div>
+        <div class="toggle-sub">An on-screen assistant will offer breathing cues and encouragement during your session</div>
+      </div>
+      <label class="toggle-switch" aria-label="Enable in-session guidance chatbot">
+        <input type="checkbox" id="chatbot-toggle" checked />
+        <span class="toggle-thumb"></span>
+      </label>
+    </div>
+  </section>
+
+  <!-- ── CLINICAL NOTICE ── -->
+  <div class="clinical-notice" role="note" aria-label="Clinical information">
+    <span class="notice-icon">💬</span>
+    <p>Your session is monitored passively via your connected heart rate device. No action is needed . The environment will respond automatically. If you feel unwell at any point, tap <strong>End Therapy Session</strong> on the next screen.</p>
+  </div>
+
+  <!-- ── LAUNCH BUTTON ── -->
+  <div class="launch-wrap">
+    <button id="launchBtn" aria-label="Begin AR therapy session">
+      <span>🫀</span>
+      Begin Session
+    </button>
+  </div>
+
+  <div class="version-tag">WebAR Therapy · FYP 2025–26 · v1.0</div>
+
+</div><!-- .page -->
+
+<script>
+  // ── AUTH GUARD ──────────────────────────────────────────
+  (function () {
+    try {
+      if (!sessionStorage.getItem('gUser')) {
+        window.location.replace('login.html');
+      }
+    } catch (e) { /* sessionStorage unavailable — allow through */ }
+  })();
+  // ────────────────────────────────────────────────────────
+
+  // ── POPULATE USER CHIP ──────────────────────────────────
+  (function () {
+    try {
+      var raw = sessionStorage.getItem('gUser');
+      if (!raw) return;
+      var user = JSON.parse(raw);
+      var chip   = document.getElementById('userChip');
+      var avatar = document.getElementById('userAvatar');
+      var name   = document.getElementById('userName');
+      if (user.picture) avatar.src = user.picture;
+      if (user.name)    name.textContent = user.name.split(' ')[0]; // first name only
+      chip.style.display = 'flex';
+    } catch (e) {}
+  })();
+
+  // ── PALETTE CARD SELECTION ──────────────────────────────
+  document.querySelectorAll('input[name="palette"]').forEach(function(radio) {
+    radio.addEventListener('change', function () {
+      document.querySelectorAll('.palette-card').forEach(function(c) {
+        c.classList.remove('selected');
+      });
+      // The label wrapping the radio
+      radio.closest('.palette-card').classList.add('selected');
+    });
+  });
+
+  // ── MODE CARD SELECTION ─────────────────────────────────
+  document.querySelectorAll('input[name="mode"]').forEach(function(radio) {
+    radio.addEventListener('change', function () {
+      document.querySelectorAll('.mode-card').forEach(function(c) {
+        c.classList.remove('selected');
+      });
+      radio.closest('.mode-card').classList.add('selected');
+    });
+  });
+
+  // ── LAUNCH ──────────────────────────────────────────────
+  document.getElementById('launchBtn').addEventListener('click', function () {
+    var selectedPalette = document.querySelector('input[name="palette"]:checked').value;
+    var selectedMode    = document.querySelector('input[name="mode"]:checked').value;
+    var chatbotEnabled  = document.getElementById('chatbot-toggle').checked;
+
+    localStorage.setItem('selectedPalette',   selectedPalette);
+    localStorage.setItem('distractionStyle',  selectedMode);
+    localStorage.setItem('chatbotEnabled',    chatbotEnabled ? 'true' : 'false');
+
+    window.location.href = 'ar.html';
+  });
+</script>
+
+</body>
 </html>
