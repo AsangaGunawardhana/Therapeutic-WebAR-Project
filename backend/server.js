@@ -37,6 +37,9 @@ let lastHRV = null;
 let lastTime = 0;
 let timer = null;
 
+// Store user's mode preference across all data sources
+let userModePreference = { comfortMode: false, fullAR: true };
+
 function safeEmit(command) {
   const now = Date.now();
 
@@ -84,8 +87,26 @@ function safeEmit(command) {
 io.on("connection", (socket) => {
   console.log("✅ Client connected:", socket.id);
 
-  socket.on("bio:update", ({ hr, hrv, userPalette }) => {
-    const command = getEbdPrescription(hr, hrv, userPalette); // Pass palette preference
+  socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
+    console.log("🔍 Backend received:", { hr, hrv, userPalette, sessionContext });
+
+    // Use updated ebdEngine with sessionContext for dual-mode system
+    const fullSessionContext = sessionContext || {
+      interventionTrigger: 'PATIENT_INITIATED',
+      userPreferences: { comfortMode: false, fullAR: true },
+      patientAnxietyLevel: 5 // Default moderate
+    };
+
+    // Remember user's mode preference for future hardware updates
+    if (sessionContext && sessionContext.userPreferences) {
+      userModePreference = sessionContext.userPreferences;
+      console.log("💾 Saved user mode preference:", userModePreference);
+    }
+
+    const command = getEbdPrescription(hr, hrv, userPalette, fullSessionContext);
+
+    console.log("📤 Backend sending:", JSON.stringify(command, null, 2));
+
     safeEmit(command);
   });
 
@@ -109,18 +130,16 @@ app.all('/hr', (req, res) => {
         const liveHR = parseInt(hrValue, 10);
         console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM`);
 
-        let currentState = "MODERATE";
-        if (liveHR < 50) currentState = "BRADYCARDIA_ALERT";
-        else if (liveHR > 100) currentState = "HIGH_STRESS";
-        else if (liveHR >= 60 && liveHR <= 80) currentState = "CALM_RECOVERY";
+        // Use updated ebdEngine with user's saved mode preference
+        const sessionContext = {
+          interventionTrigger: 'MONITORING', // Pure monitoring from hardware
+          userPreferences: userModePreference, // Use saved preference!
+          patientAnxietyLevel: 0 // No self-reported anxiety from hardware
+        };
 
-        io.emit('ar:command', {
-            state: currentState,
-            vitals: { hr: liveHR, hrv: 60 },
-            visual: { colorOrCCT: "#FFBF00", intensity: 0.8 },
-            message_patient: "Live hardware connection active.",
-            message_clinical: "Monitoring physical watch telemetry."
-        });
+        const command = getEbdPrescription(liveHR, 60, 'AMBER', sessionContext);
+        safeEmit(command);
+
         res.status(200).send('OK');
     } else {
         res.status(400).send('Awaiting HR data');
@@ -167,16 +186,16 @@ function connectHypeRate() {
             if (msg.event === 'hr_update') {
                 const hr = msg.payload.hr;
                 console.log(`❤️ LIVE HR: ${hr} BPM`);
-                const state = hr < 50  ? 'BRADYCARDIA_ALERT'
-                            : hr > 100 ? 'HIGH_STRESS'
-                            : hr < 80  ? 'CALM_RECOVERY'
-                            : 'MODERATE';
-                safeEmit({
-                    state,
-                    vitals: { hr },
-                    message_clinical: "Live Apple Watch via HypeRate",
-                    message_patient: "Syncing with your heart..."
-                });
+
+                // Use updated ebdEngine with user's saved mode preference
+                const sessionContext = {
+                  interventionTrigger: 'MONITORING', // Pure monitoring from HypeRate
+                  userPreferences: userModePreference, // Use saved preference!
+                  patientAnxietyLevel: 0 // No self-reported anxiety from hardware
+                };
+
+                const command = getEbdPrescription(hr, 60, 'AMBER', sessionContext);
+                safeEmit(command);
             }
         } catch (e) {}
     });
