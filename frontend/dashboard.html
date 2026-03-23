@@ -202,6 +202,20 @@
         <input type="range" id="hrv" min="10" max="120" value="60" />
       </div>
 
+      <div class="control-group">
+        <label>AR Mode: <b id="modeDisplay">Full AR</b></label>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button id="fullARDashBtn" onclick="setDashboardMode('fullAR')"
+                  style="flex: 1; padding: 8px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🎮 Full AR
+          </button>
+          <button id="comfortDashBtn" onclick="setDashboardMode('comfort')"
+                  style="flex: 1; padding: 8px; background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🎯 Simple
+          </button>
+        </div>
+      </div>
+
       <div class="status-info">
         <p>Socket: <b id="status">Disconnected</b></p>
         <p>Last sent: <span id="sent">-</span></p>
@@ -221,15 +235,49 @@
       socket.on("connect", () => (status.textContent = "Connected"));
       socket.on("disconnect", () => (status.textContent = "Disconnected"));
 
+      // Dashboard Mode Selection
+      let dashboardMode = 'fullAR'; // Default mode
+
+      function setDashboardMode(mode) {
+        dashboardMode = mode;
+
+        // Update button styles
+        document.getElementById('fullARDashBtn').style.background =
+          mode === 'fullAR' ? '#4CAF50' : 'rgba(255,255,255,0.3)';
+        document.getElementById('comfortDashBtn').style.background =
+          mode === 'comfort' ? '#4CAF50' : 'rgba(255,255,255,0.3)';
+
+        // Update display
+        document.getElementById('modeDisplay').textContent =
+          mode === 'fullAR' ? 'Full AR' : 'Simple';
+
+        console.log(`📊 Dashboard mode switched to: ${mode}`);
+
+        // Send update with new mode
+        sendUpdate();
+      }
+
       function sendUpdate() {
         const userPalette = localStorage.getItem('selectedPalette') || 'AMBER'; // Get user preference
-        const data = { 
-          hr: Number(hr.value), 
+
+        // NEW FORMAT: Include sessionContext for dual-mode system
+        const data = {
+          hr: Number(hr.value),
           hrv: Number(hrv.value),
-          userPalette: userPalette
+          userPalette: userPalette,
+          sessionContext: {
+            interventionTrigger: 'MONITORING', // Dashboard provides monitoring data
+            userPreferences: {
+              comfortMode: dashboardMode === 'comfort',
+              fullAR: dashboardMode === 'fullAR'
+            },
+            patientAnxietyLevel: 0 // No patient input from dashboard
+          }
         };
+
         socket.emit("bio:update", data);
         sent.textContent = JSON.stringify(data);
+        console.log("📊 Dashboard sent:", data);
       }
 
       hr.addEventListener("input", () => {
@@ -241,6 +289,8 @@
         sendUpdate();
       });
 
+      // Initialize dashboard
+      setDashboardMode('fullAR'); // Set default mode
       sendUpdate(); // send once when page loads
     </script>
   </body>
