@@ -21,6 +21,8 @@
       --accent2: #7b8fa6;
       --text:    #2c3a42;
       --muted:   #7a8a8e;
+      --ocean:   #4fc3f7;
+      --nature:  #66bb6a;
       --green:   #4e9e72;
       --amber:   #d4913a;
       --violet:  #7c5cbf;
@@ -279,6 +281,11 @@
       font-size: 18px;
     }
 
+    /* Evidence-based cardiovascular research palettes */
+    .swatch-ocean  { background: linear-gradient(135deg, #81d4fa, #4fc3f722); }
+    .swatch-nature { background: linear-gradient(135deg, #a5d6a7, #66bb6a22); }
+
+    /* User preference and accessibility palettes */
     .swatch-amber  { background: linear-gradient(135deg, #f5d08a, #d4913a22); }
     .swatch-violet { background: linear-gradient(135deg, #c5b0e8, #7c5cbf22); }
     .swatch-pink   { background: linear-gradient(135deg, #f0b8cc, #c26b8a22); }
@@ -645,12 +652,34 @@
   <section class="card" aria-labelledby="paletteHeading">
     <div class="card-title">Step 1 of 3</div>
     <h2 class="card-heading" id="paletteHeading">Choose your calming spectrum</h2>
-    <p class="card-desc">Each palette is mapped to a specific therapeutic effect. Pick the one that feels most natural to you today.</p>
+    <p class="card-desc">Each palette is mapped to a specific therapeutic effect. Ocean and Nature are backed by cardiovascular research, while the others provide user preference options.</p>
 
     <div class="palette-grid" role="radiogroup" aria-labelledby="paletteHeading">
 
-      <label class="palette-card selected" id="label-AMBER">
-        <input type="radio" name="palette" value="AMBER" id="palette-AMBER" checked />
+      <!-- Evidence-based cardiovascular research palettes -->
+      <label class="palette-card selected" id="label-OCEAN">
+        <input type="radio" name="palette" value="OCEAN" id="palette-OCEAN" checked />
+        <div class="palette-swatch swatch-ocean" aria-hidden="true">🌊</div>
+        <div class="palette-info">
+          <div class="palette-name">Ocean</div>
+          <div class="palette-tag">Clinical studies: reduces HR &amp; BP</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <label class="palette-card" id="label-NATURE">
+        <input type="radio" name="palette" value="NATURE" id="palette-NATURE" />
+        <div class="palette-swatch swatch-nature" aria-hidden="true">🌿</div>
+        <div class="palette-info">
+          <div class="palette-name">Nature</div>
+          <div class="palette-tag">Superior cardiovascular relaxant</div>
+        </div>
+        <div class="tick" aria-hidden="true"></div>
+      </label>
+
+      <!-- User preference and accessibility palettes -->
+      <label class="palette-card" id="label-AMBER">
+        <input type="radio" name="palette" value="AMBER" id="palette-AMBER" />
         <div class="palette-swatch swatch-amber" aria-hidden="true">🟡</div>
         <div class="palette-info">
           <div class="palette-name">Amber</div>
