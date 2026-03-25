@@ -28,8 +28,8 @@ app.use((req, res, next) => {
 // 6. Serve static files from the frontend folder
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-const DEBOUNCE_MS = 1200; // wait before reacting
-const HOLD_MS = 3000; // stay in one state
+const DEBOUNCE_MS = 800;  // wait before reacting (reduced for faster response)
+const HOLD_MS = 2000;     // stay in one state (reduced from 3s to 2s)
 
 // ========================================
 // 🏥 MULTI-USER SESSION MANAGEMENT SYSTEM
