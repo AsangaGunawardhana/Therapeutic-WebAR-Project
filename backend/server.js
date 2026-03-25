@@ -268,8 +268,10 @@ function connectHypeRate() {
 connectHypeRate();
 
 
-// 8. Start the server on port 3000
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+// 8. Start the server (Cloud-Ready)
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🏥 Therapeutic WebAR Server running on port ${PORT}`);
+  console.log(`📱 Local: http://localhost:${PORT}`);
+  console.log(`🌐 Ready for cloud deployment!`);
 });
