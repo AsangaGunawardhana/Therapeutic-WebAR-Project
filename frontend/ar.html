@@ -1327,20 +1327,25 @@
       // Read the therapeutic palette the patient selected
       const selectedPalette = localStorage.getItem('selectedPalette') || 'AMBER';
       
-      // ✅ ENSURE ALL 4 PALETTES ARE ALWAYS AVAILABLE
-      // Even if dashboard doesn't offer all options, patients can still use all 4
-      const AVAILABLE_PALETTES = ['AMBER', 'VIOLET', 'PINK', 'EARTH'];
+      // ✅ ENSURE ALL 6 PALETTES ARE ALWAYS AVAILABLE
+      // Includes both evidence-based cardiovascular colors and user preference options
+      const AVAILABLE_PALETTES = ['OCEAN', 'NATURE', 'AMBER', 'VIOLET', 'PINK', 'EARTH'];
       if (!AVAILABLE_PALETTES.includes(selectedPalette)) {
-        localStorage.setItem('selectedPalette', 'AMBER');
-        console.warn(`❌ Invalid palette: ${selectedPalette}. Resetting to AMBER`);
+        localStorage.setItem('selectedPalette', 'OCEAN');
+        console.warn(`❌ Invalid palette: ${selectedPalette}. Resetting to OCEAN`);
       }
-      
+
       // Palette colors synced with backend ebdEngine.js colorMapping (stress colors)
       const paletteColorMap = {
-        'AMBER': '#FFBF00',   // Amber - Cortisol reduction, warm comfort
-        'VIOLET': '#4B0082',  // Indigo - Deep nervous system calming
-        'PINK': '#FFB6C1',    // Light Pink - Emotional soothing
-        'EARTH': '#8B7355'    // Brown - Grounding, stability
+        // Evidence-based cardiovascular research palettes
+        'OCEAN': '#4FC3F7',   // Blue - Clinically proven to reduce HR/BP (150 patient study)
+        'NATURE': '#66BB6A',  // Green - Superior cardiovascular relaxant, parasympathetic activation
+
+        // User preference and accessibility options
+        'AMBER': '#FFBF00',   // Warm amber - Circadian-friendly, emotional comfort
+        'VIOLET': '#4B0082',  // Indigo - Deep nervous system calming, mixed autonomic effects
+        'PINK': '#FFB6C1',    // Light Pink - Emotional soothing, gentle stimulation
+        'EARTH': '#8B7355'    // Brown - Grounding, stability, neutral earth tone
       };
       
       // Read distraction style/mode (MAGNETIC, RIPPLE, BREATH_CORE)
