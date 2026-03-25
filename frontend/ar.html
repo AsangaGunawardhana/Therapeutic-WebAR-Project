@@ -956,6 +956,9 @@
         // Voice announcement for calibration complete
         speakMessage("Baseline locked. Therapeutic session starting.");
 
+        // Start ambient sound therapy (works in both Full AR and Simple mode)
+        startAmbientSoundIfNeeded();
+
         console.log(`✅ CALIBRATION COMPLETE`);
         console.log(`   Baseline BPM: ${sessionMetrics.baselineBPM.toFixed(1)}`);
         console.log(`   Readings collected: ${calibrationBPMData.length}`);
@@ -1726,6 +1729,17 @@
       
       const initialVignetteColor = paletteColorMap[selectedPalette] || '#FFBF00';
 
+      // Initialize ambient sound for selected palette (starts when user taps screen)
+      // Audio context requires user interaction - will start on first touch/click
+      let ambientSoundStarted = false;
+      function startAmbientSoundIfNeeded() {
+        if (!ambientSoundStarted && soundEnabled) {
+          initAudio();
+          playAmbientSound(selectedPalette);
+          ambientSoundStarted = true;
+        }
+      }
+
       // Step 7: Ambient Wash Light (Tints the room walls with therapeutic color)
       // This creates the "Room Redesign" effect by staining the physical environment
       const ambientLight = new THREE.AmbientLight(initialVignetteColor, 0.3); // Starts with user's palette
@@ -1889,7 +1903,7 @@
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.rate = 0.85;  // Slightly slower for therapeutic calm
         utterance.pitch = 1.0;  // Natural pitch
-        utterance.volume = 0.8; // Not too loud
+        utterance.volume = 0.2; // Further reduced volume to 20%
 
         // Try to use a calm, clear voice
         const voices = speechSynth.getVoices();
@@ -1908,6 +1922,272 @@
       if (speechSynth) {
         speechSynth.getVoices(); // Trigger voice loading
         speechSynth.onvoiceschanged = () => speechSynth.getVoices();
+      }
+
+      // ========================================
+      // AMBIENT SOUND THERAPY SYSTEM (Web Audio API)
+      // ========================================
+      // Generates calming background audio matched to patient's color palette
+      // Works in both Full AR and Simple/Comfort mode
+
+      // Load user preferences
+      const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+      const hapticEnabled = localStorage.getItem('hapticEnabled') !== 'false';
+
+      let audioContext;
+      let ambientGainNode;
+      let currentOscillators = [];
+      let scheduleTimer; // For scheduled sounds like chirps/chimes
+
+      // Initialize Web Audio API (user interaction required to start)
+      function initAudio() {
+        if (audioContext) return; // Already initialized
+        if (!soundEnabled) return; // User disabled sounds
+
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          ambientGainNode = audioContext.createGain();
+          ambientGainNode.connect(audioContext.destination);
+          ambientGainNode.gain.value = 0.15; // Reduced for gentler, non-intrusive audio
+
+          console.log('🎵 Audio context initialized');
+        } catch (e) {
+          console.warn('⚠️ Web Audio API not supported:', e);
+        }
+      }
+
+      // Create noise buffer for nature sounds
+      function createNoiseBuffer() {
+        const bufferSize = audioContext.sampleRate * 2;
+        const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1; // White noise
+        }
+        return buffer;
+      }
+
+      // Stop all currently playing oscillators and scheduled sounds
+      function stopAmbientSound() {
+        currentOscillators.forEach(osc => {
+          try {
+            osc.stop();
+          } catch (e) {}
+        });
+        currentOscillators = [];
+        if (scheduleTimer) {
+          clearTimeout(scheduleTimer);
+          scheduleTimer = null;
+        }
+      }
+
+      // Generate ambient sound based on palette - DISTINCT sounds
+      function playAmbientSound(palette) {
+        if (!soundEnabled) return;
+        if (!audioContext) initAudio();
+        if (!audioContext) return; // Failed to initialize
+
+        stopAmbientSound(); // Clear previous sounds
+
+        // Each palette has UNIQUE, recognizable sound
+        switch(palette) {
+          case 'OCEAN': playOceanWaves(); break;
+          case 'NATURE': playForestAmbience(); break;
+          case 'AMBER': playSingingBowl(); break;
+          case 'VIOLET': playDeepMeditation(); break;
+          case 'PINK': playWindChimes(); break;
+          case 'EARTH': playCaveAmbience(); break;
+          default: playOceanWaves();
+        }
+
+        console.log(`🎵 Playing ${palette} ambient sound`);
+      }
+
+      // OCEAN: Filtered white noise = wave sounds
+      function playOceanWaves() {
+        const noise = audioContext.createBufferSource();
+        noise.buffer = createNoiseBuffer();
+        noise.loop = true;
+
+        // Low-pass filter = muffled wave sound
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 300;
+        filter.Q.value = 1;
+
+        // Slow volume modulation = waves coming and going
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+        lfo.frequency.value = 0.15; // Slow wave rhythm
+        lfoGain.gain.value = 100;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0.3;
+
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ambientGainNode);
+
+        noise.start();
+        lfo.start();
+
+        currentOscillators.push(noise, lfo);
+      }
+
+      // NATURE: Ultra-calm single pure tone (no noise at all)
+      // Clinical: Pure sine wave at therapeutic frequency for maximum calm
+      function playForestAmbience() {
+        // Pure sine wave (existing)
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.frequency.value = 210; // Gentle mid-range tone
+        osc.type = 'sine';
+        const now = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.07, now + 5); // Very quiet, slow fade
+        osc.connect(gain);
+        gain.connect(ambientGainNode);
+        osc.start();
+
+        // Soft filtered noise for wind/rain
+        const noise = audioContext.createBufferSource();
+        noise.buffer = createNoiseBuffer();
+        noise.loop = true;
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 700; // Softer than ocean
+        filter.Q.value = 0.7;
+        // Slow LFO for gentle wind/rain variation
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+        lfo.frequency.value = 0.07; // Very slow
+        lfoGain.gain.value = 200;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        // Noise gain (very low)
+        const noiseGain = audioContext.createGain();
+        noiseGain.gain.value = 0.045;
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(ambientGainNode);
+        noise.start();
+        lfo.start();
+
+        currentOscillators.push(osc, noise, lfo);
+      }
+
+      // AMBER: Single warm therapeutic tone (Om frequency)
+      // Clinical: 136.1Hz (C# - "Om" frequency) used in sound healing therapy
+      function playSingingBowl() {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        osc.frequency.value = 136.1; // C# - "Om" frequency (therapeutic)
+        osc.type = 'sine';
+
+        const now = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.22, now + 3); // Slow, gentle fade in
+
+        osc.connect(gain);
+        gain.connect(ambientGainNode);
+        osc.start();
+
+        currentOscillators.push(osc);
+      }
+
+      // VIOLET: Soft therapeutic pad (mid-range, not bass)
+      // Clinical: 174Hz (F) and 261Hz (C) are Solfeggio frequencies for relaxation
+      function playDeepMeditation() {
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+
+        osc1.frequency.value = 174; // F - Solfeggio frequency (stress relief)
+        osc2.frequency.value = 261; // C - Harmonious interval, no dissonance
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+
+        const now = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.16, now + 4); // Very gradual, gentle
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ambientGainNode);
+
+        osc1.start();
+        osc2.start();
+
+        currentOscillators.push(osc1, osc2);
+      }
+
+      // PINK: Very sparse, soft chimes (calm, non-intrusive)
+      // Clinical: Sparse, predictable sounds reduce startle response in cardiac patients
+      function playWindChimes() {
+        const chimeFreqs = [523, 659, 784]; // Just 3 notes - C, E, G (calm major triad)
+
+        function playChime() {
+          const freq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+
+          osc.frequency.value = freq;
+          osc.type = 'sine';
+
+          const now = audioContext.currentTime;
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.12, now + 0.1); // Softer, gentler
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 3.5); // Longer, calmer decay
+
+          osc.connect(gain);
+          gain.connect(ambientGainNode);
+          osc.start(now);
+          osc.stop(now + 3.5);
+        }
+
+        function scheduleChimes() {
+          if (!soundEnabled) return;
+          playChime();
+          scheduleTimer = setTimeout(scheduleChimes, 6000 + Math.random() * 4000); // Less frequent (6-10s)
+        }
+        scheduleChimes();
+      }
+
+      // EARTH: Deep rumble (brown noise)
+      function playCaveAmbience() {
+        const noise = audioContext.createBufferSource();
+        noise.buffer = createNoiseBuffer();
+        noise.loop = true;
+
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 150; // Very low rumble
+        filter.Q.value = 2;
+
+        const gain = audioContext.createGain();
+        gain.gain.value = 0.3;
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ambientGainNode);
+        noise.start();
+
+        currentOscillators.push(noise);
+      }
+
+      // Haptic feedback for breathing
+      function vibrateBreathing(phase) {
+        if (!hapticEnabled) return;
+        if (!navigator.vibrate) return; // Browser doesn't support vibration
+
+        if (phase === 'IN') {
+          // Gentle vibration on inhale
+          navigator.vibrate([200]); // 200ms pulse
+        }
+        // No vibration on exhale (silence)
       }
 
       function botMessage(text, speakAloud = true) {
@@ -2518,6 +2798,7 @@
         breathingSpokenOnce = true;
         currentBreathingStep = "IN";
         vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
+        vibrateBreathing('IN'); // Haptic feedback on first breath
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
@@ -2526,9 +2807,11 @@
             speakMessage("Breathe out"); // Speak just the instruction
             currentBreathingStep = "OUT";
             vignetteTargetOpacity = 0.15; // Breathe OUT = glow fades
+            // No vibration on exhale for contrast
           } else {
             botMessage(patientMessage + " BREATHE IN ⬆️", false);
             speakMessage("Breathe in"); // Speak just the instruction
+            vibrateBreathing('IN'); // Haptic feedback on inhale
             currentBreathingStep = "IN";
             vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
           }
@@ -3070,16 +3353,19 @@
       }
 
       window.addEventListener("touchstart", (event) => {
+        // Start ambient sound on first touch (browsers require user interaction for audio)
+        startAmbientSoundIfNeeded();
+
         // Check if touch is within any button's bounding box
         const touch = event.touches[0];
         const clickedBtn = getClickedButton(touch.clientX, touch.clientY);
-        
+
         if (clickedBtn) {
           console.log("🛑 Touch on button detected:", clickedBtn.id, "- TRIGGERING click");
           clickedBtn.click(); // Programmatically trigger the clicked button
           return; // Prevent 3D processing
         }
-        
+
         isTouching = true;
         updateTouchPosition(event.touches[0]);
       });
@@ -3163,6 +3449,11 @@
 
       // Start camera automatically when page finishes loading
       window.addEventListener("load", startCamera);
+
+      // Desktop/mouse click support for ambient sound start
+      window.addEventListener("click", (event) => {
+        startAmbientSoundIfNeeded();
+      });
     </script>
   </body>
 </html>
