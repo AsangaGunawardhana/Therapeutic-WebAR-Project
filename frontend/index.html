@@ -765,16 +765,44 @@
     </div>
   </section>
 
-  <!-- ── CARD 3: CHATBOT TOGGLE ── -->
-  <section class="card" aria-labelledby="chatbotHeading">
+  <!-- ── CARD 3: PERSONALIZE EXPERIENCE ── -->
+  <section class="card" aria-labelledby="personalizeHeading">
     <div class="card-title">Step 3 of 3</div>
+    <h2 class="card-heading" id="personalizeHeading">Personalize your experience</h2>
+    <p class="card-desc">Choose which sensory features to enable. Everyone responds differently - customize what works best for you.</p>
+
+    <!-- Voice Guidance Toggle -->
+    <div class="toggle-row" style="margin-bottom: 12px;">
+      <div class="toggle-info">
+        <div class="toggle-label">🔊 Voice Guidance</div>
+        <div class="toggle-sub">Spoken breathing cues: "Breathe in... Breathe out..."</div>
+      </div>
+      <label class="toggle-switch" aria-label="Enable voice guidance">
+        <input type="checkbox" id="voice-toggle" checked />
+        <span class="toggle-thumb"></span>
+      </label>
+    </div>
+
+    <!-- Ambient Sounds Toggle -->
+    <div class="toggle-row" style="margin-bottom: 12px;">
+      <div class="toggle-info">
+        <div class="toggle-label">🎵 Ambient Sounds</div>
+        <div class="toggle-sub">Calming background audio matched to your color palette</div>
+      </div>
+      <label class="toggle-switch" aria-label="Enable ambient sounds">
+        <input type="checkbox" id="sound-toggle" checked />
+        <span class="toggle-thumb"></span>
+      </label>
+    </div>
+
+    <!-- Haptic Feedback Toggle -->
     <div class="toggle-row">
       <div class="toggle-info">
-        <div class="toggle-label" id="chatbotHeading">In-session guidance</div>
-        <div class="toggle-sub">An on-screen assistant will offer breathing cues and encouragement during your session</div>
+        <div class="toggle-label">📳 Haptic Feedback</div>
+        <div class="toggle-sub">Gentle vibrations synchronized with breathing rhythm</div>
       </div>
-      <label class="toggle-switch" aria-label="Enable in-session guidance chatbot">
-        <input type="checkbox" id="chatbot-toggle" checked />
+      <label class="toggle-switch" aria-label="Enable haptic feedback">
+        <input type="checkbox" id="haptic-toggle" checked />
         <span class="toggle-thumb"></span>
       </label>
     </div>
@@ -849,11 +877,26 @@
   document.getElementById('launchBtn').addEventListener('click', function () {
     var selectedPalette = document.querySelector('input[name="palette"]:checked').value;
     var selectedMode    = document.querySelector('input[name="mode"]:checked').value;
-    var chatbotEnabled  = document.getElementById('chatbot-toggle').checked;
 
+    // Get all personalization preferences
+    var voiceEnabled   = document.getElementById('voice-toggle').checked;
+    var soundEnabled   = document.getElementById('sound-toggle').checked;
+    var hapticEnabled  = document.getElementById('haptic-toggle').checked;
+
+    // Save all preferences to localStorage
     localStorage.setItem('selectedPalette',   selectedPalette);
     localStorage.setItem('distractionStyle',  selectedMode);
-    localStorage.setItem('chatbotEnabled',    chatbotEnabled ? 'true' : 'false');
+    localStorage.setItem('chatbotEnabled',    voiceEnabled ? 'true' : 'false'); // Renamed: voice guidance
+    localStorage.setItem('soundEnabled',      soundEnabled ? 'true' : 'false');
+    localStorage.setItem('hapticEnabled',     hapticEnabled ? 'true' : 'false');
+
+    console.log('✅ Session preferences saved:', {
+      palette: selectedPalette,
+      mode: selectedMode,
+      voice: voiceEnabled,
+      sounds: soundEnabled,
+      haptics: hapticEnabled
+    });
 
     window.location.href = 'ar.html';
   });
