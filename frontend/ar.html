@@ -20,6 +20,11 @@
         margin: 0;
         font-family: Arial, sans-serif;
         overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
       }
       
       #scene {
@@ -362,14 +367,270 @@
       @media (max-width: 320px) {
         #endSessionBtn { padding: 10px 12px !important; font-size: 12px !important; }
       }
+
+      /* ===== MEDICAL HUD - FULL MOBILE RESPONSIVE ===== */
+
+      /* Tablet and small desktop */
+      @media (max-width: 768px) {
+        #medicalHUD { padding-top: 10px !important; }
+        #medicalHUD > div { width: 95% !important; max-width: none !important; }
+        #vitalsPanel, #insightsPanel { padding: 10px !important; border-radius: 12px !important; }
+        #modeSelector { padding: 6px 10px !important; gap: 6px !important; }
+        #modeSelector button { padding: 4px 10px !important; font-size: 9px !important; }
+      }
+
+      /* Mobile phones */
+      @media (max-width: 480px) {
+        #medicalHUD { padding-top: 8px !important; }
+        #medicalHUD > div { width: 96% !important; gap: 6px !important; }
+
+        /* Vitals & Insights panels - stack on very small screens handled below */
+        #vitalsPanel, #insightsPanel {
+          padding: 8px 10px !important;
+          border-radius: 10px !important;
+        }
+        #vitalsPanel div[style*="font-size: 18px"] { font-size: 16px !important; }
+        #vitalsPanel div[style*="font-size: 16px"] { font-size: 14px !important; }
+        #insightsPanel #insightText { font-size: 10px !important; line-height: 1.3 !important; }
+
+        /* Mode selector */
+        #modeSelector {
+          padding: 6px 8px !important;
+          border-radius: 16px !important;
+          flex-wrap: wrap !important;
+          justify-content: center !important;
+        }
+        #modeSelector span { font-size: 10px !important; }
+        #modeSelector button {
+          padding: 5px 10px !important;
+          font-size: 10px !important;
+          border-radius: 10px !important;
+        }
+
+        /* Palette indicator */
+        #paletteIndicator {
+          padding: 5px 12px !important;
+          font-size: 10px !important;
+          border-radius: 16px !important;
+        }
+
+        /* Anxiety control & Help button */
+        #anxietyControl {
+          padding: 8px 12px !important;
+          border-radius: 16px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        #anxietyControl div[style*="margin-bottom: 6px"] { font-size: 10px !important; }
+        #anxietyControl button {
+          padding: 8px 16px !important;
+          font-size: 11px !important;
+          border-radius: 10px !important;
+          width: 100% !important;
+          margin-top: 10px !important;
+        }
+        #anxietySlider { height: 24px !important; }
+      }
+
+      /* Small mobile phones */
+      @media (max-width: 380px) {
+        #medicalHUD > div { gap: 5px !important; }
+
+        /* Stack vitals and insights vertically */
+        #medicalHUD > div > div[style*="display: flex; gap: 8px"] {
+          flex-direction: column !important;
+          gap: 5px !important;
+        }
+        #vitalsPanel, #insightsPanel {
+          width: 100% !important;
+          flex: none !important;
+        }
+
+        /* Smaller text for tiny screens */
+        #vitalsPanel div[style*="font-size: 18px"] { font-size: 14px !important; }
+        #insightsPanel #insightText { font-size: 9px !important; }
+
+        /* Mode selector compact */
+        #modeSelector { gap: 4px !important; }
+        #modeSelector button { padding: 4px 8px !important; font-size: 9px !important; }
+      }
+
+      /* Very small screens (iPhone SE, etc) */
+      @media (max-width: 320px) {
+        #medicalHUD { padding-top: 5px !important; }
+        #vitalsPanel, #insightsPanel { padding: 6px 8px !important; }
+        #modeSelector { padding: 4px 6px !important; }
+        #anxietyControl { padding: 6px 10px !important; }
+        #anxietyControl button { padding: 6px 12px !important; font-size: 10px !important; }
+      }
+
+      /* Landscape mode on mobile */
+      @media (max-height: 500px) and (orientation: landscape) {
+        #medicalHUD { padding-top: 5px !important; }
+        #medicalHUD > div { gap: 4px !important; }
+        #vitalsPanel, #insightsPanel { padding: 6px 8px !important; }
+        #modeSelector { padding: 4px 8px !important; }
+        #anxietyControl { padding: 6px 10px !important; }
+        #endSessionBtn { padding: 8px 16px !important; font-size: 11px !important; }
+      }
+
+      /* ===== MINIMAL THERAPY UI - RESPONSIVE ===== */
+
+      /* Mobile responsiveness for minimal UI */
+      @media (max-width: 480px) {
+        #minimalTopBar { top: 10px !important; padding: 0 10px !important; }
+        #hrBadge { padding: 6px 12px !important; border-radius: 20px !important; }
+        #hrBadge span[style*="font-size: 18px"] { font-size: 16px !important; }
+        #settingsToggle { width: 38px !important; height: 38px !important; font-size: 16px !important; }
+
+        #guidanceText { font-size: 16px !important; bottom: 24% !important; }
+
+        #minimalBottomBar { bottom: 15px !important; gap: 8px !important; flex-wrap: wrap !important; justify-content: center !important; }
+        #helpBtn { padding: 12px 20px !important; font-size: 13px !important; border-radius: 20px !important; }
+        #endSessionBtnMinimal { padding: 12px 16px !important; font-size: 12px !important; border-radius: 20px !important; }
+
+        #detailedPanel > div { padding: 15px !important; max-height: 85vh !important; }
+      }
+
+      @media (max-width: 380px) {
+        #hrBadge { padding: 5px 10px !important; }
+        #hrBadge span[style*="font-size: 18px"] { font-size: 14px !important; }
+        #settingsToggle { width: 34px !important; height: 34px !important; }
+
+        #guidanceText { font-size: 14px !important; }
+
+        #helpBtn { padding: 10px 16px !important; font-size: 12px !important; }
+        #endSessionBtnMinimal { padding: 10px 14px !important; font-size: 11px !important; }
+      }
+
+      @media (max-width: 320px) {
+        #minimalTopBar { top: 8px !important; }
+        #guidanceText { font-size: 13px !important; bottom: 26% !important; }
+        #minimalBottomBar { bottom: 10px !important; }
+        #helpBtn, #endSessionBtnMinimal { padding: 8px 12px !important; font-size: 11px !important; }
+      }
+
+      /* Landscape mode */
+      @media (max-height: 500px) and (orientation: landscape) {
+        #minimalTopBar { top: 8px !important; }
+        #hrBadge { padding: 4px 10px !important; }
+        #settingsToggle { width: 32px !important; height: 32px !important; }
+        #guidanceText { font-size: 14px !important; bottom: 30% !important; }
+        #minimalBottomBar { bottom: 8px !important; }
+        #helpBtn, #endSessionBtnMinimal { padding: 8px 14px !important; font-size: 11px !important; }
+      }
     </style>
   </head>
   <body>
-    <!-- Medical HUD Overlay -->
-    <div id="medicalHUD" style="position: fixed; top: 0; left: 0; width: 100vw; pointer-events: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 100; display: flex; justify-content: center; padding-top: 15px;">
-      
+    <!-- ============================================ -->
+    <!-- MINIMAL THERAPY MODE - Clean Patient View   -->
+    <!-- ============================================ -->
+
+    <!-- TOP BAR: Minimal HR Badge + Settings Toggle -->
+    <div id="minimalTopBar" style="position: fixed; top: 15px; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 100; pointer-events: none;">
+
+      <!-- HR Badge (always visible) -->
+      <div id="hrBadge" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 25px; padding: 8px 16px; display: flex; align-items: center; gap: 8px; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <span style="font-size: 16px;">♥</span>
+        <span id="minimalHR" style="font-size: 18px; font-weight: 800; color: #4fc3f7;">--</span>
+        <span style="font-size: 10px; color: rgba(255,255,255,0.6);">bpm</span>
+      </div>
+
+      <!-- Settings Toggle Button -->
+      <button id="settingsToggle" onclick="toggleDetailedView()" style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 18px; transition: all 0.3s ease;">
+        ⚙️
+      </button>
+    </div>
+
+    <!-- GUIDANCE TEXT (center-bottom, always visible) -->
+    <div id="guidanceText" style="position: fixed; bottom: 22%; left: 50%; transform: translateX(-50%); text-align: center; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 20px; font-weight: 600; text-shadow: 0px 2px 15px rgba(0,0,0,0.9), 0px 0px 30px rgba(0,0,0,0.5); z-index: 98; pointer-events: none; max-width: 90%; width: 100%; box-sizing: border-box; transition: opacity 0.5s ease;">
+      Focus on the light and breathe slowly
+    </div>
+
+    <!-- BOTTOM BAR: Help + End Session -->
+    <div id="minimalBottomBar" style="position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 12px; padding: 0 15px; z-index: 100; pointer-events: none;">
+
+      <!-- Help Button (always visible, prominent) -->
+      <button id="helpBtn" onclick="requestHelp()" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 14px 24px; border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.5); display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
+        🆘 I Need Help
+      </button>
+
+      <!-- End Session Button -->
+      <button id="endSessionBtnMinimal" onclick="generateSessionReport()" style="background: rgba(255, 71, 87, 0.9); color: white; border: none; padding: 14px 20px; border-radius: 25px; font-size: 13px; font-weight: 600; cursor: pointer; pointer-events: auto; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); transition: all 0.2s ease;">
+        End Session
+      </button>
+    </div>
+
+    <!-- EXPANDABLE DETAILED PANEL (hidden by default) -->
+    <div id="detailedPanel" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 150; display: none; justify-content: center; align-items: center; padding: 20px;">
+
+      <div style="background: rgba(15, 23, 42, 0.95); border-radius: 20px; padding: 20px; max-width: 380px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+
+        <!-- Close Button -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <span style="color: white; font-size: 16px; font-weight: 700;">Session Controls</span>
+          <button onclick="toggleDetailedView()" style="background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 36px; height: 36px; color: white; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+
+        <!-- Mode Selector -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <div style="color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">VISUALIZATION MODE</div>
+          <div style="display: flex; gap: 8px;">
+            <button id="fullARBtnPanel" onclick="setARMode('fullAR'); updateModeButtons();" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;">🎮 Full AR</button>
+            <button id="comfortBtnPanel" onclick="setARMode('comfort'); updateModeButtons();" style="flex: 1; background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer;">🎯 Simple</button>
+          </div>
+        </div>
+
+        <!-- Vitals Panel -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <div style="color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 12px;">⚕ VITALS</div>
+
+          <!-- HR and HRV Row -->
+          <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 12px;">
+            <div style="flex: 1; padding: 8px; background: rgba(79, 195, 247, 0.1); border-radius: 8px; margin-right: 6px;">
+              <div style="font-size: 28px; font-weight: 800; color: #4fc3f7;"><span id="detailedHR">--</span></div>
+              <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">HR (bpm)</div>
+            </div>
+            <div style="flex: 1; padding: 8px; background: rgba(129, 199, 132, 0.1); border-radius: 8px; margin-left: 6px;">
+              <div style="font-size: 28px; font-weight: 800; color: #81c784;"><span id="detailedHRV">--</span></div>
+              <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">HRV (ms)</div>
+            </div>
+          </div>
+
+          <!-- State Row (separate for long text) -->
+          <div style="text-align: center; padding: 8px; background: rgba(255, 183, 77, 0.1); border-radius: 8px;">
+            <div style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;">Current State</div>
+            <div style="font-size: 12px; font-weight: 700; color: #ffb74d; text-transform: uppercase; word-break: break-word;"><span id="detailedState">--</span></div>
+          </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <div style="color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">📊 INSIGHTS</div>
+          <div id="detailedInsight" style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+            Monitoring patient response...
+          </div>
+        </div>
+
+        <!-- Anxiety Slider -->
+        <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 12px;">
+          <div style="color: #94a3b8; font-size: 11px; font-weight: 600; margin-bottom: 8px;">HOW ARE YOU FEELING?</div>
+          <input type="range" id="anxietySliderPanel" min="1" max="10" value="5" style="width: 100%; margin-bottom: 8px; height: 8px;" oninput="updateAnxietyLevel(this.value); document.getElementById('anxietyValuePanel').textContent = this.value;">
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.6);">
+            <span>😌 Calm</span>
+            <span id="anxietyValuePanel" style="color: #4fc3f7; font-weight: 600;">5</span>
+            <span>😰 Anxious</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ORIGINAL HUD (hidden, kept for compatibility) -->
+    <div id="medicalHUD" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; pointer-events: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 100; justify-content: center; padding-top: 15px;">
+
       <div style="width: 92%; max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
-        
+
         <div id="paletteIndicator" style="align-self: center; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 20px; padding: 6px 16px; text-align: center; color: white; font-size: 11px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; pointer-events: auto;">
           🎨 <span id="paletteNameDisplay">AMBER</span> Palette Active
         </div>
@@ -400,20 +661,20 @@
         </div>
 
         <div style="display: flex; gap: 8px; width: 100%; pointer-events: auto;">
-          
+
           <div id="vitalsPanel" style="flex: 1; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px rgba(255,255,255,0.15) solid; border-radius: 16px; padding: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); color: white; display: flex; flex-direction: column; justify-content: space-between;">
             <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px;">⚕ VITALS</div>
-            
+
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <div style="font-size: 10px; color: #cbd5e1;">HR</div>
               <div style="font-size: 18px; font-weight: 800; color: #4fc3f7;"><span id="liveHR">--</span> <span style="font-size: 9px; color: #94a3b8;">bpm</span></div>
             </div>
-            
+
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <div style="font-size: 10px; color: #cbd5e1;">HRV</div>
               <div style="font-size: 16px; font-weight: 800; color: #81c784;"><span id="liveHRV">--</span> <span style="font-size: 9px; color: #94a3b8;">ms</span></div>
             </div>
-            
+
             <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
               <div style="font-size: 10px; color: #cbd5e1;">State</div>
               <div style="font-size: 10px; font-weight: 800; color: #ffb74d; text-transform: uppercase;"><span id="liveState">--</span></div>
@@ -434,7 +695,7 @@
             🛑 End Therapy Session
           </button>
         </div>
-        
+
       </div>
     </div>
 
@@ -682,7 +943,7 @@
 
         isCalibrated = true;
         sessionStartTime = Date.now();
-        
+
         // Display message (keep it longer - 10 seconds instead of 6)
         const subtitle = document.getElementById('ar-subtitle');
         subtitle.innerText = "🟢 Baseline locked. Therapeutic session starting...";
@@ -691,7 +952,10 @@
         subtitleTimeout = setTimeout(() => {
           subtitle.style.opacity = 0;
         }, 10000); // 10 seconds instead of 6
-        
+
+        // Voice announcement for calibration complete
+        speakMessage("Baseline locked. Therapeutic session starting.");
+
         console.log(`✅ CALIBRATION COMPLETE`);
         console.log(`   Baseline BPM: ${sessionMetrics.baselineBPM.toFixed(1)}`);
         console.log(`   Readings collected: ${calibrationBPMData.length}`);
@@ -1268,7 +1532,106 @@
 
       function requestHelp() {
         console.log(`🆘 Patient requested help (Anxiety: ${currentAnxietyLevel}/10, Mode: ${currentARMode})`);
+
+        // Update guidance text to reassure patient
+        document.getElementById('guidanceText').textContent = "Help is on the way. Breathe slowly...";
+
+        // Speak reassurance
+        speakMessage("Help requested. Take slow, deep breaths. You are safe.");
+
         triggerPatientInitiatedIntervention();
+      }
+
+      // ========================================
+      // MINIMAL UI TOGGLE FUNCTIONS
+      // ========================================
+
+      function toggleDetailedView() {
+        const panel = document.getElementById('detailedPanel');
+        const isVisible = panel.style.display === 'flex';
+
+        if (isVisible) {
+          panel.style.display = 'none';
+          document.getElementById('settingsToggle').textContent = '⚙️';
+        } else {
+          panel.style.display = 'flex';
+          document.getElementById('settingsToggle').textContent = '✕';
+          // Sync current values to detailed panel
+          syncDetailedPanel();
+        }
+      }
+
+      function syncDetailedPanel() {
+        // Sync vitals
+        document.getElementById('detailedHR').textContent =
+          document.getElementById('liveHR').textContent;
+        document.getElementById('detailedHRV').textContent =
+          document.getElementById('liveHRV').textContent;
+
+        // Shorten state names for better display
+        const rawState = document.getElementById('liveState').textContent;
+        const shortState = shortenStateName(rawState);
+        document.getElementById('detailedState').textContent = shortState;
+
+        document.getElementById('detailedInsight').textContent =
+          document.getElementById('insightText').textContent;
+      }
+
+      function shortenStateName(state) {
+        // Map long state names to shorter, patient-friendly versions
+        const stateMap = {
+          'PATIENT_REPORTED_HIGH_STRESS': 'HIGH STRESS',
+          'PATIENT_REPORTED_MODERATE_STRESS': 'MODERATE',
+          'PATIENT_REQUESTED_COMFORT': 'COMFORT MODE',
+          'MONITORING_ELEVATED': 'ELEVATED',
+          'MONITORING_STABLE': 'STABLE',
+          'MONITORING_SIMPLE': 'SIMPLE MODE',
+          'CALM_RECOVERY': 'RECOVERING',
+          'HIGH_STRESS': 'HIGH STRESS',
+          'BRADYCARDIA_ALERT': 'LOW HR ALERT',
+          'MODERATE': 'MODERATE',
+          'CALIBRATING': 'CALIBRATING'
+        };
+        return stateMap[state] || state;
+      }
+
+      function updateMinimalUI(hr, hrv, state) {
+        // Update minimal HR badge
+        document.getElementById('minimalHR').textContent = hr;
+
+        // Update guidance text based on state
+        const guidanceText = document.getElementById('guidanceText');
+        const arSubtitle = document.getElementById('ar-subtitle');
+
+        // Hide guidance text when ar-subtitle is showing (breathing instructions)
+        if (arSubtitle.style.opacity === '1' || parseFloat(arSubtitle.style.opacity) > 0) {
+          guidanceText.style.opacity = '0';
+        } else {
+          guidanceText.style.opacity = '1';
+          if (state === 'HIGH_STRESS') {
+            guidanceText.textContent = "Breathe slowly with the light...";
+          } else if (state === 'BRADYCARDIA_ALERT') {
+            guidanceText.textContent = "Rest and breathe gently";
+          } else if (state === 'CALM_RECOVERY') {
+            guidanceText.textContent = "You're doing great. Stay calm.";
+          } else {
+            guidanceText.textContent = "Focus on the light and breathe slowly";
+          }
+        }
+
+        // Also update detailed panel if it's open
+        if (document.getElementById('detailedPanel').style.display === 'flex') {
+          syncDetailedPanel();
+        }
+      }
+
+      function updateModeButtons() {
+        // Sync mode buttons in detailed panel
+        const mode = currentARMode;
+        document.getElementById('fullARBtnPanel').style.background =
+          mode === 'fullAR' ? '#3b82f6' : 'rgba(255,255,255,0.1)';
+        document.getElementById('comfortBtnPanel').style.background =
+          mode === 'comfort' ? '#3b82f6' : 'rgba(255,255,255,0.1)';
       }
 
       function triggerPatientInitiatedIntervention() {
@@ -1492,14 +1855,67 @@
       // CINEMATIC SUBTITLE SYSTEM (Modern AR)
       // ========================================
       // Replaces clunky chat windows with gentle, fading subtitles
+      // Enhanced with Web Speech API for voice guidance
       let subtitleTimeout; // Keeps track of the timer
 
-      function botMessage(text) {
+      // ========================================
+      // VOICE GUIDANCE SYSTEM (Web Speech API)
+      // ========================================
+      // Speaks therapeutic messages aloud for hands-free experience
+      const speechSynth = window.speechSynthesis;
+      let voiceGuidanceEnabled = localStorage.getItem('chatbotEnabled') !== 'false';
+
+      // Clean text for speech (remove emojis and special characters)
+      function cleanTextForSpeech(text) {
+        return text
+          .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Remove emojis
+          .replace(/[⬆️⬇️🫁💆✅🟠⚠️💛📊🐠💧⭐🌊🌿🟡]/g, '') // Remove specific symbols
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim();
+      }
+
+      // Speak text using Web Speech API
+      function speakMessage(text) {
+        // Check if voice guidance is enabled
+        if (!voiceGuidanceEnabled) return;
+        if (!speechSynth) return; // Browser doesn't support speech
+
+        // Cancel any ongoing speech to prevent overlap
+        speechSynth.cancel();
+
+        const cleanText = cleanTextForSpeech(text);
+        if (!cleanText) return; // Nothing to speak after cleaning
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 0.85;  // Slightly slower for therapeutic calm
+        utterance.pitch = 1.0;  // Natural pitch
+        utterance.volume = 0.8; // Not too loud
+
+        // Try to use a calm, clear voice
+        const voices = speechSynth.getVoices();
+        const preferredVoice = voices.find(v =>
+          v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google'))
+        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+
+        speechSynth.speak(utterance);
+      }
+
+      // Preload voices (some browsers need this)
+      if (speechSynth) {
+        speechSynth.getVoices(); // Trigger voice loading
+        speechSynth.onvoiceschanged = () => speechSynth.getVoices();
+      }
+
+      function botMessage(text, speakAloud = true) {
         const subtitle = document.getElementById('ar-subtitle');
-        
+
         // Set the new text
         subtitle.innerText = text;
-        
+
         // Fade it IN
         subtitle.style.opacity = 1;
 
@@ -1510,6 +1926,11 @@
         subtitleTimeout = setTimeout(() => {
           subtitle.style.opacity = 0;
         }, 6000);
+
+        // Speak the message aloud if enabled
+        if (speakAloud) {
+          speakMessage(text);
+        }
       }
 
       // ========================================
@@ -2075,6 +2496,7 @@
       // 3.5) Breathing Loop Functions (Task 2.3)
       // -----------------------------
       let patientMessage = ""; // Store the HIGH_STRESS message context
+      let breathingSpokenOnce = false; // Track if we've spoken the initial context
 
       function startBreathingLoop(contextMessage = "") {
         // Update patient message even if interval is already running
@@ -2083,26 +2505,30 @@
 
         // Update UI immediately with current step and new message
         if (breathingInterval) {
-          // Interval already running - update current display with new message
+          // Interval already running - update current display with new message (no speech)
           const currentStep =
             currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
-          botMessage(patientMessage + " " + currentStep);
+          botMessage(patientMessage + " " + currentStep, false); // Don't repeat speech
           return;
         }
 
         // Set initial message immediately (don't wait for first interval)
         const initialStep = "BREATHE IN ⬆️";
-        botMessage(patientMessage + " " + initialStep);
+        botMessage(patientMessage + " " + initialStep, true); // Speak the initial message
+        breathingSpokenOnce = true;
         currentBreathingStep = "IN";
         vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
-            botMessage(patientMessage + " BREATHE OUT ⬇️");
+            // Only speak "Breathe out", not the full context message
+            botMessage(patientMessage + " BREATHE OUT ⬇️", false);
+            speakMessage("Breathe out"); // Speak just the instruction
             currentBreathingStep = "OUT";
             vignetteTargetOpacity = 0.15; // Breathe OUT = glow fades
           } else {
-            botMessage(patientMessage + " BREATHE IN ⬆️");
+            botMessage(patientMessage + " BREATHE IN ⬆️", false);
+            speakMessage("Breathe in"); // Speak just the instruction
             currentBreathingStep = "IN";
             vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
           }
@@ -2113,6 +2539,7 @@
         clearInterval(breathingInterval);
         breathingInterval = null;
         currentBreathingStep = null; // Reset phase for next cycle
+        breathingSpokenOnce = false; // Reset for next HIGH_STRESS episode
         vignetteTargetOpacity = 0; // Fade out vignette when stopping
       }
 
@@ -2131,17 +2558,21 @@
           // During calibration: record BPM, ignore stress visualization
           recordBPMReading(data.vitals.hr);
 
-          // Show calibration message
+          // Show calibration message (don't speak every second - too frequent)
           const secondsRemaining = Math.max(0, Math.ceil(
             (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS -
             (Date.now() - calibrationStartTime)) / 1000
           ));
-          botMessage(`📊 Measuring baseline heart rate... ${secondsRemaining}s`);
+          botMessage(`📊 Measuring baseline heart rate... ${secondsRemaining}s`, false);
 
           // Update display but don't apply stress animation yet
           document.getElementById("liveHR").textContent = data.vitals.hr;
           document.getElementById("liveHRV").textContent = data.vitals.hrv;
           document.getElementById("liveState").textContent = "CALIBRATING";
+
+          // Update minimal UI during calibration
+          document.getElementById('minimalHR').textContent = data.vitals.hr;
+          document.getElementById('guidanceText').textContent = `Calibrating... ${secondsRemaining}s remaining`;
 
           // IMPORTANT: Still allow particle mode changes during calibration!
           // This ensures comfort mode can hide particles immediately
@@ -2167,12 +2598,15 @@
 
         // Trigger refined particle animation based on state and backend configuration
         animateParticles(currentStressLevel, data.visual);  // Pass full visual config from backend
-        
+
         // Update live display at top
         document.getElementById("liveHR").textContent = data.vitals.hr;
         document.getElementById("liveHRV").textContent = data.vitals.hrv;
         document.getElementById("liveState").textContent = data.state;
-        
+
+        // Update minimal UI (new clean interface)
+        updateMinimalUI(data.vitals.hr, data.vitals.hrv, data.state);
+
         // DEBUG: Show normalized stress in console
         console.log(`HR: ${data.vitals.hr} BPM → Normalized Stress: ${normalizedStress.toFixed(2)} | State: ${data.state}`);
 
@@ -2541,11 +2975,11 @@
         // === SHOW CALIBRATION COUNTDOWN (for local testing) ===
         if (!isCalibrated) {
           const secondsRemaining = Math.max(0, Math.ceil(
-            (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS - 
+            (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS -
             (Date.now() - calibrationStartTime)) / 1000
           ));
           const readingsCollected = calibrationBPMData.length;
-          botMessage(`📊 Measuring baseline... ${secondsRemaining}s (${readingsCollected} samples)`);
+          botMessage(`📊 Measuring baseline... ${secondsRemaining}s (${readingsCollected} samples)`, false);
         }
         
         // Mirror backend logic (EBD Engine) for state classification
