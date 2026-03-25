@@ -2036,46 +2036,48 @@
         currentOscillators.push(noise, lfo);
       }
 
-      // NATURE: Ultra-calm single pure tone (no noise at all)
-      // Clinical: Pure sine wave at therapeutic frequency for maximum calm
+      // NATURE: Calm flowing water sound
+      // Clinical: Natural water ambience for deep relaxation - no synthetic tones
       function playForestAmbience() {
-        // Pure sine wave (existing)
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.frequency.value = 210; // Gentle mid-range tone
-        osc.type = 'sine';
-        const now = audioContext.currentTime;
-        gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.07, now + 5); // Very quiet, slow fade
-        osc.connect(gain);
-        gain.connect(ambientGainNode);
-        osc.start();
-
-        // Soft filtered noise for wind/rain
+        // Create pink/brown noise for natural water texture
         const noise = audioContext.createBufferSource();
         noise.buffer = createNoiseBuffer();
         noise.loop = true;
-        const filter = audioContext.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 700; // Softer than ocean
-        filter.Q.value = 0.7;
-        // Slow LFO for gentle wind/rain variation
+
+        // Band-pass filter to isolate water-like frequencies (200-1200Hz)
+        const filter1 = audioContext.createBiquadFilter();
+        filter1.type = 'bandpass';
+        filter1.frequency.value = 600; // Center frequency for flowing water
+        filter1.Q.value = 0.8; // Wider band for natural sound
+
+        // Additional low-pass filter to soften harsh frequencies
+        const filter2 = audioContext.createBiquadFilter();
+        filter2.type = 'lowpass';
+        filter2.frequency.value = 1200;
+        filter2.Q.value = 0.5;
+
+        // Slow LFO to create gentle flowing variation (like water movement)
         const lfo = audioContext.createOscillator();
         const lfoGain = audioContext.createGain();
-        lfo.frequency.value = 0.07; // Very slow
-        lfoGain.gain.value = 200;
+        lfo.frequency.value = 0.12; // Gentle flowing rhythm
+        lfoGain.gain.value = 150; // Subtle modulation
         lfo.connect(lfoGain);
-        lfoGain.connect(filter.frequency);
-        // Noise gain (very low)
-        const noiseGain = audioContext.createGain();
-        noiseGain.gain.value = 0.045;
-        noise.connect(filter);
-        filter.connect(noiseGain);
-        noiseGain.connect(ambientGainNode);
+        lfoGain.connect(filter1.frequency);
+
+        // Volume control - gentle and non-intrusive
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0.25; // Comfortable volume for calm water
+
+        // Connect the audio chain: noise -> filters -> gain -> output
+        noise.connect(filter1);
+        filter1.connect(filter2);
+        filter2.connect(gainNode);
+        gainNode.connect(ambientGainNode);
+
         noise.start();
         lfo.start();
 
-        currentOscillators.push(osc, noise, lfo);
+        currentOscillators.push(noise, lfo);
       }
 
       // AMBER: Single warm therapeutic tone (Om frequency)
