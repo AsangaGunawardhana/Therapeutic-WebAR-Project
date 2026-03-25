@@ -31,88 +31,131 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 const DEBOUNCE_MS = 1200; // wait before reacting
 const HOLD_MS = 3000; // stay in one state
 
-let lastState = null;
-let lastHR = null;
-let lastHRV = null;
-let lastTime = 0;
-let timer = null;
+// ========================================
+// 🏥 MULTI-USER SESSION MANAGEMENT SYSTEM
+// ========================================
+// Individual session tracking for simultaneous users
+const userSessions = new Map();
 
-// Store user's mode preference across all data sources
-let userModePreference = { comfortMode: false, fullAR: true };
+// Default user preferences for new sessions
+const defaultUserPreferences = { comfortMode: false, fullAR: true };
 
-function safeEmit(command) {
+// ========================================
+// 🎯 PER-USER SAFE EMIT FUNCTION
+// ========================================
+// Sends AR commands to individual users, not broadcast to all
+function safeEmit(socket, command) {
   const now = Date.now();
+  const session = userSessions.get(socket.id);
 
-  // emergency → send immediately
+  if (!session) {
+    console.warn("⚠️ No session found for socket:", socket.id);
+    return;
+  }
+
+  console.log(`📡 Processing command for user ${socket.id}:`, command.state);
+
+  // emergency → send immediately to THIS user only
   if (command.state === "BRADYCARDIA_ALERT") {
-    io.emit("ar:command", command);
-    lastState = command.state;
-    lastHR = command.vitals.hr;
-    lastHRV = command.vitals.hrv;
-    lastTime = now;
+    socket.emit("ar:command", command);
+    session.lastState = command.state;
+    session.lastHR = command.vitals.hr;
+    session.lastHRV = command.vitals.hrv;
+    session.lastTime = now;
+    console.log(`🚨 EMERGENCY sent to user ${socket.id}`);
     return;
   }
 
-  // same state AND same vitals → do nothing
+  // same state AND same vitals for THIS user → do nothing
   if (
-    command.state === lastState &&
-    command.vitals.hr === lastHR &&
-    command.vitals.hrv === lastHRV
+    command.state === session.lastState &&
+    command.vitals.hr === session.lastHR &&
+    command.vitals.hrv === session.lastHRV
   ) {
+    console.log(`⏸️ Duplicate state for user ${socket.id}, skipping`);
     return;
   }
 
-  // too soon → wait
-  if (now - lastTime < HOLD_MS) {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      io.emit("ar:command", command);
-      lastState = command.state;
-      lastHR = command.vitals.hr;
-      lastHRV = command.vitals.hrv;
-      lastTime = Date.now();
+  // too soon for THIS user → wait
+  if (now - session.lastTime < HOLD_MS) {
+    clearTimeout(session.timer);
+    session.timer = setTimeout(() => {
+      socket.emit("ar:command", command);
+      session.lastState = command.state;
+      session.lastHR = command.vitals.hr;
+      session.lastHRV = command.vitals.hrv;
+      session.lastTime = Date.now();
+      console.log(`⏰ Delayed command sent to user ${socket.id}:`, command.state);
     }, DEBOUNCE_MS);
+    console.log(`⌛ Command debounced for user ${socket.id}`);
     return;
   }
 
-  // normal case
-  io.emit("ar:command", command);
-  lastState = command.state;
-  lastHR = command.vitals.hr;
-  lastHRV = command.vitals.hrv;
-  lastTime = now;
+  // normal case - send to THIS user only
+  socket.emit("ar:command", command);
+  session.lastState = command.state;
+  session.lastHR = command.vitals.hr;
+  session.lastHRV = command.vitals.hrv;
+  session.lastTime = now;
+  console.log(`✅ Command sent to user ${socket.id}:`, command.state);
 }
 
-// 5. When a client connects
+// ========================================
+// 🔌 MULTI-USER CONNECTION HANDLER
+// ========================================
 io.on("connection", (socket) => {
   console.log("✅ Client connected:", socket.id);
 
-  socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
-    console.log("🔍 Backend received:", { hr, hrv, userPalette, sessionContext });
+  // Create individual session for this user
+  userSessions.set(socket.id, {
+    lastState: null,
+    lastHR: null,
+    lastHRV: null,
+    lastTime: 0,
+    timer: null,
+    userPreferences: { ...defaultUserPreferences } // Individual copy
+  });
 
-    // Use updated ebdEngine with sessionContext for dual-mode system
+  console.log(`🆕 Created session for user ${socket.id}. Active sessions: ${userSessions.size}`);
+
+  socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
+    console.log(`🔍 Backend received from ${socket.id}:`, { hr, hrv, userPalette, sessionContext });
+
+    const session = userSessions.get(socket.id);
+    if (!session) {
+      console.warn("⚠️ Session not found for user:", socket.id);
+      return;
+    }
+
+    // Use individual user preferences for this specific user
     const fullSessionContext = sessionContext || {
       interventionTrigger: 'PATIENT_INITIATED',
-      userPreferences: { comfortMode: false, fullAR: true },
+      userPreferences: session.userPreferences, // Use THIS user's preferences
       patientAnxietyLevel: 5 // Default moderate
     };
 
-    // Remember user's mode preference for future hardware updates
+    // Save user's individual preferences (not global!)
     if (sessionContext && sessionContext.userPreferences) {
-      userModePreference = sessionContext.userPreferences;
-      console.log("💾 Saved user mode preference:", userModePreference);
+      session.userPreferences = { ...sessionContext.userPreferences };
+      console.log(`💾 Saved user ${socket.id} preference:`, session.userPreferences);
     }
 
     const command = getEbdPrescription(hr, hrv, userPalette, fullSessionContext);
 
-    console.log("📤 Backend sending:", JSON.stringify(command, null, 2));
+    console.log(`📤 Backend sending to ${socket.id}:`, JSON.stringify(command, null, 2));
 
-    safeEmit(command);
+    // Send command only to THIS specific user
+    safeEmit(socket, command);
   });
 
-  // 6. When client disconnects
+  // Cleanup individual session when user disconnects
   socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
+    const session = userSessions.get(socket.id);
+    if (session && session.timer) {
+      clearTimeout(session.timer);
+    }
+    userSessions.delete(socket.id);
+    console.log(`❌ User ${socket.id} disconnected. Active sessions: ${userSessions.size}`);
   });
 });
 
@@ -130,15 +173,21 @@ app.all('/hr', (req, res) => {
         const liveHR = parseInt(hrValue, 10);
         console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM`);
 
-        // Use updated ebdEngine with user's saved mode preference
-        const sessionContext = {
-          interventionTrigger: 'MONITORING', // Pure monitoring from hardware
-          userPreferences: userModePreference, // Use saved preference!
-          patientAnxietyLevel: 0 // No self-reported anxiety from hardware
-        };
+        // Multi-user consideration: Hardware data sent to all connected users
+        // Note: In production, you may want to route to specific user/session
+        userSessions.forEach((session, socketId) => {
+          const socket = io.sockets.sockets.get(socketId);
+          if (socket) {
+            const sessionContext = {
+              interventionTrigger: 'MONITORING', // Pure monitoring from hardware
+              userPreferences: session.userPreferences, // Use each user's preference!
+              patientAnxietyLevel: 0 // No self-reported anxiety from hardware
+            };
 
-        const command = getEbdPrescription(liveHR, 60, 'AMBER', sessionContext);
-        safeEmit(command);
+            const command = getEbdPrescription(liveHR, 60, 'AMBER', sessionContext);
+            safeEmit(socket, command);
+          }
+        });
 
         res.status(200).send('OK');
     } else {
@@ -187,15 +236,21 @@ function connectHypeRate() {
                 const hr = msg.payload.hr;
                 console.log(`❤️ LIVE HR: ${hr} BPM`);
 
-                // Use updated ebdEngine with user's saved mode preference
-                const sessionContext = {
-                  interventionTrigger: 'MONITORING', // Pure monitoring from HypeRate
-                  userPreferences: userModePreference, // Use saved preference!
-                  patientAnxietyLevel: 0 // No self-reported anxiety from hardware
-                };
+                // Multi-user consideration: HypeRate data sent to all connected users
+                // Note: In production, you may want to route to specific user/session
+                userSessions.forEach((session, socketId) => {
+                  const socket = io.sockets.sockets.get(socketId);
+                  if (socket) {
+                    const sessionContext = {
+                      interventionTrigger: 'MONITORING', // Pure monitoring from HypeRate
+                      userPreferences: session.userPreferences, // Use each user's preference!
+                      patientAnxietyLevel: 0 // No self-reported anxiety from hardware
+                    };
 
-                const command = getEbdPrescription(hr, 60, 'AMBER', sessionContext);
-                safeEmit(command);
+                    const command = getEbdPrescription(hr, 60, 'AMBER', sessionContext);
+                    safeEmit(socket, command);
+                  }
+                });
             }
         } catch (e) {}
     });
