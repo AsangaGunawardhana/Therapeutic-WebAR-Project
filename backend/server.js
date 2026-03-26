@@ -113,10 +113,22 @@ io.on("connection", (socket) => {
     lastHRV: null,
     lastTime: 0,
     timer: null,
+    linkedDevice: null, // PRIVACY FIX: Track which hardware device is linked to this session
     userPreferences: { ...defaultUserPreferences } // Individual copy
   });
 
   console.log(`🆕 Created session for user ${socket.id}. Active sessions: ${userSessions.size}`);
+
+  // ========================================
+  // 🔗 IOT DEVICE PAIRING (The Privacy Fix)
+  // ========================================
+  socket.on("claim_device", (deviceId) => {
+    const session = userSessions.get(socket.id);
+    if (session) {
+      session.linkedDevice = deviceId;
+      console.log(`🔗 DEVICE PAIRED: Phone ${socket.id} claimed watch ${deviceId}`);
+    }
+  });
 
   socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
     console.log(`🔍 Backend received from ${socket.id}:`, { hr, hrv, userPalette, sessionContext });
@@ -167,27 +179,59 @@ app.use(express.urlencoded({ extended: true }));
 
 app.all('/hr', (req, res) => {
     let hrValue = req.query.hr || req.query.heartrate || req.body.hr || req.body.heartrate;
+    let deviceId = req.query.deviceId || req.body.deviceId || 'default_tizen'; // Identify the watch
+
     if (!hrValue && Object.keys(req.body).length > 0) hrValue = Object.keys(req.body)[0];
 
     if (hrValue) {
         const liveHR = parseInt(hrValue, 10);
-        console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM`);
+        console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM from ${deviceId}`);
 
-        // Multi-user consideration: Hardware data sent to all connected users
-        // Note: In production, you may want to route to specific user/session
-        userSessions.forEach((session, socketId) => {
-          const socket = io.sockets.sockets.get(socketId);
-          if (socket) {
-            const sessionContext = {
-              interventionTrigger: 'MONITORING', // Pure monitoring from hardware
-              userPreferences: session.userPreferences, // Use each user's preference!
-              patientAnxietyLevel: 0 // No self-reported anxiety from hardware
-            };
+        // PRIVACY FIX: Route to the correct user, not everyone
+        // Auto-link the device to the first eligible session so live updates reach the AR client.
+        let targetSessionId = null;
 
-            const command = getEbdPrescription(liveHR, 60, 'AMBER', sessionContext);
-            safeEmit(socket, command);
-          }
-        });
+        for (const [socketId, session] of userSessions.entries()) {
+            if (session.linkedDevice === deviceId) {
+                targetSessionId = socketId;
+                break;
+            }
+        }
+
+        if (!targetSessionId) {
+            if (userSessions.size === 1) {
+                targetSessionId = userSessions.keys().next().value;
+                console.log(`🔗 Solo session ${targetSessionId} assumed for device ${deviceId}`);
+            } else {
+                for (const [socketId, session] of userSessions.entries()) {
+                    if (!session.linkedDevice) {
+                        session.linkedDevice = deviceId;
+                        targetSessionId = socketId;
+                        console.log(`🔗 Auto-claiming device ${deviceId} for session ${socketId}`);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (targetSessionId) {
+            const socket = io.sockets.sockets.get(targetSessionId);
+            const session = userSessions.get(targetSessionId);
+            if (socket && session) {
+                if (!session.linkedDevice) {
+                    session.linkedDevice = deviceId;
+                }
+                const sessionContext = {
+                    interventionTrigger: 'MONITORING',
+                    userPreferences: session.userPreferences,
+                    patientAnxietyLevel: 0
+                };
+                const command = getEbdPrescription(liveHR, 0, session.userPreferences.palette || 'DEFAULT', sessionContext);
+                safeEmit(socket, command);
+            }
+        } else {
+            console.warn(`⚠️ No eligible session found for device ${deviceId}`);
+        }
 
         res.status(200).send('OK');
     } else {
@@ -234,22 +278,26 @@ function connectHypeRate() {
             const msg = JSON.parse(data);
             if (msg.event === 'hr_update') {
                 const hr = msg.payload.hr;
-                console.log(`❤️ LIVE HR: ${hr} BPM`);
+                console.log(`❤️ LIVE HR: ${hr} BPM from HypeRate: ${HYPERATE_SESSION}`);
 
-                // Multi-user consideration: HypeRate data sent to all connected users
-                // Note: In production, you may want to route to specific user/session
+                // PRIVACY FIX: Route to the correct user
                 userSessions.forEach((session, socketId) => {
-                  const socket = io.sockets.sockets.get(socketId);
-                  if (socket) {
-                    const sessionContext = {
-                      interventionTrigger: 'MONITORING', // Pure monitoring from HypeRate
-                      userPreferences: session.userPreferences, // Use each user's preference!
-                      patientAnxietyLevel: 0 // No self-reported anxiety from hardware
-                    };
-
-                    const command = getEbdPrescription(hr, 60, 'AMBER', sessionContext);
-                    safeEmit(socket, command);
-                  }
+                    // Only send if this user claimed the HypeRate watch, or if it's a solo demo
+                    if (session.linkedDevice === HYPERATE_SESSION || userSessions.size === 1) {
+                        const socket = io.sockets.sockets.get(socketId);
+                        if (socket) {
+                            const sessionContext = {
+                                interventionTrigger: 'MONITORING',
+                                userPreferences: session.userPreferences,
+                                patientAnxietyLevel: 0 
+                            };
+                            
+                            // Get the patient's actual chosen palette from their session, not a hardcoded 'AMBER'
+                            const userPalette = session.userPreferences.palette || 'OCEAN';
+                            const command = getEbdPrescription(hr, 0, userPalette, sessionContext);
+                            safeEmit(socket, command);
+                        }
+                    }
                 });
             }
         } catch (e) {}
@@ -269,7 +317,7 @@ connectHypeRate();
 
 
 // 8. Start the server (Cloud-Ready)
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;  // Changed from 3000 to 3001
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🏥 Therapeutic WebAR Server running on port ${PORT}`);
   console.log(`📱 Local: http://localhost:${PORT}`);
