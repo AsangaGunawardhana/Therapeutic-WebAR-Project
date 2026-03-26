@@ -1770,9 +1770,9 @@
       // Mobile AR Optimization: Reduced size from 0.8 to 0.4 for better visibility on small screens
       const geometry = new THREE.SphereGeometry(0.4, 64, 64);
       const material = new THREE.MeshStandardMaterial({
-        color: new THREE.Color("#ffffff"),
-        emissive: new THREE.Color("#000000"),
-        roughness: 0.4,
+        color: new THREE.Color(initialVignetteColor),
+        emissive: new THREE.Color(initialVignetteColor),
+        roughness: 0.6,
         metalness: 0.1,
       });
       const therapeuticOrb = new THREE.Mesh(geometry, material);
@@ -2608,9 +2608,9 @@
       // Add Glow Mesh (The Aura) - Creates a soft outer glow effect
       const glowGeometry = new THREE.SphereGeometry(0.45, 64, 64); // Slightly larger than orb
       const glowMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff, // Initial color; will be synced to orb color in animate loop
+        color: new THREE.Color(initialVignetteColor),
         transparent: true,
-        opacity: 0.2, // Subtle transparency for aura effect
+        opacity: 0.25, // Subtle transparency for aura effect
         side: THREE.BackSide, // Render from inside to create glow
       });
       const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
@@ -2711,9 +2711,9 @@
       // -----------------------------
       // 3) Target values (for smooth transitions)
       // -----------------------------
-      const targetColor = new THREE.Color(0xffffff); // Default color
-      const currentColor = new THREE.Color(0xffffff); // Initial color
-      let targetEmissive = new THREE.Color("#000000");
+      const targetColor = new THREE.Color(initialVignetteColor); // Default to selected palette
+      const currentColor = new THREE.Color(initialVignetteColor); // Initial color
+      let targetEmissive = new THREE.Color(initialVignetteColor);
       let targetEmissiveIntensity = 0.2;
 
       let isPulsing = false;
@@ -3028,7 +3028,7 @@
       // -----------------------------
       // 5) Render loop (smooth transitions + pulse)
       // -----------------------------
-      let currentEmissive = new THREE.Color("#000000");
+      let currentEmissive = new THREE.Color(initialVignetteColor);
       let currentEmissiveIntensity = 0.2;
 
       function animate() {
