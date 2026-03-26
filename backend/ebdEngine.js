@@ -68,12 +68,12 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
       state: "MONITORING_ELEVATED",
       visual: { 
         mode: "GENTLE_AR", 
-        colorOrCCT: { cctK: 2700 }, // Neutral Warm Amber
+        colorOrCCT: palette.calm,
         intensity: 0.4,
         particles: { enabled: !userPrefs.comfortMode, type: "soft_ambient", speed: "very_slow" }
       },
       patientMessage: "Your heart rate is slightly high. Keeping the room steady.",
-      clinicalJustification: "High HR detected without subjective stress. Applying neutral warmth to prevent escalation.",
+      clinicalJustification: "High HR detected without subjective stress. Applying patient's calm palette to prevent escalation.",
       vitals: { hr, hrv }
     });
   }
@@ -83,12 +83,12 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
       state: "MODERATE",
       visual: {
         mode: "GENTLE_AR",
-        colorOrCCT: { cctK: 3000 }, // Gentle Warm White
+        colorOrCCT: palette.calm,
         intensity: 0.5,
         particles: { enabled: !userPrefs.comfortMode, type: "soft_ambient", speed: "very_slow" }
       },
       patientMessage: "The room is adjusting to help you stay comfortable.",
-      clinicalJustification: "Moderate stress levels detected. Applying warm lighting to stabilize.",
+      clinicalJustification: "Moderate stress levels detected. Applying patient's calm palette to stabilize.",
       vitals: { hr, hrv }
     });
   }
