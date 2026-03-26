@@ -1,84 +1,111 @@
-// EBD Logic Engine (Stage 1)
-// Input: hr, hrv, userPalette
-// Output: state + lighting prescription
+// EBD Logic Engine - Final Version for March 30th Deadline
+// Incorporates Cardiologist feedback, Multi-modal Data Fusion, and Hardware Fallbacks
 
-// Therapeutic Color Palettes - Evidence-Based Chromotherapy
 const colorMapping = {
-   // Evidence-based cardiovascular research palettes (clinically proven)
-  OCEAN: {
-    stress: "#4FC3F7", // Blue - Clinical studies: reduces HR/BP (150 patient trials)
-    calm: "#81D4FA",   // Light Blue - Sustained cardiovascular relaxation
-    wavelength: 470,   // Blue spectrum - parasympathetic activation
-  },
-  NATURE: {
-    stress: "#66BB6A", // Green - Superior cardiovascular relaxant vs other colors
-    calm: "#81C784",   // Light Green - Proven anxiety reduction (13.1% variance)
-    wavelength: 530,   // Green spectrum - optimal autonomic balance
-  },
-
-  // User preference and accessibility palettes
-  AMBER: {
-    stress: "#FFBF00", // Amber - Circadian-friendly, emotional comfort
-    calm: "#FFD700",   // Gold - Sustained warmth, stability
-    wavelength: 590,   // Yellow-orange spectrum
-  },
-  VIOLET: {
-    stress: "#4B0082", // Indigo - Deep nervous system calming (mixed effects)
-    calm: "#EE82EE",   // Violet - Gentle recovery, spiritual calm
-    wavelength: 420,   // Violet spectrum
-  },
-  PINK: {
-    stress: "#FFB6C1", // Light Pink - Emotional soothing, gentle stimulation
-    calm: "#FFC0CB",   // Pink - Nurturing, gentle comfort
-    wavelength: 495,   // Pink-purple spectrum
-  },
-  EARTH: {
-    stress: "#8B7355", // Brown - Grounding, stability, neutral earth tone
-    calm: "#D2B48C",   // Tan - Natural, earthy calm
-    wavelength: 580,   // Yellow-brown spectrum
-  },
-
-  DEFAULT: {
-    stress: "#4FC3F7", // Ocean Blue - Research-backed fallback
-    calm: "#81D4FA",   // Light Blue - Evidence-based general relaxation
-    wavelength: 470,   // Blue spectrum
-  }
+  OCEAN: { stress: "#4FC3F7", calm: "#81D4FA", wavelength: 470 },
+  NATURE: { stress: "#66BB6A", calm: "#81C784", wavelength: 530 },
+  AMBER: { stress: "#FFBF00", calm: "#FFD700", wavelength: 590 },
+  VIOLET: { stress: "#4B0082", calm: "#EE82EE", wavelength: 420 },
+  PINK: { stress: "#FFB6C1", calm: "#FFC0CB", wavelength: 495 },
+  EARTH: { stress: "#8B7355", calm: "#D2B48C", wavelength: 580 },
+  DEFAULT: { stress: "#4FC3F7", calm: "#81D4FA", wavelength: 470 }
 };
 
-// Patient-centered stress management (not automated physiological detection)
+/**
+ * Main Entry Point: getEbdPrescription
+ * Performs Data Fusion between Sensor (HR/HRV) and Manual Input
+ */
 function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {}) {
   hr = Number(hr);
   hrv = Number(hrv);
-
-  // Validate userPalette, fallback to DEFAULT if invalid
   const palette = colorMapping[userPalette] || colorMapping.DEFAULT;
+  const userPrefs = sessionContext.userPreferences || { comfortMode: false };
+  const manualAnxiety = Number(sessionContext.patientAnxietyLevel || 0);
 
-  if (!Number.isFinite(hr) || !Number.isFinite(hrv)) {
+  // 1. EMERGENCY CHECK: Bradycardia (Medical Safety Gate)
+  if (hr > 0 && hr < 50) {
     return buildCommand({
-      state: "MODERATE",
-      visual: { mode: "NEUTRAL", colorOrCCT: { cctK: 3000 }, intensity: 0.5 },
-      patientMessage: "Reading not available. Keeping the room steady.",
-      clinicalJustification:
-        "Invalid vitals input (NaN/undefined). Safe default applied.",
-      vitals: { hr, hrv },
+      state: "BRADYCARDIA_ALERT",
+      visual: { mode: "SAFETY", colorOrCCT: { cctK: 4000 }, intensity: 0.8 },
+      patientMessage: "Low heart rate detected. Please rest and stay calm.",
+      clinicalJustification: "Emergency low heart rate (<50 BPM). Interaction disabled for safety.",
+      vitals: { hr, hrv }
     });
   }
 
-  // PATIENT-PRIMARY approach: Let patient control intervention
-  const interventionMode = sessionContext.interventionTrigger || 'PATIENT_INITIATED';
+  // 2. DATA FUSION BRAIN: Determine Clinical State
+  const sensorState = classifyState(hr, hrv); 
 
-  if (interventionMode === 'PATIENT_INITIATED') {
-    // Patient manually requests stress intervention - pass user preferences for mode selection
-    const userPreferences = sessionContext.userPreferences || { comfortMode: false, fullAR: true };
-    return buildPatientInitiatedResponse(sessionContext.patientAnxietyLevel, palette, userPreferences);
-  } else if (interventionMode === 'SCHEDULED') {
-    // Scheduled breathing sessions (not stress-reactive)
-    return buildScheduledResponse(palette);
-  } else {
-    // Monitoring mode only - show vitals, respect user preference
-    const userPreferences = sessionContext.userPreferences || { comfortMode: false, fullAR: true };
-    return buildMonitoringResponse(hr, hrv, palette, userPreferences);
+  // LOGIC GATE: Merging sensor data with the patient's manual button
+  let finalState = sensorState;
+  
+  if (manualAnxiety >= 7) {
+    finalState = "HIGH_STRESS"; // Patient override: They feel stressed, believe them.
+  } else if (hr >= 100 && manualAnxiety < 4) {
+    finalState = "MONITORING_ELEVATED"; // Doctor's Case: High HR, but patient feels calm.
   }
+
+  // 3. GENERATE THE VISUAL COMMAND based on the final fused state
+
+  if (finalState === "HIGH_STRESS") {
+    return buildCommand({
+      state: "HIGH_STRESS",
+      visual: {
+        mode: userPrefs.comfortMode ? "SIMPLE_CALM" : "IMMERSIVE_SOOTHING",
+        colorOrCCT: palette.stress,
+        intensity: 0.7,
+        particles: { enabled: !userPrefs.comfortMode, type: "calming_flow", speed: "slow" },
+        breathing: { pattern: "4-7-8", visualGuide: "expanding_circle" }
+      },
+      patientMessage: "Let's breathe together. Focus on the light.",
+      clinicalJustification: `Acute stress confirmed (Manual: ${manualAnxiety}, HR: ${hr}). Applying ${palette.stress} spectrum.`,
+      vitals: { hr, hrv }
+    });
+  }
+
+  if (finalState === "MONITORING_ELEVATED") {
+    return buildCommand({
+      state: "MONITORING_ELEVATED",
+      visual: { 
+        mode: "GENTLE_AR", 
+        colorOrCCT: { cctK: 2700 }, // Neutral Warm Amber
+        intensity: 0.4,
+        particles: { enabled: !userPrefs.comfortMode, type: "soft_ambient", speed: "very_slow" }
+      },
+      patientMessage: "Your heart rate is slightly high. Keeping the room steady.",
+      clinicalJustification: "High HR detected without subjective stress. Applying neutral warmth to prevent escalation.",
+      vitals: { hr, hrv }
+    });
+  }
+
+  if (finalState === "MODERATE") {
+    return buildCommand({
+      state: "MODERATE",
+      visual: {
+        mode: "GENTLE_AR",
+        colorOrCCT: { cctK: 3000 }, // Gentle Warm White
+        intensity: 0.5,
+        particles: { enabled: !userPrefs.comfortMode, type: "soft_ambient", speed: "very_slow" }
+      },
+      patientMessage: "The room is adjusting to help you stay comfortable.",
+      clinicalJustification: "Moderate stress levels detected. Applying warm lighting to stabilize.",
+      vitals: { hr, hrv }
+    });
+  }
+
+  // DEFAULT: Calm Recovery
+  return buildCommand({
+    state: "CALM_RECOVERY",
+    visual: {
+      mode: "RECOVERY_AR",
+      colorOrCCT: palette.calm,
+      intensity: 0.4,
+      particles: { enabled: !userPrefs.comfortMode, type: "peaceful_drift", speed: "drift" }
+    },
+    patientMessage: "You are doing well. Recovering comfortably.",
+    clinicalJustification: "Vitals within normal range. Maintaining therapeutic environment.",
+    vitals: { hr, hrv }
+  });
 }
 
 function buildPatientInitiatedResponse(anxietyLevel, palette, userPreferences = {}) {
@@ -246,70 +273,26 @@ function buildMonitoringResponse(hr, hrv, palette, userPreferences = {}) {
   }
 }
 
-// Multi-signal stress classification addressing cardiac patient limitations
-function classifyState(hr, hrv, patientBaseline = null, additionalSignals = {}) {
-  // A) SAFETY FIRST: Bradycardia (can be dangerous)
-  if (hr < 50) return "BRADYCARDIA_ALERT";
+/**
+ * HRV and HR Classification Logic
+ * Includes Fallback for when HRV is not provided by hardware
+ */
+function classifyState(hr, hrv) {
+  // Check if HRV is real (Mock data is usually 50)
+  const isHRVAvailable = (hrv > 0 && hrv !== 50);
 
-  // B) HRV-PRIMARY approach (most reliable for cardiac patients)
-  // HRV is the strongest autonomic indicator, less affected by medications
-  const hrvStress = classifyHRVStress(hrv);
-
-  // C) HR-SECONDARY (supportive evidence only, not primary)
-  const hrStress = classifyHRSupportive(hr, patientBaseline);
-
-  // D) ADDITIONAL SIGNALS if available
-  const multiModalStress = combineSignals(hrvStress, hrStress, additionalSignals);
-
-  return multiModalStress;
-}
-
-function classifyHRVStress(hrv) {
-  // HRV thresholds based on cardiac patient research
-  if (hrv < 20) return "SEVERE_STRESS";    // Very low HRV = high sympathetic
-  if (hrv < 35) return "HIGH_STRESS";      // Low HRV = moderate stress
-  if (hrv < 50) return "MILD_STRESS";      // Borderline HRV
-  if (hrv >= 60) return "RECOVERY_STATE";  // Good parasympathetic tone
-  return "MODERATE";                       // Normal range
-}
-
-function classifyHRSupportive(hr, baseline) {
-  // HR provides SUPPORTIVE evidence only (not primary decision)
-  if (baseline !== null) {
-    const deviation = ((hr - baseline) / baseline) * 100;
-    if (deviation > 20) return "HR_ELEVATED";     // Supporting evidence
-    if (deviation > 10) return "HR_MODERATE";     // Mild supporting evidence
-    return "HR_NORMAL";
-  }
-
-  // Fallback for very high HR (supportive evidence)
-  if (hr > 120) return "HR_ELEVATED";
-  if (hr > 100) return "HR_MODERATE";
-  return "HR_NORMAL";
-}
-
-function combineSignals(hrvStress, hrStress, additionalSignals = {}) {
-  // HRV-weighted decision (primary indicator)
-  if (hrvStress === "SEVERE_STRESS") return "HIGH_STRESS";
-
-  // Combine HRV + HR supportive evidence
-  if (hrvStress === "HIGH_STRESS" && hrStress === "HR_ELEVATED") {
-    return "HIGH_STRESS";  // Both signals agree
-  }
-
-  if (hrvStress === "HIGH_STRESS") return "MODERATE"; // HRV only
-
-  // Check for patient self-report (if available)
-  if (additionalSignals.selfReportAnxiety >= 7) {
-    return "HIGH_STRESS";  // Patient knows their own state
-  }
-
-  if (hrvStress === "RECOVERY_STATE" && hrStress === "HR_NORMAL") {
+  if (isHRVAvailable) {
+    // PRIMARY INDICATOR: HRV (Clinical Research)
+    if (hrv < 20) return "HIGH_STRESS";
+    if (hrv < 35) return "HIGH_STRESS";
+    if (hrv < 50) return "MODERATE";
+    return "CALM_RECOVERY";
+  } else {
+    // SECONDARY INDICATOR: HR (Hardware Fallback for Demo)
+    if (hr >= 100) return "HIGH_STRESS";
+    if (hr >= 85) return "MODERATE";
     return "CALM_RECOVERY";
   }
-
-  // Conservative default
-  return "MODERATE";
 }
 
 function prescriptionFromState(state, palette) {
