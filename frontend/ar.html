@@ -1545,9 +1545,9 @@
         // 3. Speak reassurance
         speakMessage("Help requested. Take slow, deep breaths. You are safe.");
 
-        // 4. THE THERAPEUTIC LOCK: Lock the AR room for 12 seconds!
+        // 4. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
         // This stops the watch from immediately overwriting the help message.
-        window.therapeuticLockTime = Date.now() + 12000;
+        window.therapeuticLockTime = Date.now() + 60000;
 
         triggerPatientInitiatedIntervention();
       }
@@ -1912,7 +1912,7 @@
         if (!cleanText) return; // Nothing to speak after cleaning
 
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.rate = 0.85;  // Slightly slower for therapeutic calm
+        utterance.rate = 0.7;   // Slower, more calming pacing
         utterance.pitch = 1.0;  // Natural pitch
         utterance.volume = 0.2; // Further reduced volume to 20%
 
@@ -1926,7 +1926,8 @@
           utterance.voice = preferredVoice;
         }
 
-        speechSynth.speak(utterance);
+        // Brief pause lets the text settle before audio starts.
+        setTimeout(() => speechSynth.speak(utterance), 400);
       }
 
       // Preload voices (some browsers need this)
