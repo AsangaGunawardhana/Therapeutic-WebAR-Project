@@ -1539,14 +1539,10 @@
         // 1. Force anxiety to 10 so the backend knows this is an explicit distress call
         currentAnxietyLevel = 10;
 
-        // 2. Update guidance text to reassure patient
-        document.getElementById('guidanceText').textContent = "Help is on the way. Breathe slowly...";
+        // 2. Update guidance text to reassure patient locally
+        document.getElementById('guidanceText').textContent = "Help is on the way...";
 
-        // 3. Speak reassurance
-        speakMessage("Help requested. Take slow, deep breaths. You are safe.");
-
-        // 4. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
-        // This stops the watch from immediately overwriting the help message.
+        // 3. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
         window.therapeuticLockTime = Date.now() + 60000;
 
         triggerPatientInitiatedIntervention();
@@ -2791,44 +2787,62 @@
       // -----------------------------
       let patientMessage = ""; // Store the HIGH_STRESS message context
       let breathingSpokenOnce = false; // Track if we've spoken the initial context
+      let isPreparingBreathing = false;
+      let breathingPrepTimeout = null;
 
       function startBreathingLoop(contextMessage = "") {
         patientMessage = contextMessage;
 
         // 🛑 HARDWARE ANTI-SPAM FIX: 
-        // If the interval is already running, do absolutely nothing!
-        // Let the 4-second timer update the text naturally.
-        if (breathingInterval) {
+        // If the interval is already running, or we are in the prep phase, do nothing.
+        if (breathingInterval || isPreparingBreathing) {
           return; 
         }
 
-        // Set initial message immediately 
-        const initialStep = "BREATHE IN ⬆️";
-        botMessage(patientMessage + " " + initialStep, true); 
-        breathingSpokenOnce = true;
-        currentBreathingStep = "IN";
-        vignetteTargetOpacity = 0.5; 
-        vibrateBreathing('IN'); 
+        isPreparingBreathing = true;
 
-        breathingInterval = setInterval(() => {
-          if (currentBreathingStep === "IN") {
-            botMessage(patientMessage + " BREATHE OUT ⬇️", false);
-            speakMessage("Breathe out"); 
-            currentBreathingStep = "OUT";
-            vignetteTargetOpacity = 0.15; 
-          } else {
-            botMessage(patientMessage + " BREATHE IN ⬆️", false);
-            speakMessage("Breathe in"); 
-            vibrateBreathing('IN'); 
-            currentBreathingStep = "IN";
-            vignetteTargetOpacity = 0.5; 
-          }
-        }, 4000); 
+        // 1. Show and speak the introductory message first.
+        botMessage(patientMessage, true); 
+
+        // 2. Wait for the voice to finish the intro before starting the breathing cadence.
+        clearTimeout(breathingPrepTimeout);
+        breathingPrepTimeout = setTimeout(() => {
+          isPreparingBreathing = false;
+
+          // Safety check: Don't begin the loop if the patient already calmed down.
+          if (currentStressLevel !== 'HIGH_STRESS') return;
+
+          const initialStep = "BREATHE IN ⬆️";
+          botMessage(patientMessage + " " + initialStep, false); 
+          speakMessage("Breathe in");
+
+          breathingSpokenOnce = true;
+          currentBreathingStep = "IN";
+          vignetteTargetOpacity = 0.5; 
+          vibrateBreathing('IN'); 
+
+          breathingInterval = setInterval(() => {
+            if (currentBreathingStep === "IN") {
+              botMessage(patientMessage + " BREATHE OUT ⬇️", false);
+              speakMessage("Breathe out"); 
+              currentBreathingStep = "OUT";
+              vignetteTargetOpacity = 0.15; 
+            } else {
+              botMessage(patientMessage + " BREATHE IN ⬆️", false);
+              speakMessage("Breathe in"); 
+              vibrateBreathing('IN'); 
+              currentBreathingStep = "IN";
+              vignetteTargetOpacity = 0.5; 
+            }
+          }, 4000); 
+        }, 4500);
       }
 
       function stopBreathingLoop() {
+        clearTimeout(breathingPrepTimeout);
         clearInterval(breathingInterval);
         breathingInterval = null;
+        isPreparingBreathing = false;
         currentBreathingStep = null; // Reset phase for next cycle
         breathingSpokenOnce = false; // Reset for next HIGH_STRESS episode
         vignetteTargetOpacity = 0; // Fade out vignette when stopping
