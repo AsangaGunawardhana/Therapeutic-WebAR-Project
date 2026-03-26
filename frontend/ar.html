@@ -1534,13 +1534,20 @@
       }
 
       function requestHelp() {
-        console.log(`🆘 Patient requested help (Anxiety: ${currentAnxietyLevel}/10, Mode: ${currentARMode})`);
+        console.log(`🆘 Patient requested help...`);
 
-        // Update guidance text to reassure patient
+        // 1. Force anxiety to 10 so the backend knows this is an explicit distress call
+        currentAnxietyLevel = 10;
+
+        // 2. Update guidance text to reassure patient
         document.getElementById('guidanceText').textContent = "Help is on the way. Breathe slowly...";
 
-        // Speak reassurance
+        // 3. Speak reassurance
         speakMessage("Help requested. Take slow, deep breaths. You are safe.");
+
+        // 4. THE THERAPEUTIC LOCK: Lock the AR room for 12 seconds!
+        // This stops the watch from immediately overwriting the help message.
+        window.therapeuticLockTime = Date.now() + 12000;
 
         triggerPatientInitiatedIntervention();
       }
@@ -1672,6 +1679,10 @@
       // 1) Socket
       // ========================================
       const socket = io();
+      
+      // 🔒 PRIVACY FIX: Tell the server this phone owns the test watch
+      // This unlocks the data stream so the watch data flows to this specific screen
+      socket.emit("claim_device", "5038D");
 
       // ========================================
       // 2) Three.js scene + orb
@@ -2781,43 +2792,37 @@
       let breathingSpokenOnce = false; // Track if we've spoken the initial context
 
       function startBreathingLoop(contextMessage = "") {
-        // Update patient message even if interval is already running
-        // (vitals may change while still in HIGH_STRESS)
         patientMessage = contextMessage;
 
-        // Update UI immediately with current step and new message
+        // 🛑 HARDWARE ANTI-SPAM FIX: 
+        // If the interval is already running, do absolutely nothing!
+        // Let the 4-second timer update the text naturally.
         if (breathingInterval) {
-          // Interval already running - update current display with new message (no speech)
-          const currentStep =
-            currentBreathingStep === "IN" ? "BREATHE IN ⬆️" : "BREATHE OUT ⬇️";
-          botMessage(patientMessage + " " + currentStep, false); // Don't repeat speech
-          return;
+          return; 
         }
 
-        // Set initial message immediately (don't wait for first interval)
+        // Set initial message immediately 
         const initialStep = "BREATHE IN ⬆️";
-        botMessage(patientMessage + " " + initialStep, true); // Speak the initial message
+        botMessage(patientMessage + " " + initialStep, true); 
         breathingSpokenOnce = true;
         currentBreathingStep = "IN";
-        vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
-        vibrateBreathing('IN'); // Haptic feedback on first breath
+        vignetteTargetOpacity = 0.5; 
+        vibrateBreathing('IN'); 
 
         breathingInterval = setInterval(() => {
           if (currentBreathingStep === "IN") {
-            // Only speak "Breathe out", not the full context message
             botMessage(patientMessage + " BREATHE OUT ⬇️", false);
-            speakMessage("Breathe out"); // Speak just the instruction
+            speakMessage("Breathe out"); 
             currentBreathingStep = "OUT";
-            vignetteTargetOpacity = 0.15; // Breathe OUT = glow fades
-            // No vibration on exhale for contrast
+            vignetteTargetOpacity = 0.15; 
           } else {
             botMessage(patientMessage + " BREATHE IN ⬆️", false);
-            speakMessage("Breathe in"); // Speak just the instruction
-            vibrateBreathing('IN'); // Haptic feedback on inhale
+            speakMessage("Breathe in"); 
+            vibrateBreathing('IN'); 
             currentBreathingStep = "IN";
-            vignetteTargetOpacity = 0.5; // Breathe IN = glow appears
+            vignetteTargetOpacity = 0.5; 
           }
-        }, 4000); // 4 seconds per phase (8-second complete cycle)
+        }, 4000); 
       }
 
       function stopBreathingLoop() {
@@ -2835,75 +2840,87 @@
       // Phase 2: THERAPY (30s+) - Apply stress-responsive visuals
       // Phase 3: REPORT - Generate session outcome metrics
       // -----------------------------
+      // -----------------------------
+      // 4) Socket listener - Handle ar:command from server
+      // ===== MEDICAL DEVICE PROTOCOL =====
+      // Phase 1: CALIBRATION (0-30s) - Collect baseline BPM
+      // Phase 2: THERAPY (30s+) - Apply stress-responsive visuals
+      // Phase 3: REPORT - Generate session outcome metrics
+      // -----------------------------
       socket.on("ar:command", (data) => {
         console.log("🔴 SOCKET MESSAGE RECEIVED:", data.state, data.visual.mode);
+        console.log("📊 Vitals received: HR=" + data.vitals.hr + " HRV=" + data.vitals.hrv);
+
+        // ==========================================
+        // 🫀 FIX: ALWAYS UPDATE HR NUMBERS FIRST
+        // This ensures the screen never looks "frozen" even if the room is locked.
+        // ==========================================
+        const liveHREl = document.getElementById("liveHR");
+        const liveHRVEl = document.getElementById("liveHRV");
+        const minimalHREl = document.getElementById("minimalHR");
+        
+        console.log("🔍 Element check - liveHR:", !!liveHREl, "liveHRV:", !!liveHRVEl, "minimalHR:", !!minimalHREl);
+        
+        if (liveHREl) {
+          liveHREl.textContent = data.vitals.hr;
+          console.log("✅ Updated liveHR to", data.vitals.hr);
+        }
+        if (liveHRVEl) {
+          liveHRVEl.textContent = data.vitals.hrv;
+          console.log("✅ Updated liveHRV to", data.vitals.hrv);
+        }
+        if (minimalHREl) {
+          minimalHREl.textContent = data.vitals.hr;
+          console.log("✅ Updated minimalHR to", data.vitals.hr);
+        }
+        
+        // Record data immediately so the final session report is 100% accurate
+        recordBPMReading(data.vitals.hr);
+
+        // ==========================================
+        // 🛑 THE HARDWARE OVERRIDE FIX (Therapeutic Lock)
+        // ==========================================
+        if (window.therapeuticLockTime && Date.now() < window.therapeuticLockTime) {
+          if (data.state !== "BRADYCARDIA_ALERT" && data.state !== "HIGH_STRESS") {
+            console.log("⏳ Therapeutic lock active. Numbers updated, but visuals/voice paused.");
+            return; // Skip changing colors and voice!
+          }
+        }
 
         // === PHASE 1: CALIBRATION ===
         if (!isCalibrated) {
-          // During calibration: record BPM, ignore stress visualization
-          recordBPMReading(data.vitals.hr);
-
-          // Show calibration message (don't speak every second - too frequent)
           const secondsRemaining = Math.max(0, Math.ceil(
             (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS -
             (Date.now() - calibrationStartTime)) / 1000
           ));
           botMessage(`📊 Measuring baseline heart rate... ${secondsRemaining}s`, false);
 
-          // Update display but don't apply stress animation yet
-          document.getElementById("liveHR").textContent = data.vitals.hr;
-          document.getElementById("liveHRV").textContent = data.vitals.hrv;
-          document.getElementById("liveState").textContent = "CALIBRATING";
+          if (document.getElementById("liveState")) document.getElementById("liveState").textContent = "CALIBRATING";
+          if (document.getElementById('guidanceText')) document.getElementById('guidanceText').textContent = `Calibrating... ${secondsRemaining}s remaining`;
 
-          // Update minimal UI during calibration
-          document.getElementById('minimalHR').textContent = data.vitals.hr;
-          document.getElementById('guidanceText').textContent = `Calibrating... ${secondsRemaining}s remaining`;
-
-          // IMPORTANT: Still allow particle mode changes during calibration!
-          // This ensures comfort mode can hide particles immediately
           animateParticles(data.state, data.visual);
-
-          return; // Don't proceed to stress visualization (but particles handled above)
+          return; 
         }
 
         // === PHASE 2: THERAPY (post-calibration) ===
-        // Record BPM for session metrics
-        recordBPMReading(data.vitals.hr);
-        
-        // SAFETY: Always use the clamped, non-linear stress mapping
-        // This prevents "dangerous escalation" mentioned in supervisor review
         const normalizedStress = getNormalizedStress(data.vitals.hr);
-        
-        // Store current stress level for biofeedback particle animation
         currentStressLevel = data.state;
-
-        // GAP 3 FIX: Record this state into short-term stress history
-        // Enables chatbot to detect persistent/recurring stress patterns
         recordStressEvent(data.state);
+        animateParticles(currentStressLevel, data.visual); 
 
-        // Trigger refined particle animation based on state and backend configuration
-        animateParticles(currentStressLevel, data.visual);  // Pass full visual config from backend
-
-        // Update live display at top
-        document.getElementById("liveHR").textContent = data.vitals.hr;
-        document.getElementById("liveHRV").textContent = data.vitals.hrv;
-        document.getElementById("liveState").textContent = data.state;
-
-        // Update minimal UI (new clean interface)
+        if (document.getElementById("liveState")) document.getElementById("liveState").textContent = data.state;
+        
+        // Update guidance text and synced panels
         updateMinimalUI(data.vitals.hr, data.vitals.hrv, data.state);
 
-        // DEBUG: Show normalized stress in console
         console.log(`HR: ${data.vitals.hr} BPM → Normalized Stress: ${normalizedStress.toFixed(2)} | State: ${data.state}`);
 
-        // Map the clinical/scientific reasoning to the top right panel
-        document.getElementById("insightText").textContent =
-          data.message_clinical;
+        if (document.getElementById("insightText")) document.getElementById("insightText").textContent = data.message_clinical;
 
-        // Handle breathing loop for HIGH_STRESS state (GAP 3 FIX applied here)
-        // Chatbot message now reflects short-term stress history, not just current state
+        // Handle breathing loop for HIGH_STRESS state
         if (data.state === "HIGH_STRESS") {
           const historyCtx = getStressHistoryContext();
-          let breathMessage = data.message_patient; // Default: server message
+          let breathMessage = data.message_patient; 
           if (historyCtx === 'PERSISTENT_STRESS') {
             breathMessage = "⚠️ Heart rate has been elevated multiple times. Let's slow down together. ";
           } else if (historyCtx === 'RECURRING_STRESS') {
@@ -2912,84 +2929,67 @@
           startBreathingLoop(breathMessage);
         } else {
           stopBreathingLoop();
-          // Reset to the default message from the server if not stressed
-          botMessage(data.message_patient);
+          
+          // Anti-spam for normal state text
+          if (data.state !== window.lastProcessedState) {
+            botMessage(data.message_patient);
+          }
         }
+        
+        window.lastProcessedState = data.state;
 
+        // Apply Visuals and Room Colors
         const v = data.visual;
-
-        // Convert color format: string (hex) or object {cctK}
         let hex;
         if (typeof v.colorOrCCT === "string") {
-          hex = v.colorOrCCT; // Direct hex like #2E8BFF
+          hex = v.colorOrCCT; 
         } else if (typeof v.colorOrCCT === "object" && v.colorOrCCT.cctK) {
-          hex = cctToHex(v.colorOrCCT.cctK); // CCT -> hex conversion
+          hex = cctToHex(v.colorOrCCT.cctK); 
         } else {
-          console.error("❌ Invalid colorOrCCT format:", v.colorOrCCT);
           return;
         }
 
-        // --- Task 2.4: State-Based Styling (Visual Cues) ---
-        // hex is now resolved above before this block runs
         const vPanel = document.getElementById("vitalsPanel");
         const iPanel = document.getElementById("insightsPanel");
         const accentColor = hex;
 
         if (data.state === "HIGH_STRESS") {
-          vPanel.style.borderColor = accentColor;
-          vPanel.style.boxShadow = `0 0 20px rgba(255, 255, 255, 0.4)`;
-          iPanel.style.borderColor = accentColor;
+          if(vPanel) vPanel.style.borderColor = accentColor;
+          if(vPanel) vPanel.style.boxShadow = `0 0 20px rgba(255, 255, 255, 0.4)`;
+          if(iPanel) iPanel.style.borderColor = accentColor;
         } else if (data.state === "BRADYCARDIA_ALERT") {
-          vPanel.style.borderColor = "#ff5252";
-          vPanel.style.boxShadow = "0 0 20px rgba(255, 82, 82, 0.6)";
-          iPanel.style.borderColor = "#ff5252";
+          if(vPanel) vPanel.style.borderColor = "#ff5252";
+          if(vPanel) vPanel.style.boxShadow = "0 0 20px rgba(255, 82, 82, 0.6)";
+          if(iPanel) iPanel.style.borderColor = "#ff5252";
         } else {
-          vPanel.style.borderColor = accentColor;
-          vPanel.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.5)";
-          iPanel.style.borderColor = "rgba(150, 150, 150, 0.4)";
+          if(vPanel) vPanel.style.borderColor = accentColor;
+          if(vPanel) vPanel.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.5)";
+          if(iPanel) iPanel.style.borderColor = "rgba(150, 150, 150, 0.4)";
         }
 
-        // Step 8: Perfect Orb-Vignette-Room Synchronization
-        // Update target colors (lerp will handle smooth transition)
         targetColor.set(hex);
         targetEmissive.set(hex);
-
-        // Update emissive intensity
         targetEmissiveIntensity = Math.max(0, Math.min(1, v.intensity)) * 2.0;
 
-        // Sync vignette color with therapeutic palette (The Glow)
         vignetteMaterial.color.set(hex);
-        roomTintMat.color.set(hex); // Also sync the room tint plane color
-        
-        // Sync ambient light for wall wash effect (The Room Tint)
+        roomTintMat.color.set(hex); 
         targetAmbientColor.set(hex);
         
-        // Trigger room redesign based on stress level
-        // When stressed, apply 20-30% color wash to stain the entire room
         if (data.state === 'HIGH_STRESS') {
-          targetAmbientIntensity = 0.6; // Stronger color wash during stress
-          roomTintTargetOpacity = 0.25; // Apply 25% color wash over entire room during high stress
+          targetAmbientIntensity = 0.6; 
+          roomTintTargetOpacity = 0.25; 
         } else if (data.state === 'BRADYCARDIA_ALERT') {
-          targetAmbientIntensity = 0.5; // Moderate intensity for alerts
-          roomTintTargetOpacity = 0.0; // No room tint for alerts
+          targetAmbientIntensity = 0.5; 
+          roomTintTargetOpacity = 0.0; 
         } else {
-          targetAmbientIntensity = 0.3; // Baseline ambient
-          roomTintTargetOpacity = 0.0; // No tint when calm
+          targetAmbientIntensity = 0.3; 
+          roomTintTargetOpacity = 0.0; 
         }
 
-        // Sync the DOM-based room tint layer with the EBD Engine
-        // This updates the --therapeutic-color CSS variable for the interactive layer
         syncRoomColor(hex, data.state);
-
-        // Update global lighting to tint all objects in the scene
-        // Objects with MeshStandardMaterial/MeshPhongMaterial react to ambient light color
         updateGlobalLighting(hex);
-
-        // Update furniture materials directly for immersive "physically repainted" effect
-        // Creates the sense that the room environment has been therapeutically redesigned
         updateFurnitureColor(hex);
 
-        // Handle bradycardia pulse effect
         if (data.state === "BRADYCARDIA_ALERT") {
           isPulsing = true;
         } else {
@@ -3424,8 +3424,19 @@
       
       // Convert 2D screen coordinates to 3D world coordinates
       function updateTouchPosition(event) {
-        const clientX = event.clientX || event.touches[0].clientX;
-        const clientY = event.clientY || event.touches[0].clientY;
+        let clientX, clientY;
+        
+        // Safely extract coordinates from either mouse or touch event
+        if (event.clientX !== undefined) {
+          clientX = event.clientX;
+          clientY = event.clientY;
+        } else if (event.touches && event.touches.length > 0) {
+          clientX = event.touches[0].clientX;
+          clientY = event.touches[0].clientY;
+        } else {
+          console.warn("⚠️ updateTouchPosition: No valid touch or mouse coordinates found");
+          return;
+        }
         
         // Normalize to -1 to +1 (NDC - Normalized Device Coordinates)
         const x = (clientX / window.innerWidth) * 2 - 1;
