@@ -984,8 +984,13 @@
           subtitle.style.opacity = 0;
         }, 10000); // 10 seconds instead of 6
 
-        // Voice announcement for calibration complete
-        speakMessage("Baseline locked. Therapeutic session starting.");
+        // Voice announcement — only if the patient is NOT already in a breathing session.
+        // If they clicked 'I Need Help' before calibration finished, the breathing guidance
+        // is already playing. Calling speakMessage() here would call speechSynth.cancel()
+        // and kill the therapeutic voice mid-sentence.
+        if (!breathingInterval && !isPreparingBreathing) {
+          speakMessage("Baseline locked. Therapeutic session starting.");
+        }
 
         // Start ambient sound therapy (works in both Full AR and Simple mode)
         startAmbientSoundIfNeeded();
@@ -1526,6 +1531,21 @@
       function setARMode(mode) {
         currentARMode = mode;
 
+        // ── IMMEDIATE VISUAL TOGGLE ──────────────────────────────────────
+        // Hide/show the Three.js canvas so the patient sees only the camera
+        // feed in Simple mode instantly — no server roundtrip needed.
+        const sceneCanvas = document.getElementById('scene');
+        if (sceneCanvas) sceneCanvas.style.display = (mode === 'comfort') ? 'none' : 'block';
+
+        // Also hide orb and particles inside the Three.js scene
+        if (typeof therapeuticOrb !== 'undefined' && therapeuticOrb) {
+          therapeuticOrb.visible = (mode !== 'comfort');
+        }
+        if (typeof particleSystem !== 'undefined' && particleSystem) {
+          particleSystem.visible = (mode !== 'comfort');
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         // Update button styles to show selection
         document.getElementById('fullARBtn').style.background =
           mode === 'fullAR' ? '#3b82f6' : 'rgba(255,255,255,0.2)';
@@ -1538,11 +1558,10 @@
 
         console.log(`🎮 AR Mode switched to: ${mode}`);
 
-        // Immediately apply new mode with current anxiety level
-        if (mode === 'fullAR') {
-          triggerPatientInitiatedIntervention();
-        } else if (mode === 'comfort') {
-          // Also send backend request for comfort mode to get MONITORING_SIMPLE response
+        showModeWelcomeMessage(mode);
+
+        // Inform backend so it can send the right ar:command back
+        if (mode === 'fullAR' || mode === 'comfort') {
           triggerPatientInitiatedIntervention();
         }
       }
@@ -1562,6 +1581,7 @@
         }
 
         console.log(`😰 Patient anxiety level: ${level}/10`);
+        triggerPatientInitiatedIntervention();
       }
 
       function requestHelp() {
@@ -1570,12 +1590,35 @@
         // 1. Force anxiety to 10 so the backend knows this is an explicit distress call
         currentAnxietyLevel = 10;
 
-        // 2. Update guidance text to reassure patient locally
-        document.getElementById('guidanceText').textContent = "Help is on the way...";
+        // 2. CLOSE the settings panel immediately so ar-subtitle is visible to patient
+        const panel = document.getElementById('detailedPanel');
+        if (panel && panel.style.display === 'flex') {
+          panel.style.display = 'none';
+          const settingsBtn = document.getElementById('settingsToggle');
+          if (settingsBtn) settingsBtn.textContent = '⚙️';
+        }
 
-        // 3. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
+        // 3. Set stress level locally so all safety gates know we're in HIGH_STRESS
+        currentStressLevel = 'HIGH_STRESS';
+
+        // 4. IMMEDIATELY show breathing guidance — don't wait for server roundtrip.
+        //    Short spoken intro (under 3 seconds) so it finishes before the 7500ms
+        //    prep timeout fires and calls speakMessage("Breathe in").
+        const immediateMessage = "Let's breathe together.";
+        // Show the friendly longer text on screen (no speech — speakMessage handles it)
+        botMessage("🫁 Let's breathe together. Slow, gentle breaths...", false);
+        // Speak only the short version so it's guaranteed to finish
+        speakMessage(immediateMessage);
+        startBreathingLoop(immediateMessage, false);
+
+        // 5. Update guidance text as a secondary reassurance
+        const guidanceEl = document.getElementById('guidanceText');
+        if (guidanceEl) guidanceEl.textContent = "Breathe slowly with me...";
+
+        // 6. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
         window.therapeuticLockTime = Date.now() + 60000;
 
+        // 7. Inform server so it logs the event and can alert the therapist
         triggerPatientInitiatedIntervention();
       }
 
@@ -1958,7 +2001,7 @@
         const utterance = new SpeechSynthesisUtterance(cleanText);
         utterance.rate = 0.7;   // Slower, more calming pacing
         utterance.pitch = 1.0;  // Natural pitch
-        utterance.volume = 0.2; // Further reduced volume to 20%
+        utterance.volume = 0.55; // Clear and audible for phone speakers
 
         // Try to use a calm, clear voice
         const voices = speechSynth.getVoices();
@@ -2274,9 +2317,14 @@
       // ========================================
       // Personalized Chatbot Greeting (Clinical Metaphors)
       // ========================================
-      function greetUser() {
+      function showModeWelcomeMessage(mode = currentARMode) {
         // Check if user even wants the chatbot
         if (localStorage.getItem('chatbotEnabled') === 'false') return; 
+
+        if (mode === 'comfort') {
+          botMessage("Simple mode is starting. Follow the guidance and breathe slowly.");
+          return;
+        }
 
         const style = localStorage.getItem('distractionStyle') || 'MAGNETIC';
         
@@ -2295,7 +2343,7 @@
       }
 
       // Call this right after scene finishes loading
-      greetUser();
+      showModeWelcomeMessage();
       
       // Particle-specific variables (only used in PARTICLES mode)
       // Window-level reference for mode switching from dashboard
@@ -2838,7 +2886,7 @@
       let isPreparingBreathing = false;
       let breathingPrepTimeout = null;
 
-      function startBreathingLoop(contextMessage = "") {
+      function startBreathingLoop(contextMessage = "", speakIntro = true) {
         patientMessage = contextMessage;
 
         // 🛑 HARDWARE ANTI-SPAM FIX: 
@@ -2850,7 +2898,7 @@
         isPreparingBreathing = true;
 
         // 1. Show and speak the introductory message first.
-        botMessage(patientMessage, true); 
+        botMessage(patientMessage, speakIntro); 
 
         // 2. Wait for the voice to finish the intro before starting the breathing cadence.
         clearTimeout(breathingPrepTimeout);
@@ -2883,7 +2931,8 @@
               vignetteTargetOpacity = 0.5; 
             }
           }, 4000); 
-        }, 4500);
+        }, 7500); // 7500ms: long enough for the intro sentence to finish speaking
+                  // before speechSynth.cancel() is called by the first Breathe In prompt
       }
 
       function stopBreathingLoop() {
@@ -2951,7 +3000,15 @@
         }
 
         // === PHASE 1: CALIBRATION ===
-        if (!isCalibrated) {
+        // Allow urgent states to break through calibration so subjective distress
+        // can start breathing guidance immediately, even before baseline lock.
+        const allowDuringCalibration =
+          data.state === "HIGH_STRESS" ||
+          data.state === "BRADYCARDIA_ALERT" ||
+          !!breathingInterval ||
+          isPreparingBreathing;
+
+        if (!isCalibrated && !allowDuringCalibration) {
           const secondsRemaining = Math.max(0, Math.ceil(
             (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS -
             (Date.now() - calibrationStartTime)) / 1000
