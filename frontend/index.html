@@ -585,6 +585,69 @@
       text-transform: uppercase;
     }
 
+    /* ─── WATCH ID INPUT (Step 0) ─── */
+    .watch-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .watch-input-wrap label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #watchIdInput {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid rgba(74,139,126,0.3);
+      border-radius: 10px;
+      font-family: 'Inter', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    #watchIdInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(74,139,126,0.15);
+      background: #fff;
+    }
+
+    .watch-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 12px;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    .watch-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
     /* ══════════════════════════════
        RESPONSIVE
     ══════════════════════════════ */
@@ -647,6 +710,32 @@
       </div>
     </div>
   </header>
+
+  <!-- ── CARD 0: CONNECT WEARABLE ── -->
+  <section class="card" aria-labelledby="wearableHeading">
+    <div class="card-title">Step 0 of 3 &nbsp;·&nbsp; Wearable Setup</div>
+    <h2 class="card-heading" id="wearableHeading">Connect your heart rate device</h2>
+    <p class="card-desc">Enter your HypeRate session ID to link the watch. The system will stream live heart rate data directly to your AR session.</p>
+
+    <div class="watch-input-wrap">
+      <label for="watchIdInput">Watch ID</label>
+      <input
+        id="watchIdInput"
+        type="text"
+        maxlength="10"
+        placeholder="e.g. 5038D"
+        value="5038D"
+        aria-label="HypeRate watch session ID"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <div class="watch-status">
+      <span class="watch-dot"></span>
+      <span id="watchStatusText">Ready to connect , session begins when you tap <strong>Begin Session</strong></span>
+    </div>
+  </section>
 
   <!-- ── CARD 1: COLOUR PALETTE ── -->
   <section class="card" aria-labelledby="paletteHeading">
@@ -734,7 +823,7 @@
         <div class="mode-icon" aria-hidden="true">🧲</div>
         <div class="mode-info">
           <div class="mode-name">Magnetic Swarm</div>
-          <div class="mode-desc">A school of particles follows your touch — keep them near you</div>
+          <div class="mode-desc">A school of particles follows your touch , keep them near you</div>
         </div>
         <span class="mode-badge badge-active">Active</span>
         <div class="tick" aria-hidden="true"></div>
@@ -756,7 +845,7 @@
         <div class="mode-icon" aria-hidden="true">🫁</div>
         <div class="mode-info">
           <div class="mode-name">Breathing Guide</div>
-          <div class="mode-desc">Hold the screen to inhale — release to exhale. Paced breathing</div>
+          <div class="mode-desc">Hold the screen to inhale , release to exhale. Paced breathing</div>
         </div>
         <span class="mode-badge badge-guided">Guided</span>
         <div class="tick" aria-hidden="true"></div>
@@ -883,6 +972,11 @@
     var soundEnabled   = document.getElementById('sound-toggle').checked;
     var hapticEnabled  = document.getElementById('haptic-toggle').checked;
 
+    // ── STEP 0: Capture the watch ID and save it for ar.html ──
+    var rawWatchId = document.getElementById('watchIdInput').value.trim().toUpperCase();
+    var watchId    = rawWatchId || '5038D'; // default fallback
+    localStorage.setItem('hyperateSession', watchId);
+
     // Save all preferences to localStorage
     localStorage.setItem('selectedPalette',   selectedPalette);
     localStorage.setItem('distractionStyle',  selectedMode);
@@ -891,6 +985,7 @@
     localStorage.setItem('hapticEnabled',     hapticEnabled ? 'true' : 'false');
 
     console.log('✅ Session preferences saved:', {
+      watchId: watchId,
       palette: selectedPalette,
       mode: selectedMode,
       voice: voiceEnabled,
