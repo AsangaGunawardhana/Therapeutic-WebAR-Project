@@ -1646,23 +1646,27 @@
           interventionTrigger: 'PATIENT_INITIATED',
           userPreferences: {
             comfortMode: currentARMode === 'comfort',
-            fullAR: currentARMode === 'fullAR'
+            fullAR: currentARMode === 'fullAR',
+            // ✅ THE CRITICAL FIX: send the chosen palette so the server saves it
+            // into session.userPreferences. Without this, watch HR data defaults to
+            // Ocean (blue) regardless of what the patient picked on the setup page.
+            palette: localStorage.getItem('selectedPalette') || 'OCEAN'
           },
           patientAnxietyLevel: currentAnxietyLevel
         };
 
         // Use a mock HR/HRV for patient-initiated requests
-        const mockHR = 85; // Baseline HR for patient-initiated
-        const mockHRV = 50; // Baseline HRV
+        const mockHR = 85;
+        const mockHRV = 50;
 
         socket.emit('bio:update', {
           hr: mockHR,
           hrv: mockHRV,
-          userPalette: localStorage.getItem('selectedPalette') || 'AMBER',
+          userPalette: localStorage.getItem('selectedPalette') || 'OCEAN',
           sessionContext: sessionContext
         });
 
-        console.log(`📡 Sent patient-initiated intervention:`, sessionContext);
+        console.log(`📡 Sent patient-initiated intervention with palette:`, sessionContext.userPreferences.palette);
       }
 
       // Initialize mode selector on page load
@@ -1675,10 +1679,9 @@
       // 1) Socket
       // ========================================
       const socket = io();
-      
-      // 🔒 PRIVACY FIX: Tell the server this phone owns the test watch
-      // This unlocks the data stream so the watch data flows to this specific screen
-      socket.emit("claim_device", "5038D");
+      // claim_device is now sent dynamically from window.addEventListener("load")
+      // using the session code saved in localStorage by the setup page.
+
 
       // ========================================
       // 2) Three.js scene + orb
@@ -3475,8 +3478,15 @@
         console.log(`👆 Touch at 3D position: (${touchPosition.x.toFixed(2)}, ${touchPosition.y.toFixed(2)}, ${touchPosition.z.toFixed(2)})`);
       }
 
-      // Start camera automatically when page finishes loading
-      window.addEventListener("load", startCamera);
+      // Start camera automatically when page finishes loading.
+      // Use the existing Socket.IO connection to tell the server which watch to use.
+      window.addEventListener("load", () => {
+        const hyperateCode = localStorage.getItem('hyperateSession') || '5038D';
+        socket.emit('claim_device', hyperateCode);
+        console.log('⌚ Claimed watch: ' + hyperateCode);
+        startCamera();
+      });
+
 
       // Desktop/mouse click support for ambient sound start
       window.addEventListener("click", (event) => {
