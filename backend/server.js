@@ -127,8 +127,10 @@ io.on("connection", (socket) => {
     if (session) {
       session.linkedDevice = deviceId;
       console.log(`🔗 DEVICE PAIRED: Phone ${socket.id} claimed watch ${deviceId}`);
+      switchHypeRateSession(deviceId);
     }
   });
+
 
   socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
     console.log(`🔍 Backend received from ${socket.id}:`, { hr, hrv, userPalette, sessionContext });
@@ -244,26 +246,28 @@ app.all('/hr', (req, res) => {
 // =====================================================
 const WebSocket = require('ws');
 
-const HYPERATE_SESSION = '5038D';
+let HYPERATE_SESSION = '5038D';
 const HYPERATE_TOKEN   = 'Q5Ag4eAQBL4VJqG33DK3FPyItfEHsmgmVp1z9kk7';
+let hrSocket = null; // track the current socket globally so we can replace it
 
-function connectHypeRate() {
-    const hrSocket = new WebSocket(
+function connectHypeRate(sessionCode) {
+    const activeSession = sessionCode || HYPERATE_SESSION;
+    const ws = new WebSocket(
         `wss://app.hyperate.io/socket/websocket?token=${HYPERATE_TOKEN}&vsn=2.0.0`
     );
 
-    hrSocket.on('open', () => {
-        console.log(`✅ HypeRate connected — watching: ${HYPERATE_SESSION}`);
-        hrSocket.send(JSON.stringify({
-            "topic": `hr:${HYPERATE_SESSION}`,
+    ws.on('open', () => {
+        console.log(`✅ HypeRate connected — watching: ${activeSession}`);
+        ws.send(JSON.stringify({
+            "topic": `hr:${activeSession}`,
             "event": "phx_join",
             "payload": {},
             "ref": 0
         }));
         // Phoenix heartbeat — required every 10 seconds
         const hb = setInterval(() => {
-            if (hrSocket.readyState === WebSocket.OPEN) {
-                hrSocket.send(JSON.stringify({
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
                     "topic": "phoenix", "event": "heartbeat",
                     "payload": {}, "ref": 0
                 }));
@@ -273,26 +277,23 @@ function connectHypeRate() {
         }, 10000);
     });
 
-    hrSocket.on('message', (data) => {
+    ws.on('message', (data) => {
         try {
             const msg = JSON.parse(data);
             if (msg.event === 'hr_update') {
                 const hr = msg.payload.hr;
-                console.log(`❤️ LIVE HR: ${hr} BPM from HypeRate: ${HYPERATE_SESSION}`);
+                console.log(`❤️ LIVE HR: ${hr} BPM from HypeRate: ${activeSession}`);
 
-                // PRIVACY FIX: Route to the correct user
+                // Route to the correct user
                 userSessions.forEach((session, socketId) => {
-                    // Only send if this user claimed the HypeRate watch, or if it's a solo demo
-                    if (session.linkedDevice === HYPERATE_SESSION || userSessions.size === 1) {
+                    if (session.linkedDevice === activeSession || userSessions.size === 1) {
                         const socket = io.sockets.sockets.get(socketId);
                         if (socket) {
                             const sessionContext = {
                                 interventionTrigger: 'MONITORING',
                                 userPreferences: session.userPreferences,
-                                patientAnxietyLevel: 0 
+                                patientAnxietyLevel: 0
                             };
-                            
-                            // Get the patient's actual chosen palette from their session, not a hardcoded 'AMBER'
                             const userPalette = session.userPreferences.palette || 'OCEAN';
                             const command = getEbdPrescription(hr, 0, userPalette, sessionContext);
                             safeEmit(socket, command);
@@ -303,15 +304,53 @@ function connectHypeRate() {
         } catch (e) {}
     });
 
-    hrSocket.on('error', (err) => {
+    ws.on('error', (err) => {
         console.error('❌ HypeRate error:', err.message);
     });
 
-    hrSocket.on('close', (code) => {
-        console.warn(`⚠️ HypeRate closed (code: ${code}). Retrying in 30s...`);
-        setTimeout(connectHypeRate, 30000); // auto-reconnect
+    ws.on('close', (code) => {
+        // Only auto-reconnect if this socket is still the active one
+        if (hrSocket === ws) {
+            console.warn(`⚠️ HypeRate closed (code: ${code}). Retrying in 30s...`);
+            setTimeout(() => connectHypeRate(activeSession), 30000);
+        }
     });
+
+    hrSocket = ws;
 }
+
+function switchHypeRateSession(sessionCode) {
+    const nextSession = (sessionCode || HYPERATE_SESSION).trim().toUpperCase();
+    if (!nextSession) return false;
+
+    if (nextSession === HYPERATE_SESSION && hrSocket && hrSocket.readyState === WebSocket.OPEN) {
+        console.log(`✅ Already connected to HypeRate session: ${nextSession}`);
+        return true;
+    }
+
+    console.log(`🔄 Switching HypeRate watch: ${HYPERATE_SESSION} → ${nextSession}`);
+
+    if (hrSocket) {
+        const old = hrSocket;
+        hrSocket = null; // nullify BEFORE close so the 'close' handler won't auto-reconnect
+        old.terminate();
+    }
+
+    HYPERATE_SESSION = nextSession;
+    connectHypeRate(nextSession);
+    return true;
+}
+
+// ========================================
+// ⌚ SWITCH WATCH: Dynamic Session Connect
+// ========================================
+app.post('/connect-watch', (req, res) => {
+    const sessionCode = (req.body.sessionCode || '').trim().toUpperCase();
+    if (!sessionCode) return res.status(400).send('Missing sessionCode');
+    switchHypeRateSession(sessionCode);
+
+    res.status(200).json({ connected: true, session: sessionCode });
+});
 
 connectHypeRate();
 
