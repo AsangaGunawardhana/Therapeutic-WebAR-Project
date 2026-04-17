@@ -1,5 +1,5 @@
-// EBD Logic Engine - Final Version for March 30th Deadline
-// Incorporates Cardiologist feedback, Multi-modal Data Fusion, and Hardware Fallbacks
+// EBD (Evidence-Based Design) processing engine
+// Fuses runtime biometric telemetry with self-reported psychological states
 
 const colorMapping = {
   OCEAN: { stress: "#4FC3F7", calm: "#81D4FA", wavelength: 470 },
@@ -12,8 +12,8 @@ const colorMapping = {
 };
 
 /**
- * Main Entry Point: getEbdPrescription
- * Performs Data Fusion between Sensor (HR/HRV) and Manual Input
+ * Main function to determine the AR therapy state
+ * Uses heart rate, HRV, and manual anxiety input
  */
 function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {}) {
   hr = Number(hr);
@@ -22,7 +22,7 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
   const userPrefs = sessionContext.userPreferences || { comfortMode: false };
   const manualAnxiety = Number(sessionContext.patientAnxietyLevel || 0);
 
-  // 1. EMERGENCY CHECK: Bradycardia (Medical Safety Gate)
+  // Handle dangerously low heart rates immediately
   if (hr > 0 && hr < 50) {
     return buildCommand({
       state: "BRADYCARDIA_ALERT",
@@ -33,19 +33,19 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
     });
   }
 
-  // 2. DATA FUSION BRAIN: Determine Clinical State
+  // Get the initial state based only on watch data
   const sensorState = classifyState(hr, hrv); 
 
-  // LOGIC GATE: Merging sensor data with the patient's manual button
+  // Allow manual anxiety input to override the watch data
   let finalState = sensorState;
   
   if (manualAnxiety >= 7) {
-    finalState = "HIGH_STRESS"; // Patient override: They feel stressed, believe them.
+    finalState = "HIGH_STRESS"; // Override if patient reports high anxiety
   } else if (hr >= 100 && manualAnxiety < 4) {
-    finalState = "MONITORING_ELEVATED"; // Doctor's Case: High HR, but patient feels calm.
+    finalState = "MONITORING_ELEVATED"; // High HR, but patient reports low anxiety
   }
 
-  // 3. GENERATE THE VISUAL COMMAND based on the final fused state
+  // Generate the AR command based on the final determined state
 
   if (finalState === "HIGH_STRESS") {
     return buildCommand({
@@ -93,7 +93,7 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
     });
   }
 
-  // DEFAULT: Calm Recovery
+  // Default to a calm recovery state
   return buildCommand({
     state: "CALM_RECOVERY",
     visual: {
@@ -109,14 +109,14 @@ function getEbdPrescription(hr, hrv, userPalette = 'OCEAN', sessionContext = {})
 }
 
 function buildPatientInitiatedResponse(anxietyLevel, palette, userPreferences = {}) {
-  const useComfortMode = userPreferences.comfortMode || false; // Simple mode for older patients
-  const useFullAR = userPreferences.fullAR || true;           // Full AR mode with particles (DEFAULT)
+  const useComfortMode = userPreferences.comfortMode || false; // Simpler layout.
+  const useFullAR = userPreferences.fullAR || true;           // Full visual mode.
 
-  // Use baseline vitals for patient-initiated interventions (no real HR data available)
+  // Manual interventions use baseline placeholder vitals.
   const baselineHR = 75;
   const baselineHRV = 50;
 
-  // FULL AR MODE (Your Original Design) - Keep the particles and interactions!
+  // Full AR mode keeps the interactive visuals.
   if (useFullAR && !useComfortMode) {
     if (anxietyLevel >= 7) {
       return buildCommand({
@@ -184,7 +184,7 @@ function buildPatientInitiatedResponse(anxietyLevel, palette, userPreferences = 
     });
   }
 
-  // COMFORT MODE (Simple for Older Patients) - Your new addition
+  // Comfort mode keeps things simpler.
   if (useComfortMode) {
     if (anxietyLevel >= 7) {
       return buildCommand({
@@ -218,7 +218,7 @@ function buildScheduledResponse(palette) {
   const baselineHR = 75;
   const baselineHRV = 50;
 
-  // Scheduled breathing session (preventive, not reactive)
+  // Scheduled breathing prompt.
   return buildCommand({
     state: "SCHEDULED_BREATHING",
     visual: {
@@ -239,11 +239,11 @@ function buildScheduledResponse(palette) {
 }
 
 function buildMonitoringResponse(hr, hrv, palette, userPreferences = {}) {
-  // Respect user preference for monitoring mode
+  // Follow the chosen monitoring mode.
   const useComfortMode = userPreferences.comfortMode || false;
 
   if (useComfortMode) {
-    // Simple monitoring for older patients - no particles
+    // Simpler monitoring view with no particles.
     return buildCommand({
       state: "MONITORING_SIMPLE",
       visual: { mode: "SIMPLE_MONITORING", colorOrCCT: { cctK: 3000 }, intensity: 0.3 },
@@ -252,7 +252,7 @@ function buildMonitoringResponse(hr, hrv, palette, userPreferences = {}) {
       vitals: { hr, hrv },
     });
   } else {
-    // Full AR monitoring with particles
+    // Full AR monitoring keeps the particle view.
     return buildCommand({
       state: "MONITORING_AR",
       visual: {
@@ -274,21 +274,21 @@ function buildMonitoringResponse(hr, hrv, palette, userPreferences = {}) {
 }
 
 /**
- * HRV and HR Classification Logic
- * Includes Fallback for when HRV is not provided by hardware
+ * HR/HRV classification helper.
+ * Falls back to HR-only logic when HRV is not available.
  */
 function classifyState(hr, hrv) {
-  // Check if HRV is real (Mock data is usually 50)
+  // Mock values often use 50, so treat that as missing HRV.
   const isHRVAvailable = (hrv > 0 && hrv !== 50);
 
   if (isHRVAvailable) {
-    // PRIMARY INDICATOR: HRV (Clinical Research)
+    // Use HRV first when it looks valid.
     if (hrv < 20) return "HIGH_STRESS";
     if (hrv < 35) return "HIGH_STRESS";
     if (hrv < 50) return "MODERATE";
     return "CALM_RECOVERY";
   } else {
-    // SECONDARY INDICATOR: HR (Hardware Fallback for Demo)
+    // Fall back to HR when HRV is missing.
     if (hr >= 100) return "HIGH_STRESS";
     if (hr >= 85) return "MODERATE";
     return "CALM_RECOVERY";
@@ -300,7 +300,7 @@ function prescriptionFromState(state, palette) {
     return {
       state,
       lightingMode: "CCT",
-      cctKelvin: 4000, // neutral daylight (stable + clear visibility)
+      cctKelvin: 4000, // Neutral daylight for visibility and stability.
       intensity: 0.8,
       alert: true,
       justification:
@@ -312,7 +312,7 @@ function prescriptionFromState(state, palette) {
     return {
       state,
       lightingMode: "COLOR",
-      colorHex: palette.stress, // Dynamic color based on user preference
+      colorHex: palette.stress, // Use the selected palette's stress color.
       wavelengthNm: palette.wavelength,
       intensity: 0.6,
       justification:
@@ -335,7 +335,7 @@ function prescriptionFromState(state, palette) {
     return {
       state,
       lightingMode: "COLOR",
-      colorHex: palette.calm, // Dynamic color for calm state
+      colorHex: palette.calm, // Use the selected palette's calm color.
       wavelengthNm: palette.wavelength,
       intensity: 0.7,
       justification:
@@ -343,7 +343,7 @@ function prescriptionFromState(state, palette) {
     };
   }
 
-  // never reached, but safe
+  // Fallback return.
   return {
     state: "MODERATE",
     lightingMode: "CCT",
@@ -359,14 +359,14 @@ function buildCommand({
   clinicalJustification,
   vitals,
 }) {
-  // Build enhanced visual object that includes particles and breathing config
+  // Start with the shared visual fields.
   const enhancedVisual = {
-    mode: visual.mode, // e.g., "IMMERSIVE_SOOTHING", "SIMPLE_CALM", "NEUTRAL"
-    colorOrCCT: visual.colorOrCCT, // e.g., "#2E7DFF" OR { cctK: 6500 }
-    intensity: visual.intensity, // 0..1
+    mode: visual.mode, 
+    colorOrCCT: visual.colorOrCCT, 
+    intensity: visual.intensity, 
   };
 
-  // Add particle configuration if present (for Full AR mode)
+  // Add particle settings when present.
   if (visual.particles) {
     enhancedVisual.particles = {
       enabled: visual.particles.enabled,
@@ -377,7 +377,7 @@ function buildCommand({
     };
   }
 
-  // Add breathing guidance configuration if present
+  // Add breathing settings when present.
   if (visual.breathing) {
     enhancedVisual.breathing = {
       pattern: visual.breathing.pattern,
@@ -390,15 +390,15 @@ function buildCommand({
     type: "ar:command",
     version: 1,
     timestamp: Date.now(),
-    state, // PATIENT_REPORTED_HIGH_STRESS | PATIENT_REQUESTED_COMFORT | etc.
+    state, // PATIENT_REPORTED_HIGH_STRESS or PATIENT_REQUESTED_COMFORT
     vitals: {
       hr: vitals.hr,
       hrv: vitals.hrv,
       units: { hr: "bpm", hrv: "ms" },
     },
     visual: enhancedVisual,
-    message_patient: patientMessage, // short, friendly
-    message_clinical: clinicalJustification, //  EBD justification text
+    message_patient: patientMessage, // Short patient-facing line.
+    message_clinical: clinicalJustification, // Clinical explanation for the state.
   };
 }
 
@@ -414,14 +414,14 @@ function toLockedVisual(p) {
   if (p.lightingMode === "COLOR") {
     return {
       mode: "SOOTHING",
-      colorOrCCT: p.colorHex, // ← string, not object
+      colorOrCCT: p.colorHex, // Use the color string directly here.
       intensity: p.intensity,
     };
   }
 
   return {
     mode: "NEUTRAL",
-    colorOrCCT: { cctK: p.cctKelvin }, // ← ONLY ONCE
+    colorOrCCT: { cctK: p.cctKelvin }, // Wrap the Kelvin value once here.
     intensity: p.intensity,
   };
 }
