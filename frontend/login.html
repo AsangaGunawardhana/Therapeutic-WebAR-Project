@@ -33,7 +33,7 @@
       overflow: hidden;
     }
 
-    /* subtle warm texture overlay */
+    /* Soft texture overlay */
     body::after {
       content: '';
       position: fixed;
@@ -43,7 +43,7 @@
       z-index: 0;
     }
 
-    /* ── BACKGROUND MESH ── */
+    /* Background mesh */
     body::before {
       content: '';
       position: fixed;
@@ -64,9 +64,7 @@
       height: 100vh;
     }
 
-    /* ══════════════════════════════
-       LEFT PANEL — BRANDING
-    ══════════════════════════════ */
+    /*        Left panel */
     .brand-panel {
       display: flex;
       flex-direction: column;
@@ -77,7 +75,7 @@
       overflow: hidden;
     }
 
-    /* subtle grid lines */
+    /* Faint grid lines */
     .brand-panel::before {
       content: '';
       position: absolute;
@@ -151,7 +149,7 @@
       margin-bottom: 52px;
     }
 
-    /* ECG Canvas */
+    /* ECG line */
     #ecgCanvas {
       display: block;
       width: 100%;
@@ -201,9 +199,7 @@
       margin-bottom: 2px;
     }
 
-    /* ══════════════════════════════
-       RIGHT PANEL — SIGN IN
-    ══════════════════════════════ */
+    /*  Right panel */
     .auth-panel {
       display: flex;
       flex-direction: column;
@@ -266,7 +262,7 @@
       margin-bottom: 36px;
     }
 
-    /* --- DIVIDER --- */
+    /* Divider */
     .divider {
       display: flex;
       align-items: center;
@@ -288,7 +284,7 @@
       letter-spacing: 0.08em;
     }
 
-    /* Google Button Wrapper */
+    /* Google button wrapper */
     #googleBtnWrapper {
       display: flex;
       justify-content: center;
@@ -296,7 +292,7 @@
       min-height: 44px;
     }
 
-    /* Custom Google Sign-In Button */
+    /* Custom Google sign-in button */
     #googleSignInBtn {
       display: flex;
       align-items: center;
@@ -327,7 +323,7 @@
       box-shadow: 0 1px 2px rgba(60,64,67,0.08);
     }
 
-    /* ─── SUCCESS STATE ─── */
+    /* Success state */
     #successBanner {
       display: none;
       align-items: center;
@@ -406,7 +402,7 @@
       text-decoration: none;
     }
 
-    /* ── VERSION INFO ── */
+    /* Version info */
     .version-tag {
       position: fixed;
       bottom: 18px;
@@ -419,11 +415,9 @@
       z-index: 2;
     }
 
-    /* ══════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════ */
+    /* RESPONSIVE*/
 
-    /* ── TABLET (≤ 820px) ── */
+    /* Tablet */
     @media (max-width: 820px) {
       html, body { overflow: auto; }
 
@@ -462,7 +456,7 @@
       .auth-card { max-width: 420px; }
     }
 
-    /* ── PHONE (≤ 540px) ── */
+    /* Phone */
     @media (max-width: 540px) {
       .brand-panel { padding: 28px 22px 24px; }
 
@@ -478,7 +472,7 @@
         line-height: 1.22;
       }
 
-      /* Hide the paragraph and features list — too much on a phone */
+      /* Hide the extra copy on smaller phones */
       .brand-sub  { display: none; }
       .features   { display: none; }
 
@@ -505,7 +499,7 @@
       .version-tag { display: none; }
     }
 
-    /* ── SMALL PHONE (≤ 380px) ── */
+    /* Small phone */
     @media (max-width: 380px) {
       .brand-panel { padding: 22px 16px 20px; }
 
@@ -521,7 +515,7 @@
 
 <div class="layout">
 
-  <!-- ══════ LEFT PANEL ══════ -->
+  <!-- Left panel -->
   <div class="brand-panel">
     <div class="logo-row">
       <div class="logo-icon">🫀</div>
@@ -542,7 +536,7 @@
       with clinically-informed visual environments designed to reduce acute stress.
     </p>
 
-    <!-- Live ECG line -->
+    <!-- ECG line -->
     <canvas id="ecgCanvas" height="64"></canvas>
 
     <div class="features">
@@ -570,7 +564,7 @@
     </div>
   </div>
 
-  <!-- ══════ RIGHT PANEL ══════ -->
+  <!-- Right panel -->
   <div class="auth-panel">
     <div class="auth-card">
 
@@ -582,7 +576,7 @@
         Sign in with your Google account  no separate registration needed.
       </p>
 
-      <!-- Success banner (hidden until sign-in) -->
+      <!-- Success banner -->
       <div id="successBanner">
         <img id="userAvatar" src="" alt="Profile photo" />
         <div class="success-text">
@@ -603,7 +597,7 @@
         <div class="divider-line"></div>
       </div>
 
-      <!-- Google Sign-In button (custom-styled, triggers OAuth redirect) -->
+      <!-- Google sign-in button -->
       <button id="googleSignInBtn" onclick="startGoogleLogin()" type="button">
         <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -626,13 +620,11 @@
 
 <div class="version-tag">WebAR Therapy · FYP 2025–26 · v1.0</div>
 
-<!-- ═══════════════════════════════════════════════
-     SCRIPTS
-═══════════════════════════════════════════════ -->
+<!-- Scripts -->
 <script>
-  /* ──────────────────────────────────────────────
-     1. If user is already signed in, skip to setup
-  ────────────────────────────────────────────── */
+  /*
+     Skip straight to setup if the user is already signed in.
+  */
   (function () {
     try {
       var stored = sessionStorage.getItem('gUser');
@@ -643,17 +635,21 @@
   })();
 
 
-  /* ──────────────────────────────────────────────
-     2. ECG / heartbeat line animation
-  ────────────────────────────────────────────── */
+  /*
+     ECG line animation
+  */
   (function () {
     var canvas = document.getElementById('ecgCanvas');
+    if (!canvas || !canvas.getContext) return;
     var ctx    = canvas.getContext('2d');
+    if (!ctx) return;
 
     function resize() {
-      canvas.width  = canvas.offsetWidth  * devicePixelRatio;
-      canvas.height = canvas.offsetHeight * devicePixelRatio;
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width  = Math.max(1, Math.floor(canvas.offsetWidth  * dpr));
+      canvas.height = Math.max(1, Math.floor(canvas.offsetHeight * dpr));
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
     }
     resize();
     window.addEventListener('resize', resize);
@@ -661,12 +657,12 @@
     var W = function () { return canvas.offsetWidth; };
     var H = function () { return canvas.offsetHeight; };
 
-    // ECG waveform: one cycle of a stylised QRS complex
+    // Draw one stylized ECG cycle.
     function ecgY(t) {
-      // t goes 0 → 1 over one cycle
+      // t runs from 0 to 1 for a single cycle.
       var phase = t % 1;
 
-      // baseline
+      // Baseline
       if (phase < 0.3)  return 0;
       // P-wave
       if (phase < 0.38) return -4  * Math.sin(((phase - 0.30) / 0.08) * Math.PI);
@@ -674,7 +670,7 @@
       if (phase < 0.44) return 0;
       // Q
       if (phase < 0.46) return  6  * Math.sin(((phase - 0.44) / 0.02) * Math.PI);
-      // R — tall spike
+      // R spike
       if (phase < 0.50) return -28 * Math.sin(((phase - 0.46) / 0.04) * Math.PI);
       // S
       if (phase < 0.53) return  8  * Math.sin(((phase - 0.50) / 0.03) * Math.PI);
@@ -682,7 +678,7 @@
       if (phase < 0.58) return 0;
       // T-wave
       if (phase < 0.70) return -8  * Math.sin(((phase - 0.58) / 0.12) * Math.PI);
-      // back to baseline
+      // Back to baseline
       return 0;
     }
 
@@ -691,9 +687,13 @@
 
     function draw() {
       var w = W(), h = H();
+      if (!w || !h) {
+        requestAnimationFrame(draw);
+        return;
+      }
       ctx.clearRect(0, 0, w, h);
 
-      // gradient stroke
+      // Gradient stroke
       var grad = ctx.createLinearGradient(0, 0, w, 0);
       grad.addColorStop(0,    'rgba(74,139,126,0)');
       grad.addColorStop(0.15, 'rgba(74,139,126,0.75)');
@@ -710,7 +710,7 @@
       for (var i = 0; i <= steps; i++) {
         var t  = i / steps;
         var cx = t * w;
-        // number of cycles squeezed into the canvas width
+        // Fit a couple of cycles across the canvas.
         var cy = (h / 2) + ecgY((t * 2.2) + offset);
         if (i === 0) ctx.moveTo(cx, cy);
         else         ctx.lineTo(cx, cy);
@@ -724,26 +724,33 @@
   })();
 
 
-  /* ──────────────────────────────────────────────
-     3. Google Sign-In — OAuth 2.0 redirect flow
-     No external GSI library needed. Redirects to
-     Google's real OAuth page then parses the JWT
-     from the URL fragment on return.
-  ────────────────────────────────────────────── */
+  /* 
+     Google sign-in redirect flow
+   */
   var CLIENT_ID  = '651996649704-t54anpoifj5cjtjisopoh798oo3g1s8s.apps.googleusercontent.com';
   var REDIRECT   = window.location.origin + '/login.html';
+  var ALLOWED_ISSUERS = {
+    'accounts.google.com': true,
+    'https://accounts.google.com': true
+  };
 
-  /* Build a random nonce to prevent replay attacks */
+  /* Build a nonce for the OAuth flow. */
   function makeNonce() {
     var arr = new Uint32Array(4);
     crypto.getRandomValues(arr);
     return Array.from(arr, function(n){ return n.toString(36); }).join('');
   }
 
-  /* Launch the Google OAuth consent page */
+  /* Send the user to Google's OAuth page. */
   function startGoogleLogin() {
     var nonce = makeNonce();
-    sessionStorage.setItem('oauthNonce', nonce);
+    var state = makeNonce();
+    try {
+      sessionStorage.setItem('oauthNonce', nonce);
+      sessionStorage.setItem('oauthState', state);
+    } catch (e) {
+      console.warn('[Auth] sessionStorage unavailable; nonce/state validation may fail.', e);
+    }
 
     var params = new URLSearchParams({
       client_id:     CLIENT_ID,
@@ -751,6 +758,7 @@
       response_type: 'id_token',
       scope:         'openid email profile',
       nonce:         nonce,
+      state:         state,
       prompt:        'select_account'
     });
 
@@ -758,39 +766,86 @@
       'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
   }
 
-  /* Parse the id_token from the URL fragment after Google redirects back */
+  function decodeJwtPayload(idToken) {
+    var parts = idToken.split('.');
+    if (parts.length < 2) throw new Error('Invalid token format');
+
+    var normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (normalized.length % 4 !== 0) normalized += '=';
+
+    var binary = atob(normalized);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
+  function tokenAudienceMatches(aud) {
+    if (typeof aud === 'string') return aud === CLIENT_ID;
+    if (Array.isArray(aud)) return aud.indexOf(CLIENT_ID) !== -1;
+    return false;
+  }
+
+  function validateIdTokenClaims(payload, expectedNonce, expectedState, returnedState) {
+    if (!payload || typeof payload !== 'object') return 'Invalid token payload';
+    if (!tokenAudienceMatches(payload.aud)) return 'Unexpected token audience';
+    if (!ALLOWED_ISSUERS[payload.iss]) return 'Unexpected token issuer';
+    if (!payload.exp || (payload.exp * 1000) <= Date.now()) return 'Token is expired';
+    if (expectedNonce && payload.nonce !== expectedNonce) return 'Nonce mismatch';
+    if (expectedState && returnedState !== expectedState) return 'State mismatch';
+    return null;
+  }
+
+  /* Read the id_token after Google redirects back. */
   function handleOAuthCallback() {
     var hash = window.location.hash.substring(1);
     if (!hash) return;
 
-    var params = {};
-    hash.split('&').forEach(function(pair) {
-      var parts = pair.split('=');
-      params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1] || '');
-    });
+    var params = new URLSearchParams(hash);
+    var authError = params.get('error');
+    if (authError) {
+      console.error('[Auth] OAuth error:', authError, params.get('error_description') || '');
+      return;
+    }
 
-    var idToken = params['id_token'];
+    var idToken = params.get('id_token');
     if (!idToken) return;
+    var returnedState = params.get('state');
 
-    /* Decode the JWT payload (base64url → JSON) */
+    /* Decode the JWT payload. */
     try {
-      var parts   = idToken.split('.');
-      var payload = JSON.parse(atob(
-        parts[1].replace(/-/g, '+').replace(/_/g, '/')
-      ));
+      var expectedNonce = null;
+      var expectedState = null;
+      try {
+        expectedNonce = sessionStorage.getItem('oauthNonce');
+        expectedState = sessionStorage.getItem('oauthState');
+      } catch (e) {
+        console.warn('[Auth] Cannot read sessionStorage for nonce/state validation.', e);
+      }
 
-      /* Store the session */
+      var payload = decodeJwtPayload(idToken);
+      var validationError = validateIdTokenClaims(payload, expectedNonce, expectedState, returnedState);
+      if (validationError) {
+        console.error('[Auth] id_token validation failed:', validationError);
+        return;
+      }
+
+      /* Save the session in sessionStorage. */
       sessionStorage.setItem('gUser', JSON.stringify({
-        name:    payload.name,
-        email:   payload.email,
-        picture: payload.picture,
-        sub:     payload.sub
+        name:    payload.name || payload.given_name || 'Google User',
+        email:   payload.email || '',
+        picture: payload.picture || '',
+        sub:     payload.sub || ''
       }));
+      sessionStorage.removeItem('oauthNonce');
+      sessionStorage.removeItem('oauthState');
 
-      /* Clear the token from the URL (security) */
+      /* Remove the token from the URL. */
       history.replaceState(null, '', window.location.pathname);
 
-      /* Show success banner then redirect */
+      /* Show the success banner, then redirect. */
       showSuccessBanner(payload);
 
     } catch (e) {
@@ -808,12 +863,25 @@
     var btn      = document.getElementById('googleSignInBtn');
     var divider  = document.querySelector('.divider');
 
-    nameEl.textContent   = 'Welcome, ' + (payload.given_name || payload.name) + '!';
-    avatarEl.src         = payload.picture;
+    if (!banner || !nameEl || !progress || !fill || !note) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    nameEl.textContent = 'Welcome, ' + (payload.given_name || payload.name || 'there') + '!';
+    if (avatarEl) {
+      if (payload.picture) {
+        avatarEl.src = payload.picture;
+        avatarEl.style.display = 'block';
+      } else {
+        avatarEl.style.display = 'none';
+      }
+    }
     banner.style.display = 'flex';
     if (btn)     btn.style.display     = 'none';
     if (divider) divider.style.display = 'none';
 
+    fill.style.width = '0%';
     progress.style.display = 'block';
     note.style.display     = 'block';
 
@@ -828,7 +896,7 @@
     }, 2000);
   }
 
-  /* Run callback handler on page load */
+  /* Handle the OAuth callback on load. */
   handleOAuthCallback();
 </script>
 
