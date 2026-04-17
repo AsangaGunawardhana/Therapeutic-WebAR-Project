@@ -117,7 +117,7 @@
     <h1>🧪 QA Test: Color Transition Smoothness</h1>
 
     <div class="container">
-      <!-- Left Panel: Controls & Tests -->
+      <!-- Controls and test cases -->
       <div class="panel">
         <h2>Test Dashboard</h2>
         <div id="status" class="disconnected">Disconnected</div>
@@ -284,7 +284,7 @@
         </div>
       </div>
 
-      <!-- Right Panel: AR View -->
+      <!-- Live AR preview -->
       <div class="panel">
         <h2>AR View (Live)</h2>
         <iframe id="arFrame" src="/ar.html"></iframe>
@@ -327,7 +327,7 @@
           "",
         );
 
-        // Task 2.2 QA: Log coaching and clinical messages
+        // Log both patient-facing and clinical messages.
         if (cmd.message_patient) {
           addLog(`📢 Coaching: "${cmd.message_patient}"`, "");
         }
@@ -823,7 +823,7 @@
         addLog("====================================", "");
       }
 
-      // Initial update
+      // Send the first update on load.
       sendUpdate();
     </script>
   </body>
