@@ -975,7 +975,7 @@
         isCalibrated = true;
         sessionStartTime = Date.now();
 
-        // Display message (keep it longer - 10 seconds instead of 6)
+        // Keep the baseline message visible a little longer.
         const subtitle = document.getElementById('ar-subtitle');
         subtitle.innerText = "🟢 Baseline locked. Therapeutic session starting...";
         subtitle.style.opacity = 1;
@@ -984,15 +984,13 @@
           subtitle.style.opacity = 0;
         }, 10000); // 10 seconds instead of 6
 
-        // Voice announcement — only if the patient is NOT already in a breathing session.
-        // If they clicked 'I Need Help' before calibration finished, the breathing guidance
-        // is already playing. Calling speakMessage() here would call speechSynth.cancel()
-        // and kill the therapeutic voice mid-sentence.
+        // Skip this if breathing guidance is already running.
+        // Otherwise the calibration message would interrupt the current audio.
         if (!breathingInterval && !isPreparingBreathing) {
           speakMessage("Baseline locked. Therapeutic session starting.");
         }
 
-        // Start ambient sound therapy (works in both Full AR and Simple mode)
+        // Start ambient sound after calibration completes.
         startAmbientSoundIfNeeded();
 
         console.log(`✅ CALIBRATION COMPLETE`);
@@ -1522,22 +1520,20 @@
         console.log("📥 Patient-friendly report downloaded");
       }
 
-      // ========================================
+     
       // DUAL-MODE SYSTEM CONTROLS
-      // ========================================
+     
       let currentARMode = 'fullAR'; // Default to Full AR mode
       let currentAnxietyLevel = 5;   // Default moderate anxiety
 
       function setARMode(mode) {
         currentARMode = mode;
 
-        // ── IMMEDIATE VISUAL TOGGLE ──────────────────────────────────────
-        // Hide/show the Three.js canvas so the patient sees only the camera
-        // feed in Simple mode instantly — no server roundtrip needed.
+        // In Simple mode, hide the 3D scene and keep only the camera feed.
         const sceneCanvas = document.getElementById('scene');
         if (sceneCanvas) sceneCanvas.style.display = (mode === 'comfort') ? 'none' : 'block';
 
-        // Also hide orb and particles inside the Three.js scene
+        // Hide the scene objects too so Simple mode stays uncluttered.
         if (typeof therapeuticOrb !== 'undefined' && therapeuticOrb) {
           therapeuticOrb.visible = (mode !== 'comfort');
         }
@@ -1546,13 +1542,13 @@
         }
         // ─────────────────────────────────────────────────────────────────
 
-        // Update button styles to show selection
+        // Update the mode buttons.
         document.getElementById('fullARBtn').style.background =
           mode === 'fullAR' ? '#3b82f6' : 'rgba(255,255,255,0.2)';
         document.getElementById('comfortBtn').style.background =
           mode === 'comfort' ? '#3b82f6' : 'rgba(255,255,255,0.2)';
 
-        // Show/hide anxiety control based on mode
+        // The anxiety slider is only shown in Full AR.
         document.getElementById('anxietyControl').style.display =
           mode === 'fullAR' ? 'block' : 'none';
 
@@ -1560,7 +1556,7 @@
 
         showModeWelcomeMessage(mode);
 
-        // Inform backend so it can send the right ar:command back
+        // Let the backend recalculate the current therapy state for this mode.
         if (mode === 'fullAR' || mode === 'comfort') {
           triggerPatientInitiatedIntervention();
         }
@@ -1570,7 +1566,7 @@
         currentAnxietyLevel = parseInt(level);
         document.getElementById('anxietyValue').textContent = level;
 
-        // Update color based on anxiety level
+        // Tint the slider based on the selected level.
         const slider = document.getElementById('anxietySlider');
         if (level <= 3) {
           slider.style.accentColor = '#10b981'; // Green - calm
@@ -1587,10 +1583,10 @@
       function requestHelp() {
         console.log(`🆘 Patient requested help...`);
 
-        // 1. Force anxiety to 10 so the backend knows this is an explicit distress call
+        // Treat this as an explicit distress signal.
         currentAnxietyLevel = 10;
 
-        // 2. CLOSE the settings panel immediately so ar-subtitle is visible to patient
+        // Close the panel so the subtitle stays visible.
         const panel = document.getElementById('detailedPanel');
         if (panel && panel.style.display === 'flex') {
           panel.style.display = 'none';
@@ -1598,38 +1594,34 @@
           if (settingsBtn) settingsBtn.textContent = '⚙️';
         }
 
-        // 3. Set stress level locally so all safety gates know we're in HIGH_STRESS
+        // Update the local state right away.
         currentStressLevel = 'HIGH_STRESS';
 
-        // 4. IMMEDIATELY show breathing guidance — don't wait for server roundtrip.
-        //    Short spoken intro (under 3 seconds) so it finishes before the 7500ms
-        //    prep timeout fires and calls speakMessage("Breathe in").
+        // Start the breathing prompt locally instead of waiting on the server.
         const immediateMessage = "Let's breathe together.";
-        // Show the friendly longer text on screen (no speech — speakMessage handles it)
+        // Keep the on-screen version a bit longer than the spoken line.
         botMessage("🫁 Let's breathe together. Slow, gentle breaths...", false);
-        // Speak only the short version so it's guaranteed to finish
+        // Use the short spoken line here so the cadence can begin cleanly.
         speakMessage(immediateMessage);
         startBreathingLoop(immediateMessage, false);
 
-        // 5. Update guidance text as a secondary reassurance
+        // Leave a simple fallback message under the subtitle.
         const guidanceEl = document.getElementById('guidanceText');
         if (guidanceEl) guidanceEl.textContent = "Breathe slowly with me...";
 
-        // 6. THE THERAPEUTIC LOCK: Lock the AR room for 1 full minute.
+        // Hold the room in the calming state for a minute.
         window.therapeuticLockTime = Date.now() + 60000;
 
-        // 7. Inform server so it logs the event and can alert the therapist
+        // Still report the event to the backend.
         triggerPatientInitiatedIntervention();
       }
 
-      // ========================================
+     
       // MINIMAL UI TOGGLE FUNCTIONS
-      // ========================================
+     
 
       /**
-       * exitSystem()
-       * Confirms with the therapist/supervisor before leaving the AR session.
-       * Returns to the session setup page (index.html).
+       * exit
        */
       function exitSystem() {
         const confirmed = window.confirm(
@@ -1729,21 +1721,19 @@
       }
 
       function triggerPatientInitiatedIntervention() {
-        // Send patient-initiated intervention request to backend with mode preference
+        // Send a manual update using the current mode and anxiety level.
         const sessionContext = {
           interventionTrigger: 'PATIENT_INITIATED',
           userPreferences: {
             comfortMode: currentARMode === 'comfort',
             fullAR: currentARMode === 'fullAR',
-            // ✅ THE CRITICAL FIX: send the chosen palette so the server saves it
-            // into session.userPreferences. Without this, watch HR data defaults to
-            // Ocean (blue) regardless of what the patient picked on the setup page.
+            // Keep the chosen palette attached to the session for later updates.
             palette: localStorage.getItem('selectedPalette') || 'OCEAN'
           },
           patientAnxietyLevel: currentAnxietyLevel
         };
 
-        // Use a mock HR/HRV for patient-initiated requests
+        // Manual updates still send placeholder vitals.
         const mockHR = 85;
         const mockHRV = 50;
 
@@ -1763,17 +1753,16 @@
         document.getElementById('anxietyControl').style.display = 'block'; // Show anxiety control
       }, 500);
 
-      // ========================================
       // 1) Socket
-      // ========================================
+      
       const socket = io();
       // claim_device is now sent dynamically from window.addEventListener("load")
       // using the session code saved in localStorage by the setup page.
 
 
-      // ========================================
+     
       // 2) Three.js scene + orb
-      // ========================================
+      
       const canvas = document.getElementById("scene");
       const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -1787,12 +1776,12 @@
       const camera = new THREE.PerspectiveCamera(60, 2, 0.1, 100);
       camera.position.set(0, 0, 3);
 
-      // Step 6: Link to User Preference from Setup Screen (Must be declared early)
+      //  User Preference from Setup Screen 
       // Read the therapeutic palette the patient selected
       const selectedPalette = localStorage.getItem('selectedPalette') || 'AMBER';
       
-      // ✅ ENSURE ALL 6 PALETTES ARE ALWAYS AVAILABLE
-      // Includes both evidence-based cardiovascular colors and user preference options
+      //ENSURE ALL 6 PALETTES ARE ALWAYS AVAILABLE
+      
       const AVAILABLE_PALETTES = ['OCEAN', 'NATURE', 'AMBER', 'VIOLET', 'PINK', 'EARTH'];
       if (!AVAILABLE_PALETTES.includes(selectedPalette)) {
         localStorage.setItem('selectedPalette', 'OCEAN');
@@ -1827,8 +1816,8 @@
       
       const initialVignetteColor = paletteColorMap[selectedPalette] || '#FFBF00';
 
-      // Initialize ambient sound for selected palette (starts when user taps screen)
-      // Audio context requires user interaction - will start on first touch/click
+      // Initialize ambient sound for selected palette 
+      // Audio context requires user interaction 
       let ambientSoundStarted = false;
       function startAmbientSoundIfNeeded() {
         if (!ambientSoundStarted && soundEnabled) {
@@ -1838,8 +1827,8 @@
         }
       }
 
-      // Step 7: Ambient Wash Light (Tints the room walls with therapeutic color)
-      // This creates the "Room Redesign" effect by staining the physical environment
+      //  Ambient Wash Light (Tints the room walls with therapeutic color)
+     
       const ambientLight = new THREE.AmbientLight(initialVignetteColor, 0.3); // Starts with user's palette
       scene.add(ambientLight);
       
@@ -1854,7 +1843,6 @@
       scene.add(dir);
 
       // Therapeutic Orb
-      // Mobile AR Optimization: Reduced size from 0.8 to 0.4 for better visibility on small screens
       const geometry = new THREE.SphereGeometry(0.4, 64, 64);
       const material = new THREE.MeshStandardMaterial({
         color: new THREE.Color(initialVignetteColor),
@@ -1865,18 +1853,14 @@
       const therapeuticOrb = new THREE.Mesh(geometry, material);
       scene.add(therapeuticOrb);
 
-      // AR Positioning: Move orb down for more natural AR experience
-      therapeuticOrb.position.set(0, -0.5, 0); // Moves it down by 0.5 units
+      // AR Positioning
+      therapeuticOrb.position.set(0, -0.5, 0); 
 
-      // ========================================
-      // MULTI-MODE DISTRACTION THERAPY SYSTEM
-      // ========================================
-      // Particle-based therapeutic visualization
-      // Single mode with three interactive touch styles:
-      // 1. MAGNETIC: Particles follow finger
-      // 2. RIPPLE: Particles repel from finger
-      // 3. BREATH_CORE: Particles expand/contract with touch
       
+      // MULTI-MODE DISTRACTION THERAPY SYSTEM
+     
+      // Particle-based therapeutic visualization
+      // Single mode with three interactive touch styles
       // Particle system objects
       let particleSystem = null;
       let particleGeometry = null;
@@ -1885,14 +1869,13 @@
       let particleCount = 800; // Needed by animate loop
       let activeMode = distractionStyle;
       
-      // ========================================
-      // GLOBAL COLORS (Prevent mobile memory leak from creating objects 60x/sec)
-      // ========================================
+      
+      // GLOBAL COLORS 
       const calmColor = new THREE.Color(initialVignetteColor);
       
-      // ========================================
-      // MODE 1: PARTICLE SYSTEM (Zenspace Approach)
-      // ========================================
+      
+      //  PARTICLE SYSTEM (Zenspace Approach)
+     
       function initParticles() {
         particleGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
@@ -1928,9 +1911,8 @@
       
 
       
-      // ========================================
+    
       // MEMORY MANAGEMENT: Clean up unused modes
-      // ========================================
       function clearScene() {
         // Remove old objects to save RAM on mobile
         if (particleSystem) {
@@ -1940,9 +1922,8 @@
         console.log('🧹 Scene cleared - particle system reset');
       }
       
-      // ========================================
+     
       // Initialize selected distraction mode (Particle-Based)
-      // ========================================
       function initMode() {
         clearScene(); // Remove old particles first
         
@@ -1951,7 +1932,7 @@
         const style = localStorage.getItem('distractionStyle') || 'MAGNETIC';
         activeMode = style;
         
-        // Store original positions for RIPPLE mode (needed for return-to-rest effect)
+        // Store original positions for RIPPLE mode 
         if (style === 'RIPPLE' && particleGeometry) {
           window.rippleOriginalPositions = new Float32Array(particleGeometry.attributes.position.array);
         }
@@ -1962,17 +1943,12 @@
       // Initialize the selected mode on startup
       initMode();
 
-      // ========================================
-      // ========================================
+     
       // CINEMATIC SUBTITLE SYSTEM (Modern AR)
-      // ========================================
-      // Replaces clunky chat windows with gentle, fading subtitles
-      // Enhanced with Web Speech API for voice guidance
       let subtitleTimeout; // Keeps track of the timer
 
-      // ========================================
+     
       // VOICE GUIDANCE SYSTEM (Web Speech API)
-      // ========================================
       // Speaks therapeutic messages aloud for hands-free experience
       const speechSynth = window.speechSynthesis;
       let voiceGuidanceEnabled = localStorage.getItem('chatbotEnabled') !== 'false';
@@ -2003,7 +1979,7 @@
         utterance.pitch = 1.0;  // Natural pitch
         utterance.volume = 0.55; // Clear and audible for phone speakers
 
-        // Try to use a calm, clear voice
+        //  use a calm, clear voice
         const voices = speechSynth.getVoices();
         const preferredVoice = voices.find(v =>
           v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google'))
@@ -2017,17 +1993,14 @@
         setTimeout(() => speechSynth.speak(utterance), 400);
       }
 
-      // Preload voices (some browsers need this)
+      // Preload voices 
       if (speechSynth) {
         speechSynth.getVoices(); // Trigger voice loading
         speechSynth.onvoiceschanged = () => speechSynth.getVoices();
       }
 
-      // ========================================
+
       // AMBIENT SOUND THERAPY SYSTEM (Web Audio API)
-      // ========================================
-      // Generates calming background audio matched to patient's color palette
-      // Works in both Full AR and Simple/Comfort mode
 
       // Load user preferences
       const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
@@ -2055,7 +2028,7 @@
         }
       }
 
-      // Create noise buffer for nature sounds
+      //  noise buffer for nature sounds
       function createNoiseBuffer() {
         const bufferSize = audioContext.sampleRate * 2;
         const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
@@ -2080,7 +2053,7 @@
         }
       }
 
-      // Generate ambient sound based on palette - DISTINCT sounds
+      //  ambient sound based on palette - DISTINCT sounds
       function playAmbientSound(palette) {
         if (!soundEnabled) return;
         if (!audioContext) initAudio();
@@ -2138,7 +2111,7 @@
       // NATURE: Calm flowing water sound
       // Clinical: Natural water ambience for deep relaxation - no synthetic tones
       function playForestAmbience() {
-        // Create pink/brown noise for natural water texture
+        //  pink/brown noise for natural water texture
         const noise = audioContext.createBufferSource();
         noise.buffer = createNoiseBuffer();
         noise.loop = true;
@@ -2228,7 +2201,7 @@
       // PINK: Very sparse, soft chimes (calm, non-intrusive)
       // Clinical: Sparse, predictable sounds reduce startle response in cardiac patients
       function playWindChimes() {
-        const chimeFreqs = [523, 659, 784]; // Just 3 notes - C, E, G (calm major triad)
+        const chimeFreqs = [523, 659, 784]; //  3 notes - C, E, G (calm major triad)
 
         function playChime() {
           const freq = chimeFreqs[Math.floor(Math.random() * chimeFreqs.length)];
@@ -2314,11 +2287,9 @@
         }
       }
 
-      // ========================================
       // Personalized Chatbot Greeting (Clinical Metaphors)
-      // ========================================
       function showModeWelcomeMessage(mode = currentARMode) {
-        // Check if user even wants the chatbot
+        // Skip the welcome line if voice guidance is off.
         if (localStorage.getItem('chatbotEnabled') === 'false') return; 
 
         if (mode === 'comfort') {
@@ -2338,11 +2309,11 @@
           welcomeMessage = "⭐ Pulsing Star: Hold your finger down to inhale. Watch the particles expand like lungs filling with air. Release to exhale and watch them contract. Synchronize your breath with the light.";
         }
 
-        // Display using modern cinematic subtitle system
+        // Show the opening line as a subtitle.
         botMessage(welcomeMessage);
       }
 
-      // Call this right after scene finishes loading
+      // Show the initial mode-specific welcome.
       showModeWelcomeMessage();
       
       // Particle-specific variables (only used in PARTICLES mode)
@@ -2358,35 +2329,26 @@
       const attractionForce = 0.008;
       const maxParticleSpeed = 0.1;
 
-      // ========================================
+     
       // Playable Touch Interaction Function
-      // ========================================
-      // Applies different touch behaviors based on the user's selected distraction style
-      // ========================================
       // ADVANCED TOUCH INTERACTION SYSTEM
-      // ========================================
       // Mode 1: MAGNETIC - School of fish attraction with momentum
       // Mode 2: RIPPLE - Wave physics with particle repulsion  
       // Mode 3: BREATH_CORE - Synchronized breathing with particle aggregation
-      //
-      // GAP 2 + GAP 4 FIX: Clinical safety gates are enforced HERE first,
       // before any mode function is ever called.
       function applyTouchInteraction(style, touchPoint, isTouching) {
         if (!particleGeometry || !particleGeometry.attributes.position) return;
 
-        // ── GAP 4 SAFETY GATE: BRADYCARDIA FREEZE ───────────────────────────
+        // BRADYCARDIA FREEZE 
         // BRADYCARDIA is medical caution time — no stimulation whatsoever.
-        // Block ALL touch interaction. Particles continue their own slow drift
-        // but cannot be driven by patient input.
         if (currentStressLevel === 'BRADYCARDIA_ALERT') {
           return; // Hard stop — no mode function runs
         }
 
-        // ── GAP 2 SAFETY GATE: HIGH_STRESS MODE RESTRICTION ─────────────────
+        //  HIGH_STRESS MODE RESTRICTION 
         // MAGNETIC (high-stimulation chase) is not allowed when HR is elevated.
         // RIPPLE and BREATH_CORE are therapeutically safe and still allowed.
         if (currentStressLevel === 'HIGH_STRESS' && style === 'MAGNETIC') {
-          // applyMagneticMode itself also guards this, but we stop here for clarity
           return;
         }
         // ────────────────────────────────────────────────────────────────────
@@ -2404,18 +2366,13 @@
         particleGeometry.attributes.position.needsUpdate = true;
       }
       
-      // ========================================
+    
       // MAGNETIC MODE: School of Fish Behavior
-      // ========================================
-      // GAP 2 FIX: Track last broadcast state for one-time chatbot notice
+      //  Track last broadcast state for one-time chatbot notice
       let _lastMagneticNoticeState = null;
 
       function applyMagneticMode(positions, touchPoint, isTouching) {
-        // ── SAFETY GUARD (GAP 2 FIX) ────────────────────────────────────────
-        // High-stimulation finger-follow is medically UNSAFE when HR is already
-        // elevated. During HIGH_STRESS we disable attraction entirely and let
-        // particles decelerate naturally. This matches the supervisor requirement:
-        // "Mode restriction logic based on clinical state."
+        //SAFETY GUARD 
         if (currentStressLevel === 'HIGH_STRESS') {
           // Inform patient once when state first becomes HIGH_STRESS
           if (_lastMagneticNoticeState !== 'HIGH_STRESS') {
@@ -2436,7 +2393,6 @@
           _lastMagneticNoticeState = null;
           botMessage("✅ Heart rate calming. Swarm interaction restored.");
         }
-        // ────────────────────────────────────────────────────────────────────
 
         for (let i = 0; i < particleCount; i++) {
           const i3 = i * 3;
@@ -2473,9 +2429,8 @@
         }
       }
       
-      // ========================================
+    
       // RIPPLE MODE: Wave Physics
-      // ========================================
       function applyRippleMode(positions, touchPoint, isTouching) {
         const rippleRadius = 1.5; // How far the ripple reaches
         const ripplePower = 0.02;  // How hard particles are pushed (slowed down)
@@ -2509,21 +2464,19 @@
             }
           } else {
             // When finger lifted: particles slowly flow back to original spread positions
-            // This creates a 'water filling void' effect
+            //  creates a 'water filling void' effect
             positions[i3] += (origX - positions[i3]) * returnSpeed;
             positions[i3 + 1] += (origY - positions[i3 + 1]) * returnSpeed;
           }
         }
       }
       
-      // ========================================
       // BREATH_CORE MODE: Pulsing Lung/Star
-      // ========================================
       // Particles form dense sphere at center, expand on hold, contract on release
       function applyBreathCoreMode(positions, isTouching) {
         // Smooth breathing expansion/contraction
-        const minRadius = 0.3;  // Exhale: small tight core
-        const maxRadius = 2.2;  // Inhale: fully expanded lung
+        const minRadius = 0.3;  // Exhale
+        const maxRadius = 2.2;  // Inhale
         const transitionSpeed = 0.01; // How fast particles move (slowed down for therapeutic pacing)
         
         for (let i = 0; i < particleCount; i++) {
@@ -2559,16 +2512,12 @@
       let targetParticleRotationSpeed = 0.001;
       let currentParticleRotationSpeed = 0.001;
       
-      // Legacy code wrapper (for backward compatibility with old code)
-      // If you have old particle initialization, it will be ignored
-
-      // ========================================
+      
       // Refined Particle Animation (State-Based Feedback)
-      // ========================================
       // Updates particle system visual behavior based on clinical state
       // Creates nuanced distraction therapy that adapts to patient condition
       function animateParticles(state, visualConfig = null) {
-        // ENHANCED: Handle dual-mode system particle configuration from backend
+        // Handle dual-mode system particle configuration from backend
         let speedMult = 1.0;
         let particleGlow = 0.5;
         let particleVisible = true;
@@ -2614,8 +2563,6 @@
           // Handle particle-breathing synchronization
           if (pConfig.particleSync && visualConfig.breathing) {
             console.log(`🫁💫 Particle-breathing sync enabled (${visualConfig.breathing.pattern})`);
-            // Note: Breathing sync implementation would go here
-            // For now, just apply a slower, more rhythmic animation
             speedMult *= 0.7; // Slower for breathing rhythm
           }
 
@@ -2708,10 +2655,8 @@
       const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
       therapeuticOrb.add(glowMesh); // Attach glow to orb so they move together
 
-      // -----------------------------
-      // Vignette HUD Plane (Breathing Glow Effect)
-      // -----------------------------
-      // Scientific Logic: Transparent center ensures patients can see medication/exits (NFR3 Accessibility)
+      // Vignette HUD Plane 
+      //  Transparent center ensures patients can see medication/exits
       // Creates a calming peripheral glow that breathes with the therapeutic guidance
       
       function createVignetteTexture() {
@@ -2742,7 +2687,7 @@
 
       const vignetteTexture = createVignetteTexture();
       
-      // Use the palette color initialized earlier (see Step 6 above)
+      // Use the palette color initialized earlier 
       const vignetteMaterial = new THREE.MeshBasicMaterial({
         map: vignetteTexture,
         color: new THREE.Color(initialVignetteColor), // Apply user's therapeutic preference
@@ -2762,18 +2707,15 @@
       camera.add(vignetteMesh);
       scene.add(camera); // Ensure camera is in scene for child to render
 
-      // ========================================
+     
       // FULL ROOM TINT (The Color Wash Plane)
-      // ========================================
       // Full-screen overlay that 'stains' the entire room with therapeutic color
-      // This plane covers the entire screen and sits between camera and 3D orb
-      // MultiplyBlending ensures walls change color (e.g., white wall + Violet = Violet room)
       const roomTintGeo = new THREE.PlaneGeometry(2, 2);
       const roomTintMat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(initialVignetteColor), // Use user's therapeutic palette
         transparent: true,
         opacity: 0, // Starts invisible
-        blending: THREE.MultiplyBlending, // CRITICAL: Multiply acts like "color wash" - stains the real-world walls
+        blending: THREE.MultiplyBlending, // stains the real-world walls
         depthTest: false,
         depthWrite: false
       });
@@ -2800,9 +2742,8 @@
       window.addEventListener("resize", resize);
       resize();
 
-      // -----------------------------
+     
       // 3) Target values (for smooth transitions)
-      // -----------------------------
       const targetColor = new THREE.Color(initialVignetteColor); // Default to selected palette
       const currentColor = new THREE.Color(initialVignetteColor); // Initial color
       let targetEmissive = new THREE.Color(initialVignetteColor);
@@ -2810,7 +2751,7 @@
 
       let isPulsing = false;
 
-      // Breathing loop variables (Task 2.3)
+      // Breathing loop variables
       let breathingInterval = null;
       let currentBreathingStep = "IN"; // Alternates between IN and OUT
 
@@ -2825,16 +2766,12 @@
         return "#FFFFFF"; // cool/white
       }
 
-      // ========================================
+    
       // Room Color Synchronization (Interactive Layer)
-      // ========================================
-      // Updates the --therapeutic-color CSS variable based on EBD Engine stress level
-      // This synchronizes the DOM-based room tint layer with the Three.js rendering
       function syncRoomColor(hexColor, stressLevel) {
         const root = document.documentElement;
         
         // Parse hex color to RGB components
-        // Format: #RRGGBB → r, g, b (0-255)
         const r = parseInt(hexColor.slice(1, 3), 16);
         const g = parseInt(hexColor.slice(3, 5), 16);
         const b = parseInt(hexColor.slice(5, 7), 16);
@@ -2843,17 +2780,13 @@
         // Otherwise, keep transparent for normal viewing
         const alpha = (stressLevel === 'HIGH_STRESS') ? 0.3 : 0;
         
-        // Update the CSS variable - This changes the entire room's color tint
         // mix-blend-mode: multiply makes white walls become the therapeutic color
         root.style.setProperty('--therapeutic-color', `rgba(${r}, ${g}, ${b}, ${alpha})`);
       }
 
-      // ========================================
+   
       // Global Lighting Update (Ambient Method)
-      // ========================================
       // Tints every 3D object in the scene by updating the ambient light color
-      // Objects with MeshStandardMaterial or MeshPhongMaterial react to this light
-      // Creates an immersive effect where the entire room appears to be under colored light
       function updateGlobalLighting(targetHex) {
         const color = new THREE.Color(targetHex);
         
@@ -2862,9 +2795,8 @@
         ambientLight.color.lerp(color, 0.05);
       }
 
-      // ========================================
+     
       // Multi-Mode Color Update (Material Swap Method)
-      // ========================================
       // Updates visualization colors when stress level changes
       function updateFurnitureColor(newHex) {
         if (activeMode === 'PARTICLES' && particleMaterial) {
@@ -2878,34 +2810,32 @@
         therapeuticOrb.scale.set(1, 1, 1);
       }
 
-      // -----------------------------
-      // 3.5) Breathing Loop Functions (Task 2.3)
-      // -----------------------------
+
+      // 3.5) Breathing Loop Functions 
       let patientMessage = ""; // Store the HIGH_STRESS message context
-      let breathingSpokenOnce = false; // Track if we've spoken the initial context
+      let breathingSpokenOnce = false; 
       let isPreparingBreathing = false;
       let breathingPrepTimeout = null;
 
       function startBreathingLoop(contextMessage = "", speakIntro = true) {
         patientMessage = contextMessage;
 
-        // 🛑 HARDWARE ANTI-SPAM FIX: 
-        // If the interval is already running, or we are in the prep phase, do nothing.
+        // Avoid starting a second breathing loop on top of the first one.
         if (breathingInterval || isPreparingBreathing) {
           return; 
         }
 
         isPreparingBreathing = true;
 
-        // 1. Show and speak the introductory message first.
+        // Show the intro before the in/out cadence begins.
         botMessage(patientMessage, speakIntro); 
 
-        // 2. Wait for the voice to finish the intro before starting the breathing cadence.
+        // Give the intro a moment to finish before the cadence starts.
         clearTimeout(breathingPrepTimeout);
         breathingPrepTimeout = setTimeout(() => {
           isPreparingBreathing = false;
 
-          // Safety check: Don't begin the loop if the patient already calmed down.
+          // The state may have changed while the intro was playing.
           if (currentStressLevel !== 'HIGH_STRESS') return;
 
           const initialStep = "BREATHE IN ⬆️";
@@ -2931,8 +2861,7 @@
               vignetteTargetOpacity = 0.5; 
             }
           }, 4000); 
-        }, 7500); // 7500ms: long enough for the intro sentence to finish speaking
-                  // before speechSynth.cancel() is called by the first Breathe In prompt
+        }, 7500); // Leave enough time for the intro before "Breathe in" starts.
       }
 
       function stopBreathingLoop() {
@@ -2945,28 +2874,14 @@
         vignetteTargetOpacity = 0; // Fade out vignette when stopping
       }
 
-      // -----------------------------
-      // 4) Socket listener - Handle ar:command from server
-      // ===== MEDICAL DEVICE PROTOCOL =====
-      // Phase 1: CALIBRATION (0-30s) - Collect baseline BPM
-      // Phase 2: THERAPY (30s+) - Apply stress-responsive visuals
-      // Phase 3: REPORT - Generate session outcome metrics
-      // -----------------------------
-      // -----------------------------
-      // 4) Socket listener - Handle ar:command from server
-      // ===== MEDICAL DEVICE PROTOCOL =====
-      // Phase 1: CALIBRATION (0-30s) - Collect baseline BPM
-      // Phase 2: THERAPY (30s+) - Apply stress-responsive visuals
-      // Phase 3: REPORT - Generate session outcome metrics
-      // -----------------------------
+      //  Socket listener - Handle ar:command from server
+      //  MEDICAL DEVICE PROTOCOL
+
       socket.on("ar:command", (data) => {
         console.log("🔴 SOCKET MESSAGE RECEIVED:", data.state, data.visual.mode);
         console.log("📊 Vitals received: HR=" + data.vitals.hr + " HRV=" + data.vitals.hrv);
 
-        // ==========================================
-        // 🫀 FIX: ALWAYS UPDATE HR NUMBERS FIRST
-        // This ensures the screen never looks "frozen" even if the room is locked.
-        // ==========================================
+        // Update the vitals readouts before any early return.
         const liveHREl = document.getElementById("liveHR");
         const liveHRVEl = document.getElementById("liveHRV");
         const minimalHREl = document.getElementById("minimalHR");
@@ -2986,12 +2901,10 @@
           console.log("✅ Updated minimalHR to", data.vitals.hr);
         }
         
-        // Record data immediately so the final session report is 100% accurate
+        // Keep every reading for the session report.
         recordBPMReading(data.vitals.hr);
 
-        // ==========================================
-        // 🛑 THE HARDWARE OVERRIDE FIX (Therapeutic Lock)
-        // ==========================================
+        // While the room is locked, only urgent states can break through.
         if (window.therapeuticLockTime && Date.now() < window.therapeuticLockTime) {
           if (data.state !== "BRADYCARDIA_ALERT" && data.state !== "HIGH_STRESS") {
             console.log("⏳ Therapeutic lock active. Numbers updated, but visuals/voice paused.");
@@ -2999,9 +2912,8 @@
           }
         }
 
-        // === PHASE 1: CALIBRATION ===
-        // Allow urgent states to break through calibration so subjective distress
-        // can start breathing guidance immediately, even before baseline lock.
+        //  CALIBRATION 
+        // During calibration, still let urgent states through.
         const allowDuringCalibration =
           data.state === "HIGH_STRESS" ||
           data.state === "BRADYCARDIA_ALERT" ||
@@ -3022,7 +2934,7 @@
           return; 
         }
 
-        // === PHASE 2: THERAPY (post-calibration) ===
+        //  THERAPY (post-calibration)
         const normalizedStress = getNormalizedStress(data.vitals.hr);
         currentStressLevel = data.state;
         recordStressEvent(data.state);
@@ -3117,12 +3029,10 @@
         }
       });
 
-      // ========================================
+      
       // HYBRID DISTRACTION: Procedural Base + Particle Morphing
-      // ========================================
+     
       // Morph particles into shape formations with smooth LERP
-      // Note: TREE and LOTUS shape modes removed - function kept for potential future use
-      // ========================================
       function morphParticlesToShape(shape, radius) {
         if (!particleGeometry || !particleGeometry.attributes.position) return;
 
@@ -3131,38 +3041,26 @@
         const particleCount = posArray.length / 3;
         const time = Date.now() * 0.001;
 
-        // Currently no active shape modes - particle interaction handled by touch system
-        // (This function preserved for potential future expansion)
 
         positionAttribute.needsUpdate = true;
       }
       
       // Update visuals based on active therapeutic mode
-      // Note: TREE and LOTUS modes removed - only particle-based modes (MAGNETIC, RIPPLE, BREATH_CORE) are supported
       function updateTherapeuticVisuals(state) {
-        // Particle modes are handled via animateParticles() and touch interaction system
-        // No additional visualization updates needed for current modes
       }
 
-      // -----------------------------
+      
       // 5) Render loop (smooth transitions + pulse)
-      // -----------------------------
       let currentEmissive = new THREE.Color(initialVignetteColor);
       let currentEmissiveIntensity = 0.2;
 
       function animate() {
+         // Every lerp alpha is multiplied by deltaTime so the visual speed is
         requestAnimationFrame(animate);
-
-        // ── GAP 1 FIX: deltaTime normalisation ───────────────────────────────
-        // Every lerp alpha is now multiplied by deltaTime so the visual speed is
-        // identical on a 20fps Samsung A12 and a 60fps desktop.
-        // Formula:  lerp(a, b, speed * deltaTime)   where speed is calibrated at 60fps.
-        // Cap deltaTime at 3× (50ms) to prevent a single tab-switch spike from
-        // teleporting all values — especially important for cardiac-safe animations.
         const now = performance.now();
         const deltaTime = Math.min((now - lastFrameTime) / 16.667, 3.0); // normalised to 60fps
         lastFrameTime = now;
-        // ─────────────────────────────────────────────────────────────────────
+        
 
         // Smooth color transitions (speed calibrated for ~1.5s at 60fps)
         currentColor.lerp(targetColor, 0.1 * deltaTime);
@@ -3198,14 +3096,12 @@
           therapeuticOrb.scale.set(scale, scale, scale);
         }
 
-        // ========================================
+       
         // Apply Touch Interaction for Current Mode
-        // ========================================
         applyTouchInteraction(activeMode, touchPosition, isTouching);
 
-        // ========================================
+       
         // Update Particle System (Soft Fascination Interaction)
-        // ========================================
         if (particleGeometry && particleGeometry.attributes.position) {
           const positionAttribute = particleGeometry.attributes.position;
           const posArray = positionAttribute.array;
@@ -3224,9 +3120,8 @@
             stressMultiplier = 0.8;
             swirlingSpeed = 0.009;
           }
-          
-          // GAP 1 FIX: swirlingSpeed accumulation is now deltaTime-scaled
-          // so particle motion speed is identical on all frame rates
+                 
+          //  particle motion speed is identical on all frame rates
           particleSwirl += swirlingSpeed * stressMultiplier * deltaTime;
           
           // Update each particle
@@ -3241,7 +3136,7 @@
             let vy = particleVelocities[i3 + 1];
             let vz = particleVelocities[i3 + 2];
             
-            // ====== BIOFEEDBACK SWIRLING (deltaTime-scaled forces) ======
+            // BIOFEEDBACK SWIRLING (deltaTime-scaled forces) 
             const angle = particleSwirl + (i / particleCount) * Math.PI * 2;
             const radius = 1.5;
             const swirledY = Math.sin(angle) * radius * stressMultiplier;
@@ -3304,9 +3199,9 @@
           positionAttribute.needsUpdate = true;
         }
 
-        // ========================================
+       
         // Apply State-Based Particle Visuals
-        // ========================================
+       
         currentParticleRotationSpeed += (targetParticleRotationSpeed - currentParticleRotationSpeed) * (0.1 * deltaTime);
         if (particleSystem) {
           particleSystem.rotation.y += currentParticleRotationSpeed * deltaTime;
@@ -3318,12 +3213,11 @@
       }
       animate(); // Start the animation loop
 
-      // ========================================
+     
       // MOBILE AR: Camera Activation Function
-      // ========================================
-      // This function requests access to the phone's rear camera
-      // and displays the live feed behind the 3D scene
-      // Note: Requires HTTPS or localhost for getUserMedia to work
+     
+      //  requests access to the phone's rear camera and displays the live feed behind the 3D scene
+    
       let cameraStream = null; // Store stream reference for cleanup
 
       async function startCamera() {
@@ -3341,8 +3235,8 @@
           video.srcObject = cameraStream; // Connect camera stream to video element
           document.body.appendChild(video); // Add to page
 
-          // Make Three.js background transparent so camera feed shows through
-          renderer.setClearColor(0x000000, 0); // (color, alpha) - alpha 0 = fully transparent
+          
+          renderer.setClearColor(0x000000, 0);
         } catch (err) {
           // If user denies camera permission or camera not available
           alert("Camera Error: Please allow camera access. Note: Camera requires HTTPS or localhost.");
@@ -3357,14 +3251,12 @@
         }
       });
 
-      // ========================================
+      
       // TOUCH INTERACTION: Particle Attraction
-      // ========================================
       // Converts screen touches to 3D coordinates and attracts particles
       
-      // ========================================
+     
       // HR SLIDER TEST CONTROL
-      // ========================================
       // Local testing slider that simulates watch HR input
       // Uses same biofeedback logic that will connect to real watch on Wednesday
       const hrSlider = document.getElementById("hr-slider");
@@ -3372,12 +3264,9 @@
         hrSlider.addEventListener("input", (e) => {
         const hr = Number(e.target.value);
         document.getElementById("hr-display").innerText = hr;
-        
-        // ===== TESTING FEATURE: Feed slider data to calibration system =====
-        // During local testing, slider changes should drive the baseline measurement
         recordBPMReading(hr);
         
-        // === SHOW CALIBRATION COUNTDOWN (for local testing) ===
+        //SHOW CALIBRATION COUNTDOWN (local testing) 
         if (!isCalibrated) {
           const secondsRemaining = Math.max(0, Math.ceil(
             (SAFETY_THRESHOLDS.CALIBRATION_DURATION_MS -
@@ -3388,7 +3277,7 @@
         }
         
         // Mirror backend logic (EBD Engine) for state classification
-        // This is the EXACT same logic the watch will use
+      
         let stateFromHR = "MODERATE"; // Default
         
         if (hr < 50) {
@@ -3418,13 +3307,13 @@
         // Immediately update particle behavior (same as watch would do)
         currentStressLevel = stateFromHR;
 
-        // GAP 3 FIX: Record state into short-term history so chatbot can detect patterns
+        //Record state into short-term history so chatbot can detect patterns
         recordStressEvent(stateFromHR);
         
         // Trigger refined particle animation based on state (frontend simulation)
         animateParticles(currentStressLevel, null);  // No backend config for frontend simulation
 
-        // GAP 3 FIX: Context-aware chatbot message for sustained stress
+        // Context-aware chatbot message for sustained stress
         if (stateFromHR === "HIGH_STRESS") {
           const historyCtx = getStressHistoryContext();
           let breathMessage = "🌬️ Heart rate elevated. Let's breathe together. ";
@@ -3439,9 +3328,7 @@
           stopBreathingLoop();
         }
 
-        // GAP 4B FIX: BRADYCARDIA automatic safety palette override
-        // Forces room color to a calm, alert-safe warm white to stop therapeutic
-        // stimulation and signal the caution state visually.
+        // BRADYCARDIA automatic safety palette override
         if (stateFromHR === "BRADYCARDIA_ALERT") {
           const safetyColor = '#C8B89A'; // Warm desaturated EARTH tone — grounding, non-stimulating
           targetColor.set(safetyColor);
@@ -3455,9 +3342,6 @@
         });
       }
       
-      // Helper: Check if click is within any modal button's bounding box (canvas-agnostic)
-      // The canvas covers the buttons visually, so we check client coordinates instead
-      // Returns: null if no button, or the button element if click is within bounds
       function getClickedButton(clientX, clientY) {
         const buttonIds = ["endSessionBtn", "closeSessionBtn", "downloadReportBtn", "fullARBtn", "comfortBtn"];
 
@@ -3475,7 +3359,7 @@
       }
 
       window.addEventListener("touchstart", (event) => {
-        // Start ambient sound on first touch (browsers require user interaction for audio)
+        // Start ambient sound on first touch
         startAmbientSoundIfNeeded();
 
         // Check if touch is within any button's bounding box
@@ -3581,9 +3465,15 @@
       }
 
       // Start camera automatically when page finishes loading.
-      // Use the existing Socket.IO connection to tell the server which watch to use.
+
       window.addEventListener("load", () => {
-        const hyperateCode = localStorage.getItem('hyperateSession') || '5038D';
+        const hyperateCode = (localStorage.getItem('hyperateSession') || '').trim().toUpperCase();
+        if (!hyperateCode) {
+          alert("Watch ID missing. Please return to setup and enter a valid watch ID.");
+          window.location.href = 'index.html';
+          return;
+        }
+
         socket.emit('claim_device', hyperateCode);
         console.log('⌚ Claimed watch: ' + hyperateCode);
         startCamera();
