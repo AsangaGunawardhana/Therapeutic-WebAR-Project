@@ -53,7 +53,6 @@ Therapeutic-WebAR-Project/
 |   |-- index.html
 |   |-- ar.html
 |   |-- dashboard.html
-|   |-- test-transitions.html
 |   `-- main.js
 |-- docs/
 |   `-- qa/
@@ -175,7 +174,6 @@ Update Google sign-in client ID in `frontend/login.html`:
 ## Testing and Utility Pages
 
 - `frontend/dashboard.html`: biometric simulator that emits `bio:update`
-- `frontend/test-transitions.html`: state transition checks
 - `docs/qa/`: QA evidence and task reports
 
 ## Troubleshooting
