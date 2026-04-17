@@ -162,11 +162,9 @@ const HOLD_MS = 7000; // Force update after 7s
 ```javascript
 if (state === "BRADYCARDIA_ALERT") {
   isPulsing = true;
-  console.log("🚨 BRADYCARDIA PULSE: STARTED");
 } else if (isPulsing) {
   isPulsing = false;
   therapeuticOrb.scale.set(1, 1, 1);
-  console.log("✅ BRADYCARDIA PULSE: STOPPED");
 }
 ```
 

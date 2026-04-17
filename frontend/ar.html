@@ -993,10 +993,6 @@
         // Start ambient sound after calibration completes.
         startAmbientSoundIfNeeded();
 
-        console.log(`✅ CALIBRATION COMPLETE`);
-        console.log(`   Baseline BPM: ${sessionMetrics.baselineBPM.toFixed(1)}`);
-        console.log(`   Readings collected: ${calibrationBPMData.length}`);
-        console.log(`   Message displayed: 🟢 Baseline locked. Therapeutic session starting...`);
       }
 
       // === AUTO-CALIBRATION TIMER ===
@@ -1013,7 +1009,6 @@
        * Creates a comprehensive outcome report with metrics
        */
       function generateSessionReport() {
-        console.log("🔴 BUTTON CLICKED: generateSessionReport() called");
         
         // === DEBUG: Check if calibration completed ===
         if (!isCalibrated) {
@@ -1023,7 +1018,6 @@
           return;
         }
         
-        console.log("✅ Calibration check passed");
         
         if (!sessionStartTime) {
           console.error("❌ sessionStartTime =", sessionStartTime);
@@ -1032,19 +1026,14 @@
           return;
         }
         
-        console.log("✅ Session start time check passed:", sessionStartTime);
-        console.log("📊 sessionMetrics =", sessionMetrics);
         
-        console.log("✅ Generating session report...");
         sessionEndTime = Date.now();
         const durationSeconds = Math.round((sessionEndTime - sessionStartTime) / 1000);
         sessionMetrics.sessionDurationSeconds = durationSeconds;
-        console.log("✅ Duration calculated:", durationSeconds, "seconds");
 
         // Calculate improvement (lower BPM = better)
         const improvement = sessionMetrics.baselineBPM - sessionMetrics.endingBPM;
         sessionMetrics.improvement = improvement;
-        console.log("✅ Improvement calculated:", improvement, "BPM");
 
         // Calculate average BPM during session
         if (sessionMetrics.bpmReadings.length > 0) {
@@ -1052,12 +1041,10 @@
             sessionMetrics.bpmReadings.reduce((a, b) => a + b, 0) / 
             sessionMetrics.bpmReadings.length;
         }
-        console.log("✅ Average BPM calculated:", sessionMetrics.averageBPM);
 
         // Determine clinical interpretation
         let interpretation = "";
         const improvementPercent = (improvement / sessionMetrics.baselineBPM) * 100;
-        console.log("✅ Improvement percent:", improvementPercent + "%");
 
         if (improvement > 10) {
           interpretation = `Excellent response. Heart rate reduced by ${improvementPercent.toFixed(1)}%, indicating a strong therapeutic benefit. The ${selectedPalette} palette with ${activeMode} mode was well tolerated.`;
@@ -1071,11 +1058,9 @@
           interpretation = `Elevated response. Heart rate increased by ${Math.abs(improvementPercent).toFixed(1)}% during the session. A lower-intensity therapy mode is recommended for the next session.`;
         }
 
-        console.log("✅ Interpretation:", interpretation);
 
         // Populate report UI with error handling
         try {
-          console.log("📝 Populating report UI...");
           
           const modal = document.getElementById("sessionReportModal");
           if (!modal) {
@@ -1083,40 +1068,30 @@
             alert("❌ Report modal element missing from HTML!");
             return;
           }
-          console.log("✅ Modal element found");
           
           document.getElementById("report-baseline").textContent = sessionMetrics.baselineBPM.toFixed(1) + " BPM";
-          console.log("✅ Baseline set");
           
           document.getElementById("report-ending").textContent = sessionMetrics.endingBPM.toFixed(1) + " BPM";
-          console.log("✅ Ending BPM set");
           
           document.getElementById("report-peak").textContent = sessionMetrics.peakBPM.toFixed(1) + " BPM";
-          console.log("✅ Peak BPM set");
           
           const improvementText = improvement > 0 ? "+"+improvement.toFixed(1) : improvement.toFixed(1);
           document.getElementById("report-improvement").textContent = improvementText + " BPM";
-          console.log("✅ Improvement text set");
           
           document.getElementById("report-improvement-percent").textContent = 
             `(${improvementPercent.toFixed(1)}% improvement)`;
-          console.log("✅ Improvement percent set");
           
           const durMins = Math.floor(durationSeconds / 60);
           const durSecs = durationSeconds % 60;
           document.getElementById("report-duration").textContent = durMins > 0
             ? `${durMins} min ${durSecs} sec`
             : `${durSecs} sec`;
-          console.log("✅ Duration set");
           
           document.getElementById("report-mode").textContent = activeMode || "PARTICLES";
-          console.log("✅ Mode set");
           
           document.getElementById("report-palette").textContent = sessionMetrics.paletteSelected;
-          console.log("✅ Palette set");
           
           document.getElementById("report-interpretation").textContent = interpretation;
-          console.log("✅ Interpretation set");
 
           // Populate timestamp
           const _now = new Date();
@@ -1126,9 +1101,7 @@
           if (_dateEl) _dateEl.textContent = _now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
           // Show report modal
-          console.log("🎯 Showing modal...");
           document.getElementById("sessionReportModal").style.display = "flex";
-          console.log("✅✅✅ REPORT MODAL DISPLAYED ✅✅✅");
           
         } catch (error) {
           console.error("❌ ERROR populating report:", error);
@@ -1149,27 +1122,19 @@
       // Wait for DOM to be fully loaded before attaching
       function attachButtonListener() {
         const endSessionBtn = document.getElementById("endSessionBtn");
-        console.log("🔍 [" + new Date().toLocaleTimeString() + "] Looking for endSessionBtn...", endSessionBtn);
-        console.log("🔍 Button visible?", endSessionBtn ? (endSessionBtn.offsetParent !== null ? 'YES' : 'NO (hidden)') : 'N/A');
         
         if (endSessionBtn) {
           // Add direct onclick listener (most direct approach)
           endSessionBtn.addEventListener("click", function(event) {
-            console.log("🔴🔴🔴 END SESSION BUTTON CLICKED (addEventListener)");
-            console.log("Event target:", event.target);
-            console.log("Event target ID:", event.target.id);
             event.preventDefault();
             event.stopPropagation();
             generateSessionReport();
           }, true); // capture phase
           
-          console.log("✅ Button listener attached via addEventListener");
         } else {
           console.error("❌ Could not find endSessionBtn element!");
           const allButtons = document.querySelectorAll("button");
-          console.log("📋 All buttons on page:", allButtons.length);
           allButtons.forEach((btn, idx) => {
-            console.log("  Button " + idx + ":", btn.id, btn.textContent);
           });
         }
       }
@@ -1517,7 +1482,6 @@
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        console.log("📥 Patient-friendly report downloaded");
       }
 
      
@@ -1552,7 +1516,6 @@
         document.getElementById('anxietyControl').style.display =
           mode === 'fullAR' ? 'block' : 'none';
 
-        console.log(`🎮 AR Mode switched to: ${mode}`);
 
         showModeWelcomeMessage(mode);
 
@@ -1576,12 +1539,10 @@
           slider.style.accentColor = '#ef4444'; // Red - high anxiety
         }
 
-        console.log(`😰 Patient anxiety level: ${level}/10`);
         triggerPatientInitiatedIntervention();
       }
 
       function requestHelp() {
-        console.log(`🆘 Patient requested help...`);
 
         // Treat this as an explicit distress signal.
         currentAnxietyLevel = 10;
@@ -1744,7 +1705,6 @@
           sessionContext: sessionContext
         });
 
-        console.log(`📡 Sent patient-initiated intervention with palette:`, sessionContext.userPreferences.palette);
       }
 
       // Initialize mode selector on page load
@@ -1803,7 +1763,6 @@
       
       // Read distraction style/mode (MAGNETIC, RIPPLE, BREATH_CORE)
       const distractionStyle = localStorage.getItem('distractionStyle') || 'MAGNETIC';
-      console.log(`🎨 Distraction Mode: ${distractionStyle} | Palette: ${selectedPalette}`);
       
       // Update the palette indicator on the screen
       const paletteIndicator = document.getElementById('paletteIndicator');
@@ -1906,7 +1865,6 @@
         particleSystem = new THREE.Points(particleGeometry, particleMaterial);
         scene.add(particleSystem);
         
-        console.log(`✅ Particle Mode: Initialized ${particleCount} glowing particles`);
       }
       
 
@@ -1919,7 +1877,6 @@
           scene.remove(particleSystem);
           particleSystem = null;
         }
-        console.log('🧹 Scene cleared - particle system reset');
       }
       
      
@@ -1937,7 +1894,6 @@
           window.rippleOriginalPositions = new Float32Array(particleGeometry.attributes.position.array);
         }
         
-        console.log(`🎨 Mode initialized: ${activeMode}`);
       }
       
       // Initialize the selected mode on startup
@@ -2022,7 +1978,6 @@
           ambientGainNode.connect(audioContext.destination);
           ambientGainNode.gain.value = 0.15; // Reduced for gentler, non-intrusive audio
 
-          console.log('🎵 Audio context initialized');
         } catch (e) {
           console.warn('⚠️ Web Audio API not supported:', e);
         }
@@ -2072,7 +2027,6 @@
           default: playOceanWaves();
         }
 
-        console.log(`🎵 Playing ${palette} ambient sound`);
       }
 
       // OCEAN: Filtered white noise = wave sounds
@@ -2321,7 +2275,6 @@
       window.switchDistractonMode = function(newStyle) {
         localStorage.setItem('distractionStyle', newStyle);
         initMode();
-        console.log(`✅ Switched to: ${newStyle}`);
       };
       
       const touchPosition = new THREE.Vector3(0, 0, 0);
@@ -2351,7 +2304,7 @@
         if (currentStressLevel === 'HIGH_STRESS' && style === 'MAGNETIC') {
           return;
         }
-        // ────────────────────────────────────────────────────────────────────
+       
 
         const positions = particleGeometry.attributes.position.array;
         
@@ -2524,7 +2477,6 @@
 
         // Check if backend sent particle configuration (Full AR Mode)
         if (visualConfig && visualConfig.particles && visualConfig.particles.enabled) {
-          console.log(`🎮 Full AR Mode: Using backend particle config`, visualConfig.particles);
 
           // Map backend particle types to animation parameters
           const pConfig = visualConfig.particles;
@@ -2533,25 +2485,21 @@
             case 'calming_flow':
               speedMult = pConfig.speed === 'slow' ? 0.8 : 1.0;
               particleGlow = pConfig.density === 'medium' ? 0.8 : 0.6;
-              console.log(`🌊 Calming Flow particles (${pConfig.density} density, ${pConfig.speed} speed)`);
               break;
 
             case 'soft_ambient':
               speedMult = pConfig.speed === 'very_slow' ? 0.4 : 0.6;
               particleGlow = pConfig.density === 'light' ? 0.4 : 0.6;
-              console.log(`✨ Soft Ambient particles (${pConfig.density} density, ${pConfig.speed} speed)`);
               break;
 
             case 'peaceful_drift':
               speedMult = pConfig.speed === 'drift' ? 0.3 : 0.5;
               particleGlow = pConfig.density === 'minimal' ? 0.2 : 0.4;
-              console.log(`🕊️ Peaceful Drift particles (${pConfig.density} density, ${pConfig.speed} speed)`);
               break;
 
             case 'gentle_guidance':
               speedMult = pConfig.speed === 'breathing_sync' ? 0.7 : 0.8;
               particleGlow = pConfig.density === 'light' ? 0.5 : 0.7;
-              console.log(`🫁 Gentle Guidance particles (breathing synchronized)`);
               break;
 
             default:
@@ -2562,7 +2510,6 @@
 
           // Handle particle-breathing synchronization
           if (pConfig.particleSync && visualConfig.breathing) {
-            console.log(`🫁💫 Particle-breathing sync enabled (${visualConfig.breathing.pattern})`);
             speedMult *= 0.7; // Slower for breathing rhythm
           }
 
@@ -2574,11 +2521,9 @@
           particleVisible = false;
           speedMult = 0;
           particleGlow = 0;
-          console.log(`🎯 Comfort Mode: Particles disabled (${visualConfig.mode})`);
 
         } else {
           // Fallback to original state-based behavior (for hardware sources)
-          console.log(`📡 Hardware Mode: Using state-based particle behavior (${state})`);
 
           switch(state) {
             case 'PATIENT_REQUESTED_COMFORT':
@@ -2590,30 +2535,25 @@
               particleVisible = false;
               speedMult = 0;
               particleGlow = 0;
-              console.log(`🎯 Comfort State: Particles disabled (${state})`);
               break;
             case 'HIGH_STRESS':
               speedMult = 1.5;
               particleGlow = 1.0;
-              console.log(`🔴 HIGH_STRESS: Particles accelerating to hypnotic state`);
               break;
 
             case 'MODERATE':
               speedMult = 1.0;
               particleGlow = 0.7;
-              console.log(`🟡 MODERATE: Particles at baseline engagement`);
               break;
 
             case 'CALM_RECOVERY':
               speedMult = 0.6;
               particleGlow = 0.3;
-              console.log(`🟢 CALM_RECOVERY: Particles slowing to soothing rhythm`);
               break;
 
             case 'BRADYCARDIA_ALERT':
               speedMult = 0.3;
               particleGlow = 0.4;
-              console.log(`🟠 BRADYCARDIA_ALERT: Particles pulsing gently for alert`);
               break;
 
             default:
@@ -2625,13 +2565,11 @@
         // Apply particle visibility (hide completely in Comfort Mode)
         if (typeof particleSystem !== 'undefined' && particleSystem) {
           particleSystem.visible = particleVisible;
-          console.log(`👁️ Particle visibility set to: ${particleVisible}`);
         }
 
         // Also hide the therapeutic orb in comfort mode for complete simplicity
         if (typeof therapeuticOrb !== 'undefined' && therapeuticOrb) {
           therapeuticOrb.visible = particleVisible;
-          console.log(`🔮 Therapeutic orb visibility set to: ${particleVisible}`);
         }
 
         // Update target values (actual updates happen in animate loop with lerp)
@@ -2878,27 +2816,21 @@
       //  MEDICAL DEVICE PROTOCOL
 
       socket.on("ar:command", (data) => {
-        console.log("🔴 SOCKET MESSAGE RECEIVED:", data.state, data.visual.mode);
-        console.log("📊 Vitals received: HR=" + data.vitals.hr + " HRV=" + data.vitals.hrv);
 
         // Update the vitals readouts before any early return.
         const liveHREl = document.getElementById("liveHR");
         const liveHRVEl = document.getElementById("liveHRV");
         const minimalHREl = document.getElementById("minimalHR");
         
-        console.log("🔍 Element check - liveHR:", !!liveHREl, "liveHRV:", !!liveHRVEl, "minimalHR:", !!minimalHREl);
         
         if (liveHREl) {
           liveHREl.textContent = data.vitals.hr;
-          console.log("✅ Updated liveHR to", data.vitals.hr);
         }
         if (liveHRVEl) {
           liveHRVEl.textContent = data.vitals.hrv;
-          console.log("✅ Updated liveHRV to", data.vitals.hrv);
         }
         if (minimalHREl) {
           minimalHREl.textContent = data.vitals.hr;
-          console.log("✅ Updated minimalHR to", data.vitals.hr);
         }
         
         // Keep every reading for the session report.
@@ -2907,7 +2839,6 @@
         // While the room is locked, only urgent states can break through.
         if (window.therapeuticLockTime && Date.now() < window.therapeuticLockTime) {
           if (data.state !== "BRADYCARDIA_ALERT" && data.state !== "HIGH_STRESS") {
-            console.log("⏳ Therapeutic lock active. Numbers updated, but visuals/voice paused.");
             return; // Skip changing colors and voice!
           }
         }
@@ -2945,7 +2876,6 @@
         // Update guidance text and synced panels
         updateMinimalUI(data.vitals.hr, data.vitals.hrv, data.state);
 
-        console.log(`HR: ${data.vitals.hr} BPM → Normalized Stress: ${normalizedStress.toFixed(2)} | State: ${data.state}`);
 
         if (document.getElementById("insightText")) document.getElementById("insightText").textContent = data.message_clinical;
 
@@ -3338,7 +3268,6 @@
           botMessage("🟠 Low heart rate detected. Please rest and breathe steadily. Interaction paused.");
         }
         
-        console.log(`🧪 TEST: HR changed to ${hr} bpm → State: ${stateFromHR} | History: ${getStressHistoryContext()}`);
         });
       }
       
@@ -3367,7 +3296,6 @@
         const clickedBtn = getClickedButton(touch.clientX, touch.clientY);
 
         if (clickedBtn) {
-          console.log("🛑 Touch on button detected:", clickedBtn.id, "- TRIGGERING click");
           clickedBtn.click(); // Programmatically trigger the clicked button
           return; // Prevent 3D processing
         }
@@ -3398,10 +3326,8 @@
       window.addEventListener("mousedown", (event) => {
         // Check if click is within any button's bounding box
         const clickedBtn = getClickedButton(event.clientX, event.clientY);
-        console.log("🖱️ MOUSEDOWN at:", event.clientX, event.clientY, "| Clicked button:", clickedBtn ? clickedBtn.id : "none");
         
         if (clickedBtn) {
-          console.log("🛑🛑🛑 Mouse click on", clickedBtn.id, "detected - TRIGGERING button click");
           clickedBtn.click(); // Programmatically trigger the clicked button
           return; // Prevent 3D processing
         }
@@ -3461,7 +3387,6 @@
         raycaster.ray.intersectPlane(plane, intersection);
         
         touchPosition.copy(intersection);
-        console.log(`👆 Touch at 3D position: (${touchPosition.x.toFixed(2)}, ${touchPosition.y.toFixed(2)}, ${touchPosition.z.toFixed(2)})`);
       }
 
       // Start camera automatically when page finishes loading.
@@ -3475,7 +3400,6 @@
         }
 
         socket.emit('claim_device', hyperateCode);
-        console.log('⌚ Claimed watch: ' + hyperateCode);
         startCamera();
       });
 

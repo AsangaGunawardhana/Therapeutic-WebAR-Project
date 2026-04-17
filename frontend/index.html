@@ -1017,14 +1017,6 @@
     localStorage.setItem('soundEnabled',      soundEnabled ? 'true' : 'false');
     localStorage.setItem('hapticEnabled',     hapticEnabled ? 'true' : 'false');
 
-    console.log('✅ Session preferences saved:', {
-      watchId: watchId,
-      palette: selectedPalette,
-      mode: selectedMode,
-      voice: voiceEnabled,
-      sounds: soundEnabled,
-      haptics: hapticEnabled
-    });
 
     window.location.href = 'ar.html';
   });

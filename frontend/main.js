@@ -38,14 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // Helpful while checking setup flow locally.
-    console.log("Therapeutic Setup Complete:", {
-      palette: paletteEl.value,
-      mode: modeEl.value,
-      chatbotEnabled: document.getElementById("voice-toggle").checked,
-      soundEnabled: document.getElementById("sound-toggle").checked,
-      hapticEnabled: document.getElementById("haptic-toggle").checked,
-      timestamp: new Date().toISOString(),
-    });
 
     // Continue to the session.
     window.location.href = "ar.html";

@@ -94,7 +94,6 @@ function safeEmit(socket, command) {
 // Socket Connections
 
 io.on("connection", (socket) => {
-  console.log("✅ Client connected:", socket.id);
 
   // Create a fresh session record for this socket.
   userSessions.set(socket.id, {
@@ -107,7 +106,6 @@ io.on("connection", (socket) => {
     userPreferences: { ...defaultUserPreferences } // Use a separate copy per user.
   });
 
-  console.log(`🆕 Created session for user ${socket.id}. Active sessions: ${userSessions.size}`);
 
  
   // Device Pairing
@@ -116,14 +114,12 @@ io.on("connection", (socket) => {
     const session = userSessions.get(socket.id);
     if (session) {
       session.linkedDevice = deviceId;
-      console.log(`🔗 DEVICE PAIRED: Phone ${socket.id} claimed watch ${deviceId}`);
       switchHypeRateSession(deviceId);
     }
   });
 
 
   socket.on("bio:update", ({ hr, hrv, userPalette, sessionContext }) => {
-    console.log(`🔍 Backend received from ${socket.id}:`, { hr, hrv, userPalette, sessionContext });
 
     const session = userSessions.get(socket.id);
     if (!session) {
@@ -141,12 +137,10 @@ io.on("connection", (socket) => {
     // Save the latest preferences back to the session.
     if (sessionContext && sessionContext.userPreferences) {
       session.userPreferences = { ...sessionContext.userPreferences };
-      console.log(`💾 Saved user ${socket.id} preference:`, session.userPreferences);
     }
 
     const command = getEbdPrescription(hr, hrv, userPalette, fullSessionContext);
 
-    console.log(`📤 Backend sending to ${socket.id}:`, JSON.stringify(command, null, 2));
 
     // Reply to this user only.
     safeEmit(socket, command);
@@ -159,7 +153,6 @@ io.on("connection", (socket) => {
       clearTimeout(session.timer);
     }
     userSessions.delete(socket.id);
-    console.log(`❌ User ${socket.id} disconnected. Active sessions: ${userSessions.size}`);
   });
 });
 
@@ -177,7 +170,6 @@ app.all('/hr', (req, res) => {
 
     if (hrValue) {
         const liveHR = parseInt(hrValue, 10);
-        console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM from ${deviceId}`);
 
         // Route the reading to the right session.
         // If needed, auto-link the device to the first available session.
@@ -193,13 +185,11 @@ app.all('/hr', (req, res) => {
         if (!targetSessionId) {
             if (userSessions.size === 1) {
                 targetSessionId = userSessions.keys().next().value;
-                console.log(`🔗 Solo session ${targetSessionId} assumed for device ${deviceId}`);
             } else {
                 for (const [socketId, session] of userSessions.entries()) {
                     if (!session.linkedDevice) {
                         session.linkedDevice = deviceId;
                         targetSessionId = socketId;
-                        console.log(`🔗 Auto-claiming device ${deviceId} for session ${socketId}`);
                         break;
                     }
                 }
@@ -247,7 +237,6 @@ function connectHypeRate(sessionCode) {
     );
 
     ws.on('open', () => {
-        console.log(`✅ HypeRate connected — watching: ${activeSession}`);
         ws.send(JSON.stringify({
             "topic": `hr:${activeSession}`,
             "event": "phx_join",
@@ -272,7 +261,6 @@ function connectHypeRate(sessionCode) {
             const msg = JSON.parse(data);
             if (msg.event === 'hr_update') {
                 const hr = msg.payload.hr;
-                console.log(`❤️ LIVE HR: ${hr} BPM from HypeRate: ${activeSession}`);
 
                 // Forward the reading to the matching session.
                 userSessions.forEach((session, socketId) => {
@@ -314,11 +302,9 @@ function switchHypeRateSession(sessionCode) {
     if (!nextSession) return false;
 
     if (nextSession === HYPERATE_SESSION && hrSocket && hrSocket.readyState === WebSocket.OPEN) {
-        console.log(`✅ Already connected to HypeRate session: ${nextSession}`);
         return true;
     }
 
-    console.log(`🔄 Switching HypeRate watch: ${HYPERATE_SESSION} → ${nextSession}`);
 
     if (hrSocket) {
         const old = hrSocket;
@@ -348,7 +334,4 @@ connectHypeRate();
 // Start the server.
 const PORT = process.env.PORT || 3001;  
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🏥 Therapeutic WebAR Server running on port ${PORT}`);
-  console.log(`📱 Local: http://localhost:${PORT}`);
-  console.log(`🌐 Ready for cloud deployment!`);
 });

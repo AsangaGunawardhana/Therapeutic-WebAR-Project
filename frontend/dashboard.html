@@ -251,7 +251,6 @@
         document.getElementById('modeDisplay').textContent =
           mode === 'fullAR' ? 'Full AR' : 'Simple';
 
-        console.log(`📊 Dashboard mode switched to: ${mode}`);
 
         // Push the new mode to the app.
         sendUpdate();
@@ -277,7 +276,6 @@
 
         socket.emit("bio:update", data);
         sent.textContent = JSON.stringify(data);
-        console.log("📊 Dashboard sent:", data);
       }
 
       hr.addEventListener("input", () => {
