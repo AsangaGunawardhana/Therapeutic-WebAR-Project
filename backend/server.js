@@ -1,23 +1,23 @@
-// 1. Bring in the required libraries
+// Load server dependencies.
 const path = require("path");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const { getEbdPrescription } = require("./ebdEngine");
 
-// 2. Create basic Express app and HTTP server
+
+// Create the Express app and HTTP server.
 const app = express();
 const server = http.createServer(app);
 
-// 3. Attach Socket.IO to the server
+// Attach Socket.IO.
 const io = new Server(server);
 
-// 4. Redirect root to login page — auth entry point
+// Send the root route to the login page.
 app.get('/', (req, res) => res.redirect('/login.html'));
 
-// 5. COOP header — required for Google Identity Services popup flow.
-//    Without this, Chrome blocks the OAuth popup from posting the
-//    credential token back to the opener window.
+// Set the COOP header needed for the Google sign-in popup.
+
 app.use((req, res, next) => {
   if (req.path.endsWith('.html') || req.path === '/') {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
@@ -25,58 +25,51 @@ app.use((req, res, next) => {
   next();
 });
 
-// 6. Serve static files from the frontend folder
+// Serve the frontend files.
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-const DEBOUNCE_MS = 800;  // wait before reacting (reduced for faster response)
-const HOLD_MS = 2000;     // stay in one state (reduced from 3s to 2s)
+// Timers for smoothing out the HR data stream
+const DEBOUNCE_MS = 800;  // wait slightly before updating to avoid flickering
+const HOLD_MS = 2000;     // force the current state to hold for at least 2 seconds
 
 // ========================================
-// 🏥 MULTI-USER SESSION MANAGEMENT SYSTEM
+// Session Tracking
 // ========================================
-// Individual session tracking for simultaneous users
+// Store per-user session data for multiple active clients.
 const userSessions = new Map();
 
-// Default user preferences for new sessions
+// Default preferences for a new session.
 const defaultUserPreferences = { comfortMode: false, fullAR: true };
 
-// ========================================
-// 🎯 PER-USER SAFE EMIT FUNCTION
-// ========================================
-// Sends AR commands to individual users, not broadcast to all
+// Rate-limit state emissions to prevent client UI flickering
 function safeEmit(socket, command) {
   const now = Date.now();
   const session = userSessions.get(socket.id);
 
   if (!session) {
-    console.warn("⚠️ No session found for socket:", socket.id);
     return;
   }
 
-  console.log(`📡 Processing command for user ${socket.id}:`, command.state);
-
-  // emergency → send immediately to THIS user only
+  // Bypass timers for high-priority clinical alerts
   if (command.state === "BRADYCARDIA_ALERT") {
     socket.emit("ar:command", command);
     session.lastState = command.state;
     session.lastHR = command.vitals.hr;
     session.lastHRV = command.vitals.hrv;
     session.lastTime = now;
-    console.log(`🚨 EMERGENCY sent to user ${socket.id}`);
     return;
   }
 
-  // same state AND same vitals for THIS user → do nothing
+  // Drop redundant state payloads to save bandwidth
   if (
     command.state === session.lastState &&
     command.vitals.hr === session.lastHR &&
     command.vitals.hrv === session.lastHRV
   ) {
-    console.log(`⏸️ Duplicate state for user ${socket.id}, skipping`);
     return;
   }
 
-  // too soon for THIS user → wait
+  // Enforce minimum hold duration (HOLD_MS) via debounce
   if (now - session.lastTime < HOLD_MS) {
     clearTimeout(session.timer);
     session.timer = setTimeout(() => {
@@ -85,43 +78,40 @@ function safeEmit(socket, command) {
       session.lastHR = command.vitals.hr;
       session.lastHRV = command.vitals.hrv;
       session.lastTime = Date.now();
-      console.log(`⏰ Delayed command sent to user ${socket.id}:`, command.state);
     }, DEBOUNCE_MS);
-    console.log(`⌛ Command debounced for user ${socket.id}`);
     return;
   }
 
-  // normal case - send to THIS user only
+  // Unthrottled emission path
   socket.emit("ar:command", command);
   session.lastState = command.state;
   session.lastHR = command.vitals.hr;
   session.lastHRV = command.vitals.hrv;
   session.lastTime = now;
-  console.log(`✅ Command sent to user ${socket.id}:`, command.state);
 }
 
-// ========================================
-// 🔌 MULTI-USER CONNECTION HANDLER
-// ========================================
+
+// Socket Connections
+
 io.on("connection", (socket) => {
   console.log("✅ Client connected:", socket.id);
 
-  // Create individual session for this user
+  // Create a fresh session record for this socket.
   userSessions.set(socket.id, {
     lastState: null,
     lastHR: null,
     lastHRV: null,
     lastTime: 0,
     timer: null,
-    linkedDevice: null, // PRIVACY FIX: Track which hardware device is linked to this session
-    userPreferences: { ...defaultUserPreferences } // Individual copy
+    linkedDevice: null, // Keep track of the watch linked to this session.
+    userPreferences: { ...defaultUserPreferences } // Use a separate copy per user.
   });
 
   console.log(`🆕 Created session for user ${socket.id}. Active sessions: ${userSessions.size}`);
 
-  // ========================================
-  // 🔗 IOT DEVICE PAIRING (The Privacy Fix)
-  // ========================================
+ 
+  // Device Pairing
+ 
   socket.on("claim_device", (deviceId) => {
     const session = userSessions.get(socket.id);
     if (session) {
@@ -141,14 +131,14 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Use individual user preferences for this specific user
+    // Fall back to the saved session preferences when needed.
     const fullSessionContext = sessionContext || {
       interventionTrigger: 'PATIENT_INITIATED',
-      userPreferences: session.userPreferences, // Use THIS user's preferences
-      patientAnxietyLevel: 5 // Default moderate
+      userPreferences: session.userPreferences, // Reuse this user's saved preferences.
+      patientAnxietyLevel: 5 // Default to a moderate level.
     };
 
-    // Save user's individual preferences (not global!)
+    // Save the latest preferences back to the session.
     if (sessionContext && sessionContext.userPreferences) {
       session.userPreferences = { ...sessionContext.userPreferences };
       console.log(`💾 Saved user ${socket.id} preference:`, session.userPreferences);
@@ -158,11 +148,11 @@ io.on("connection", (socket) => {
 
     console.log(`📤 Backend sending to ${socket.id}:`, JSON.stringify(command, null, 2));
 
-    // Send command only to THIS specific user
+    // Reply to this user only.
     safeEmit(socket, command);
   });
 
-  // Cleanup individual session when user disconnects
+  // Clear the session record on disconnect.
   socket.on("disconnect", () => {
     const session = userSessions.get(socket.id);
     if (session && session.timer) {
@@ -173,15 +163,15 @@ io.on("connection", (socket) => {
   });
 });
 
-// ========================================
-// ⌚ HARDWARE BRIDGE: TIZEN WATCH LISTENER
-// ========================================
+
+// Tizen Watch Listener
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.all('/hr', (req, res) => {
     let hrValue = req.query.hr || req.query.heartrate || req.body.hr || req.body.heartrate;
-    let deviceId = req.query.deviceId || req.body.deviceId || 'default_tizen'; // Identify the watch
+    let deviceId = req.query.deviceId || req.body.deviceId || 'default_tizen'; // Identify the source watch.
 
     if (!hrValue && Object.keys(req.body).length > 0) hrValue = Object.keys(req.body)[0];
 
@@ -189,8 +179,8 @@ app.all('/hr', (req, res) => {
         const liveHR = parseInt(hrValue, 10);
         console.log(`🫀 [WATCH LIVE] Heart Rate: ${liveHR} BPM from ${deviceId}`);
 
-        // PRIVACY FIX: Route to the correct user, not everyone
-        // Auto-link the device to the first eligible session so live updates reach the AR client.
+        // Route the reading to the right session.
+        // If needed, auto-link the device to the first available session.
         let targetSessionId = null;
 
         for (const [socketId, session] of userSessions.entries()) {
@@ -241,14 +231,14 @@ app.all('/hr', (req, res) => {
     }
 });
 
-// =====================================================
-// ⌚ LIVE WATCH BRIDGE: HYPERATE WEBSOCKET
-// =====================================================
+
+// HypeRate WebSocket Bridge
+
 const WebSocket = require('ws');
 
 let HYPERATE_SESSION = '5038D';
 const HYPERATE_TOKEN   = 'Q5Ag4eAQBL4VJqG33DK3FPyItfEHsmgmVp1z9kk7';
-let hrSocket = null; // track the current socket globally so we can replace it
+let hrSocket = null; // Keep the current socket so it can be replaced cleanly.
 
 function connectHypeRate(sessionCode) {
     const activeSession = sessionCode || HYPERATE_SESSION;
@@ -264,7 +254,7 @@ function connectHypeRate(sessionCode) {
             "payload": {},
             "ref": 0
         }));
-        // Phoenix heartbeat — required every 10 seconds
+        // Phoenix requires a heartbeat every 10 seconds.
         const hb = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -284,7 +274,7 @@ function connectHypeRate(sessionCode) {
                 const hr = msg.payload.hr;
                 console.log(`❤️ LIVE HR: ${hr} BPM from HypeRate: ${activeSession}`);
 
-                // Route to the correct user
+                // Forward the reading to the matching session.
                 userSessions.forEach((session, socketId) => {
                     if (session.linkedDevice === activeSession || userSessions.size === 1) {
                         const socket = io.sockets.sockets.get(socketId);
@@ -309,7 +299,7 @@ function connectHypeRate(sessionCode) {
     });
 
     ws.on('close', (code) => {
-        // Only auto-reconnect if this socket is still the active one
+        // Reconnect only if this socket is still the active one.
         if (hrSocket === ws) {
             console.warn(`⚠️ HypeRate closed (code: ${code}). Retrying in 30s...`);
             setTimeout(() => connectHypeRate(activeSession), 30000);
@@ -332,7 +322,7 @@ function switchHypeRateSession(sessionCode) {
 
     if (hrSocket) {
         const old = hrSocket;
-        hrSocket = null; // nullify BEFORE close so the 'close' handler won't auto-reconnect
+        hrSocket = null; // Clear first so the close handler does not reconnect it.
         old.terminate();
     }
 
@@ -341,9 +331,9 @@ function switchHypeRateSession(sessionCode) {
     return true;
 }
 
-// ========================================
-// ⌚ SWITCH WATCH: Dynamic Session Connect
-// ========================================
+
+// Watch Switch Endpoint
+
 app.post('/connect-watch', (req, res) => {
     const sessionCode = (req.body.sessionCode || '').trim().toUpperCase();
     if (!sessionCode) return res.status(400).send('Missing sessionCode');
@@ -355,8 +345,8 @@ app.post('/connect-watch', (req, res) => {
 connectHypeRate();
 
 
-// 8. Start the server (Cloud-Ready)
-const PORT = process.env.PORT || 3001;  // Changed from 3000 to 3001
+// Start the server.
+const PORT = process.env.PORT || 3001;  
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🏥 Therapeutic WebAR Server running on port ${PORT}`);
   console.log(`📱 Local: http://localhost:${PORT}`);
