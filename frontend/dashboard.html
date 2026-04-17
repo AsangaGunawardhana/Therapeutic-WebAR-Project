@@ -122,7 +122,7 @@
         font-weight: 600;
       }
 
-      /* Mobile responsive adjustments */
+      /* Small-screen layout tweaks */
       @media (max-width: 768px) {
         body {
           padding: 15px;
@@ -235,43 +235,43 @@
       socket.on("connect", () => (status.textContent = "Connected"));
       socket.on("disconnect", () => (status.textContent = "Disconnected"));
 
-      // Dashboard Mode Selection
+      // Current mode selected in the dashboard.
       let dashboardMode = 'fullAR'; // Default mode
 
       function setDashboardMode(mode) {
         dashboardMode = mode;
 
-        // Update button styles
+        // Update the buttons.
         document.getElementById('fullARDashBtn').style.background =
           mode === 'fullAR' ? '#4CAF50' : 'rgba(255,255,255,0.3)';
         document.getElementById('comfortDashBtn').style.background =
           mode === 'comfort' ? '#4CAF50' : 'rgba(255,255,255,0.3)';
 
-        // Update display
+        // Update the label.
         document.getElementById('modeDisplay').textContent =
           mode === 'fullAR' ? 'Full AR' : 'Simple';
 
         console.log(`📊 Dashboard mode switched to: ${mode}`);
 
-        // Send update with new mode
+        // Push the new mode to the app.
         sendUpdate();
       }
 
       function sendUpdate() {
-        const userPalette = localStorage.getItem('selectedPalette') || 'OCEAN'; // Get user preference (default to evidence-based)
+        const userPalette = localStorage.getItem('selectedPalette') || 'OCEAN'; // Fall back to the default palette.
 
-        // NEW FORMAT: Include sessionContext for dual-mode system
+        // Match the dual-mode payload used by the main app.
         const data = {
           hr: Number(hr.value),
           hrv: Number(hrv.value),
           userPalette: userPalette,
           sessionContext: {
-            interventionTrigger: 'MONITORING', // Dashboard provides monitoring data
+            interventionTrigger: 'MONITORING', // This page simulates monitoring input.
             userPreferences: {
               comfortMode: dashboardMode === 'comfort',
               fullAR: dashboardMode === 'fullAR'
             },
-            patientAnxietyLevel: 0 // No patient input from dashboard
+            patientAnxietyLevel: 0 // No manual anxiety input on this screen.
           }
         };
 
@@ -289,9 +289,9 @@
         sendUpdate();
       });
 
-      // Initialize dashboard
-      setDashboardMode('fullAR'); // Set default mode
-      sendUpdate(); // send once when page loads
+      // Set the initial dashboard state.
+      setDashboardMode('fullAR'); // Default mode.
+      sendUpdate(); // Send an initial update on load.
     </script>
   </body>
 </html>
