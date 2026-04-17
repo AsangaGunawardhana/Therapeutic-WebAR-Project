@@ -1,16 +1,16 @@
-// main.js - Therapeutic Environment Setup Bridge
-// This script captures user preferences and passes them to the AR experience
+// Setup bridge for the AR session.
 
-// Valid palette options - must match backend colorMapping keys
+
+//  palette names need to stay in sync with the backend mapping.
 const VALID_PALETTES = ["AMBER", "VIOLET", "PINK", "EARTH", "OCEAN", "NATURE"];
 const DEFAULT_PALETTE = "AMBER";
 
 document.addEventListener("DOMContentLoaded", () => {
   const launchBtn = document.getElementById("launchBtn");
 
-  // Handle launch button click
+  // Save the selected options, then open the AR screen.
   launchBtn.addEventListener("click", () => {
-    // 1. Correctly find the checked radio buttons (Fixes the ID mismatch)
+    // Read the selected palette and mode.
     const paletteEl = document.querySelector('input[name="palette"]:checked');
     const modeEl = document.querySelector('input[name="mode"]:checked');
 
@@ -19,11 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 2. Save with the EXACT keys ar.html is looking for
+    // Store them with the keys used by ar.html.
     localStorage.setItem("selectedPalette", paletteEl.value);
     localStorage.setItem("distractionStyle", modeEl.value);
 
-    // Step 3 Toggles - using the IDs from your index.html
+    // Save the optional toggles too.
     localStorage.setItem(
       "chatbotEnabled",
       document.getElementById("voice-toggle").checked,
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("haptic-toggle").checked,
     );
 
-    // Log for debugging (can be removed in production)
+    // Helpful while checking setup flow locally.
     console.log("Therapeutic Setup Complete:", {
       palette: paletteEl.value,
       mode: modeEl.value,
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp: new Date().toISOString(),
     });
 
-    // 3. Move to the AR experience
+    // Continue to the session.
     window.location.href = "ar.html";
   });
 });
