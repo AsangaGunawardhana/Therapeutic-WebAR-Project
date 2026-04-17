@@ -37,7 +37,7 @@
       color: var(--text);
     }
 
-    /* Enhanced background texture with therapeutic mood */
+    /* Soft background texture */
     body::before {
       content: '';
       position: fixed;
@@ -52,7 +52,7 @@
       mix-blend-mode: screen;
     }
 
-    /* Animated background accent shapes */
+    /* Animated background accents */
     body::after {
       content: '';
       position: fixed;
@@ -71,7 +71,7 @@
       50% { opacity: 1.2; }
     }
 
-    /* ─── PAGE SHELL ─── */
+    /* Page layout */
     .page {
       position: relative;
       z-index: 1;
@@ -82,7 +82,7 @@
       padding: 40px 20px 60px;
     }
 
-    /* ─── HEADER ─── */
+    /* Header */
     .page-header {
       width: 100%;
       max-width: 620px;
@@ -126,7 +126,7 @@
       margin-top: 1px;
     }
 
-    /* User greeting row */
+    /* Signed-in user summary */
     .greeting-row {
       display: flex;
       align-items: center;
@@ -181,7 +181,7 @@
       white-space: nowrap;
     }
 
-    /* ─── CARD ─── */
+    /* Shared card styles */
     .card {
       width: 100%;
       max-width: 620px;
@@ -226,7 +226,7 @@
       margin-bottom: 20px;
     }
 
-    /* ─── PALETTE CARDS ─── */
+    /* Palette cards */
     .palette-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -281,11 +281,11 @@
       font-size: 18px;
     }
 
-    /* Evidence-based cardiovascular research palettes */
+    /* Research-backed palettes */
     .swatch-ocean  { background: linear-gradient(135deg, #81d4fa, #4fc3f722); }
     .swatch-nature { background: linear-gradient(135deg, #a5d6a7, #66bb6a22); }
 
-    /* User preference and accessibility palettes */
+    /* Preference-based palettes */
     .swatch-amber  { background: linear-gradient(135deg, #f5d08a, #d4913a22); }
     .swatch-violet { background: linear-gradient(135deg, #c5b0e8, #7c5cbf22); }
     .swatch-pink   { background: linear-gradient(135deg, #f0b8cc, #c26b8a22); }
@@ -306,7 +306,7 @@
       line-height: 1.4;
     }
 
-    /* Tick indicator */
+    /* Selection checkmark */
     .palette-card .tick {
       position: absolute;
       top: 10px;
@@ -333,7 +333,7 @@
       transform: rotate(45deg) translate(-1px, -1px);
     }
 
-    /* ─── MODE CARDS ─── */
+    /* Mode cards */
     .mode-list {
       display: flex;
       flex-direction: column;
@@ -446,7 +446,7 @@
       transform: rotate(45deg) translate(-1px, -1px);
     }
 
-    /* ─── CHATBOT TOGGLE ─── */
+    /* Toggle rows */
     .toggle-row {
       display: flex;
       align-items: center;
@@ -513,7 +513,7 @@
       transform: translateX(22px);
     }
 
-    /* ─── CLINICAL NOTICE ─── */
+    /* Clinical note */
     .clinical-notice {
       width: 100%;
       max-width: 620px;
@@ -539,7 +539,7 @@
       line-height: 1.6;
     }
 
-    /* ─── LAUNCH BUTTON ─── */
+    /* Primary action */
     .launch-wrap {
       width: 100%;
       max-width: 620px;
@@ -585,7 +585,7 @@
       text-transform: uppercase;
     }
 
-    /* ─── WATCH ID INPUT (Step 0) ─── */
+    /* Watch ID input */
     .watch-input-wrap {
       display: flex;
       align-items: center;
@@ -648,9 +648,7 @@
       50%       { opacity: 0.4; transform: scale(0.75); }
     }
 
-    /* ══════════════════════════════
-       RESPONSIVE
-    ══════════════════════════════ */
+    /* RESPONSIVE */
 
     /* ── TABLET (≤ 680px) ── */
     @media (max-width: 680px) {
@@ -689,7 +687,7 @@
 
 <div class="page">
 
-  <!-- ── HEADER ── -->
+  <!-- Header -->
   <header class="page-header">
     <div class="logo-row">
       <div class="logo-icon">🫀</div>
@@ -711,7 +709,7 @@
     </div>
   </header>
 
-  <!-- ── CARD 0: CONNECT WEARABLE ── -->
+  <!-- Step 0: wearable connection -->
   <section class="card" aria-labelledby="wearableHeading">
     <div class="card-title">Step 0 of 3 &nbsp;·&nbsp; Wearable Setup</div>
     <h2 class="card-heading" id="wearableHeading">Connect your heart rate device</h2>
@@ -724,7 +722,8 @@
         type="text"
         maxlength="10"
         placeholder="e.g. 5038D"
-        value="5038D"
+        required
+        aria-required="true"
         aria-label="HypeRate watch session ID"
         autocomplete="off"
         spellcheck="false"
@@ -733,11 +732,11 @@
 
     <div class="watch-status">
       <span class="watch-dot"></span>
-      <span id="watchStatusText">Ready to connect , session begins when you tap <strong>Begin Session</strong></span>
+      <span id="watchStatusText">Enter a valid watch ID to begin the therapy session.</span>
     </div>
   </section>
 
-  <!-- ── CARD 1: COLOUR PALETTE ── -->
+  <!-- Step 1: palette -->
   <section class="card" aria-labelledby="paletteHeading">
     <div class="card-title">Step 1 of 3</div>
     <h2 class="card-heading" id="paletteHeading">Choose your calming spectrum</h2>
@@ -745,7 +744,7 @@
 
     <div class="palette-grid" role="radiogroup" aria-labelledby="paletteHeading">
 
-      <!-- Evidence-based cardiovascular research palettes -->
+      <!-- Research-backed palettes -->
       <label class="palette-card selected" id="label-OCEAN">
         <input type="radio" name="palette" value="OCEAN" id="palette-OCEAN" checked />
         <div class="palette-swatch swatch-ocean" aria-hidden="true">🌊</div>
@@ -766,7 +765,7 @@
         <div class="tick" aria-hidden="true"></div>
       </label>
 
-      <!-- User preference and accessibility palettes -->
+      <!-- Preference-based palettes -->
       <label class="palette-card" id="label-AMBER">
         <input type="radio" name="palette" value="AMBER" id="palette-AMBER" />
         <div class="palette-swatch swatch-amber" aria-hidden="true">🟡</div>
@@ -810,7 +809,7 @@
     </div>
   </section>
 
-  <!-- ── CARD 2: DISTRACTION MODE ── -->
+  <!-- Step 2: focal mode -->
   <section class="card" aria-labelledby="modeHeading">
     <div class="card-title">Step 2 of 3</div>
     <h2 class="card-heading" id="modeHeading">Choose your focal point</h2>
@@ -854,13 +853,13 @@
     </div>
   </section>
 
-  <!-- ── CARD 3: PERSONALIZE EXPERIENCE ── -->
+  <!-- Step 3: personalization -->
   <section class="card" aria-labelledby="personalizeHeading">
     <div class="card-title">Step 3 of 3</div>
     <h2 class="card-heading" id="personalizeHeading">Personalize your experience</h2>
     <p class="card-desc">Choose which sensory features to enable. Everyone responds differently - customize what works best for you.</p>
 
-    <!-- Voice Guidance Toggle -->
+    <!-- Voice guidance -->
     <div class="toggle-row" style="margin-bottom: 12px;">
       <div class="toggle-info">
         <div class="toggle-label">🔊 Voice Guidance</div>
@@ -872,7 +871,7 @@
       </label>
     </div>
 
-    <!-- Ambient Sounds Toggle -->
+    <!-- Ambient sound -->
     <div class="toggle-row" style="margin-bottom: 12px;">
       <div class="toggle-info">
         <div class="toggle-label">🎵 Ambient Sounds</div>
@@ -884,7 +883,7 @@
       </label>
     </div>
 
-    <!-- Haptic Feedback Toggle -->
+    <!-- Haptic feedback -->
     <div class="toggle-row">
       <div class="toggle-info">
         <div class="toggle-label">📳 Haptic Feedback</div>
@@ -897,13 +896,13 @@
     </div>
   </section>
 
-  <!-- ── CLINICAL NOTICE ── -->
+  <!-- Clinical note -->
   <div class="clinical-notice" role="note" aria-label="Clinical information">
     <span class="notice-icon">💬</span>
     <p>Your session is monitored passively via your connected heart rate device. No action is needed . The environment will respond automatically. If you feel unwell at any point, tap <strong>End Therapy Session</strong> on the next screen.</p>
   </div>
 
-  <!-- ── LAUNCH BUTTON ── -->
+  <!-- Launch button -->
   <div class="launch-wrap">
     <button id="launchBtn" aria-label="Begin AR therapy session">
       <span>🫀</span>
@@ -916,7 +915,7 @@
 </div><!-- .page -->
 
 <script>
-  // ── AUTH GUARD ──────────────────────────────────────────
+  // Redirect to login if there is no active session.
   (function () {
     try {
       if (!sessionStorage.getItem('gUser')) {
@@ -926,7 +925,7 @@
   })();
   // ────────────────────────────────────────────────────────
 
-  // ── POPULATE USER CHIP ──────────────────────────────────
+  // Fill the small user badge in the header.
   (function () {
     try {
       var raw = sessionStorage.getItem('gUser');
@@ -941,18 +940,18 @@
     } catch (e) {}
   })();
 
-  // ── PALETTE CARD SELECTION ──────────────────────────────
+  // Update the selected palette card.
   document.querySelectorAll('input[name="palette"]').forEach(function(radio) {
     radio.addEventListener('change', function () {
       document.querySelectorAll('.palette-card').forEach(function(c) {
         c.classList.remove('selected');
       });
-      // The label wrapping the radio
+      // Highlight the label that owns this radio button.
       radio.closest('.palette-card').classList.add('selected');
     });
   });
 
-  // ── MODE CARD SELECTION ─────────────────────────────────
+  // Update the selected mode card.
   document.querySelectorAll('input[name="mode"]').forEach(function(radio) {
     radio.addEventListener('change', function () {
       document.querySelectorAll('.mode-card').forEach(function(c) {
@@ -962,25 +961,59 @@
     });
   });
 
-  // ── LAUNCH ──────────────────────────────────────────────
-  document.getElementById('launchBtn').addEventListener('click', function () {
+  var watchIdInput   = document.getElementById('watchIdInput');
+  var watchStatusText = document.getElementById('watchStatusText');
+  var launchBtn      = document.getElementById('launchBtn');
+
+  function updateWatchLaunchState() {
+    var rawWatchId = watchIdInput.value.trim().toUpperCase();
+    var hasWatchId = rawWatchId.length > 0;
+
+    watchIdInput.value = rawWatchId;
+    watchIdInput.setAttribute('aria-invalid', hasWatchId ? 'false' : 'true');
+    watchIdInput.style.borderColor = hasWatchId
+      ? 'rgba(74,139,126,0.3)'
+      : 'rgba(239,68,68,0.7)';
+    watchIdInput.style.boxShadow = hasWatchId
+      ? ''
+      : '0 0 0 3px rgba(239,68,68,0.15)';
+
+    launchBtn.disabled = !hasWatchId;
+    launchBtn.style.opacity = hasWatchId ? '1' : '0.55';
+    launchBtn.style.cursor = hasWatchId ? 'pointer' : 'not-allowed';
+
+    watchStatusText.textContent = hasWatchId
+      ? 'Watch ID ready. Session begins when you tap Begin Session.'
+      : 'Enter a valid watch ID to begin the therapy session.';
+  }
+
+  watchIdInput.addEventListener('input', updateWatchLaunchState);
+
+  // Save the setup choices and open the AR page.
+  launchBtn.addEventListener('click', function () {
     var selectedPalette = document.querySelector('input[name="palette"]:checked').value;
     var selectedMode    = document.querySelector('input[name="mode"]:checked').value;
 
-    // Get all personalization preferences
+    // Read the optional toggles.
     var voiceEnabled   = document.getElementById('voice-toggle').checked;
     var soundEnabled   = document.getElementById('sound-toggle').checked;
     var hapticEnabled  = document.getElementById('haptic-toggle').checked;
 
     // ── STEP 0: Capture the watch ID and save it for ar.html ──
-    var rawWatchId = document.getElementById('watchIdInput').value.trim().toUpperCase();
-    var watchId    = rawWatchId || '5038D'; // default fallback
+    var rawWatchId = watchIdInput.value.trim().toUpperCase();
+    if (!rawWatchId) {
+      updateWatchLaunchState();
+      watchIdInput.focus();
+      return;
+    }
+
+    var watchId = rawWatchId;
     localStorage.setItem('hyperateSession', watchId);
 
-    // Save all preferences to localStorage
+    // Save the rest of the session preferences.
     localStorage.setItem('selectedPalette',   selectedPalette);
     localStorage.setItem('distractionStyle',  selectedMode);
-    localStorage.setItem('chatbotEnabled',    voiceEnabled ? 'true' : 'false'); // Renamed: voice guidance
+    localStorage.setItem('chatbotEnabled',    voiceEnabled ? 'true' : 'false'); // Voice guidance toggle.
     localStorage.setItem('soundEnabled',      soundEnabled ? 'true' : 'false');
     localStorage.setItem('hapticEnabled',     hapticEnabled ? 'true' : 'false');
 
@@ -995,6 +1028,8 @@
 
     window.location.href = 'ar.html';
   });
+
+  updateWatchLaunchState();
 </script>
 
 </body>
