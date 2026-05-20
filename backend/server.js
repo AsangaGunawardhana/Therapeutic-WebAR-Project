@@ -32,9 +32,8 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 const DEBOUNCE_MS = 800;  // wait slightly before updating to avoid flickering
 const HOLD_MS = 2000;     // force the current state to hold for at least 2 seconds
 
-// ========================================
+
 // Session Tracking
-// ========================================
 // Store per-user session data for multiple active clients.
 const userSessions = new Map();
 
@@ -332,6 +331,7 @@ connectHypeRate();
 
 
 // Start the server.
-const PORT = process.env.PORT || 3001;  
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
